@@ -1,0 +1,10 @@
+.griglia{
+    border: 3px, red, solid;
+    margin: 5px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.cella{
+    border: 3px, green, solid;
+    margin: 5px;
+}
