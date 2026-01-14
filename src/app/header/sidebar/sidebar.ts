@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 
 @Component({
   selector: 'app-sidebar',
@@ -7,9 +7,11 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
-  @Output() slected = new EventEmitter<string>();
 
-  onClick(id: string) {
-    this.slected.emit(id);
+  @Output() selected = new EventEmitter<string>();
+
+  onBtnClick(id: string) {
+    this.selected.emit(id);
   }
+
 }
