@@ -1,9 +1,13 @@
 <app-header></app-header>
-<app-sidebar (selected)="OnSidebarIdSelected($event)"></app-sidebar>
-@if (selectedPage === 'Home') {
-  <app-grid/>
-} @else if (selectedPage === 'Clienti') {
-  <app-clienti/>
-} @else if (selectedPage === 'Progetti') {
-  <app-progetti/>
-}
+<main>
+  <app-sidebar (selected)="OnSidebarIdSelected($event)"></app-sidebar>
+  <div>
+    @if (selectedPage === 'Home') {
+    <app-grid />
+    } @else if (selectedPage === 'Clienti') {
+    <app-clienti />
+    } @else if (selectedPage === 'Progetti') {
+    <app-progetti />
+    }
+  </div>
+</main>
