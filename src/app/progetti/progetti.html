@@ -1,26 +1,20 @@
 <header>
-    <button appButton>
-        Aggiungi Progetto
-        <span class="icon">+</span>
-    </button>
+  <button appButton>
+    Aggiungi Progetto
+    <span class="icon">+</span>
+  </button>
 </header>
-<body>
-    <app-table-row [cols]="progettiColsCount">
-        @for(c of columns; track progettiColsCount){
-            <app-progetto>
-                <strong>{{ c.header }}</strong> <!-- inserimento dei titoli dei valori per numero di tipo di valori-->
-            </app-progetto>
-        }
-    </app-table-row>
 
-    <app-table-row [cols]="progettiColsCount">
-        @for(progetto of dummyProgetti; track dummyProgetti.length){
-            @for(c of columns; track progettiColsCount){
-                <app-progetto>
-                    {{ c.value(progetto) }} <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
-                </app-progetto>
-            }
-        }
-    </app-table-row>
+<!-- Header -->
+<app-table-row [cols]="progettiColsCount">
+  @for (c of columns; track c.header) {
+    <div class="tbl-header">
+      <strong>{{ c.header }}</strong> <!-- inserimento dei titoli dei valori per numero di tipo di valori -->
+    </div>
+  }
+</app-table-row>
 
-</body>
+<!-- Righe -->
+@for (progetto of dummyProgetti; track dummyProgetti.length) {
+  <app-progetto [progetto]="progetto" [columns]="columns"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
+}

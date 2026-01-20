@@ -1,20 +1,21 @@
 :host {
-  display: flex;
+  display: contents;
   min-width: 0;
 }
 
-.progetto-cell {
+.tbl-cell {
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
   white-space: normal;
-  overflow-wrap: break-word;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
 }
 
-/* allineamenti */
-:host(.cell-right) {
-  text-align: left;
+.tbl-cell--right {
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-:host(.cell-center) {
+.tbl-cell--center {
   text-align: center;
 }

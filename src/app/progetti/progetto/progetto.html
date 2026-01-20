@@ -1,3 +1,11 @@
-<div class="progetto-cell">
-    <ng-content />
-</div>
+<app-table-row [cols]="colsCount">
+  @for (c of columns; track c.header) {
+    <div
+      class="tbl-cell"
+      [class.tbl-cell--right]="c.align === 'right'"
+      [class.tbl-cell--center]="c.align === 'center'"
+    >
+      {{ c.value(progetto) }}
+    </div>
+  }
+</app-table-row> <!-- elemento Progetto, equivalente ad una riga -->
