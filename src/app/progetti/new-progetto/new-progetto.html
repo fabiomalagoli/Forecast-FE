@@ -1,1 +1,28 @@
-<p>new-progetto works!</p>
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <form #f="ngForm" (ngSubmit)="submit(f)">
+    @for (header of headers; track header.key; let i = $index) {
+
+      <app-text-input>
+        <label [attr.for]="toId(header.key, i)">{{ header.label }}</label>
+
+        <input
+          type="text"
+          [attr.id]="toId(header.key, i)"
+          [name]="header.key"
+          [(ngModel)]="formData[header.key]"
+          required
+        />
+
+        @if (f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)) {
+          <p class="error">Campo obbligatorio</p>
+        }
+      </app-text-input>
+
+    }
+
+    <button type="submit">Crea progetto</button>
+    <button type="button" (click)="onCancel()">Annulla</button>
+  </form>
+</dialog>

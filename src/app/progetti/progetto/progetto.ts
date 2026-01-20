@@ -2,6 +2,8 @@ import { Component, Input } from '@angular/core';
 import { Progetto } from './progetto.model';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
+import { PROGETTO_HEADERS } from './progetto.headers';
+
 
 @Component({
   selector: 'app-progetto',
@@ -19,21 +21,10 @@ export class ProgettoComponent {
   @Input() align: 'left' | 'center' | 'right' = 'left' //allineamento di default a sinistra
   @Input({required: true}) columns!: Column<Progetto>[];
 
-
-    readonly PROGETTO_HEADERS: Record<keyof Progetto, string> = {
-    Attività: 'Attività',
-    Descrizione: 'Descrizione',
-    Status: 'Stato',
-    Cliente: 'Cliente',
-    Referente: 'Referente',
-    Azienda: 'Azienda',
-    PM: 'Project Manager',
-    Giorni: 'Giorni',
-    winPercentual: 'Win %',
-    }; // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
-
-    get colsCount(): number {
+  get colsCount(): number {
       return this.columns.length;
   }
+  
+
 
 }

@@ -1,0 +1,54 @@
+/* pannello */
+.np-panel {
+  width: 360px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+/* titolo */
+.np-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* form layout */
+.np-form {
+  display: grid;
+  gap: 12px;
+}
+
+.np-field {
+  display: grid;
+  gap: 6px;
+}
+
+.np-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.np-input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  outline: none;
+  background: #fff;
+}
+
+.np-input:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+}
+
+.np-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}

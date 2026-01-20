@@ -2,7 +2,7 @@ import { Progetto } from "./progetto/progetto.model";
 
 export const PROGETTI_DUMMY: Progetto[] = [
   {
-    Attività: 'Sviluppo Portale Web',
+    Attivita: 'Sviluppo Portale Web',
     Descrizione: 'Realizzazione portale web aziendale responsive',
     Status: 'In Corso',
     Cliente: 'ACME S.p.A.',
@@ -13,7 +13,7 @@ export const PROGETTI_DUMMY: Progetto[] = [
     winPercentual: 80,
   },
   {
-    Attività: 'App Mobile',
+    Attivita: 'App Mobile',
     Descrizione: 'Sviluppo app mobile iOS e Android',
     Status: 'Bozza',
     Cliente: 'Beta Group',
@@ -24,7 +24,7 @@ export const PROGETTI_DUMMY: Progetto[] = [
     winPercentual: 55,
   },
   {
-    Attività: 'Migrazione Cloud',
+    Attivita: 'Migrazione Cloud',
     Descrizione: 'Migrazione infrastruttura su cloud AWS',
     Status: 'Completato',
     Cliente: 'Omega Corp',
@@ -35,7 +35,7 @@ export const PROGETTI_DUMMY: Progetto[] = [
     winPercentual: 100,
   },
   {
-    Attività: 'CRM Custom',
+    Attivita: 'CRM Custom',
     Descrizione: 'Personalizzazione CRM per rete vendita',
     Status: 'In Attesa',
     Cliente: 'Nova Retail',
@@ -46,7 +46,7 @@ export const PROGETTI_DUMMY: Progetto[] = [
     winPercentual: 40,
   },
   {
-    Attività: 'Data Analysis',
+    Attivita: 'Data Analysis',
     Descrizione: 'Analisi dati e dashboard KPI',
     Status: 'In Corso',
     Cliente: 'FinCorp',

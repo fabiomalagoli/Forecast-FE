@@ -1,5 +1,8 @@
+@if(isProgettoInAggiunta){
+  <app-new-progetto (cancel)="annullaAggiuntaProgetto()" (created)="aggiungiProgetto($event)"/>
+}
 <header>
-  <button appButton>
+  <button appButton (click)="onAggiuntaProgetto()">
     Aggiungi Progetto
     <span class="icon">+</span>
   </button>
@@ -15,6 +18,7 @@
 </app-table-row>
 
 <!-- Righe -->
-@for (progetto of dummyProgetti; track dummyProgetti.length) {
+@for (progetto of dummyProgetti; track $index) {
   <app-progetto [progetto]="progetto" [columns]="columns"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
 }
+<p>Numero progetti: {{ dummyProgetti.length }}</p> <!-- for debugging purposes -->

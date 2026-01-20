@@ -1,5 +1,5 @@
 export interface Progetto{
-    Attività: string,
+    Attivita: string,
     Descrizione: string,
     Status: string,
     Cliente: string,
