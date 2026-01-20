@@ -1,8 +1,9 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { AppButton } from '../../shared/button/button';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [],
+  imports: [AppButton],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })

@@ -1,14 +1,20 @@
 <div>
-  <button (click)="onBtnClick('Home')">
-    <img src="home-icon.svg" alt="Home" />
+  <button appButton (click)="onBtnClick('Home')">
+    <span class="icon">
+      <img src="home-icon.svg" alt="Home" />
+    </span>
     Home
   </button>
-  <button (click)="onBtnClick('Clienti')">
-    <img src="customer-icon.svg" alt="Elenco1" />
+  <button appButton (click)="onBtnClick('Clienti')">
+    <span class="icon">
+      <img src="customer-icon.svg" alt="Elenco1" />
+    </span>
     Clienti
   </button>
-  <button (click)="onBtnClick('Progetti')">
-    <img src="project-icon.svg" alt="Elenco2" />
+  <button appButton (click)="onBtnClick('Progetti')">
+    <span class="icon">
+      <img src="project-icon.svg" alt="Elenco2" />
+    </span>
     Progetti
   </button>
 </div>
