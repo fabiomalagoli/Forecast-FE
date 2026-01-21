@@ -1,5 +1,4 @@
 .griglia {
-  border: 3px solid red;
   margin: 5px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

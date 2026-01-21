@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CardHome } from './card-home/card-home';
+import { GridService } from './grid.service';
 
 @Component({
   selector: 'app-grid',
@@ -7,4 +8,8 @@ import { CardHome } from './card-home/card-home';
   templateUrl: './grid.html',
   styleUrl: './grid.css',
 })
-export class Grid {}
+export class Grid {
+  private gridService = inject(GridService);
+
+  grid = this.gridService.allCards;
+}

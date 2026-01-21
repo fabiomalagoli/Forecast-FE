@@ -1,6 +1,5 @@
 <div class="griglia">
-  <app-card-home></app-card-home>
-  <app-card-home></app-card-home>
-  <app-card-home></app-card-home>
-  <app-card-home></app-card-home>
+  @for (card of grid(); track card.cliente) {
+    <app-card-home [card]="card"></app-card-home>
+  }
 </div>

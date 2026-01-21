@@ -1,4 +1,47 @@
-.cella {
-  border: 3px solid green;
+.card {
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 5px;
   margin: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: #c36500;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  margin: 0;
+}
+
+h3 {
+  margin: 8px 0 0 0 0;
+  color: #757575;
+  font-weight: normal;
+}
+
+.col-dx {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  padding: 0 5px;
+}
+
+.info-g {
+  display: flex;
+  flex-direction: column;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+p {
+  margin: 0;
+  font-size: 18px;
+  color: #5c5c5c;
 }
