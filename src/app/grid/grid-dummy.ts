@@ -42,4 +42,25 @@ export const DUMMY_CARDS: CardModel[] = [
     persone: 6,
     totale: 45000,
   },
+  {
+    cliente: 'Alfa Retail',
+    progetto: 'Sistema POS',
+    stato: 'in attesa',
+    persone: 4,
+    totale: 18000,
+  },
+  {
+    cliente: 'Blue Energy',
+    progetto: 'Portale clienti',
+    stato: 'concluso',
+    persone: 7,
+    totale: 62000,
+  },
+  {
+    cliente: 'NextGen Labs',
+    progetto: 'Prototipo AI',
+    stato: 'in corso',
+    persone: 3,
+    totale: 27000,
+  },
 ];
