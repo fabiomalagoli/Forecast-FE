@@ -1,6 +1,11 @@
-<p>
-    <ng-content />
-</p>
-<p select="error">
-    <ng-content />
-</p>
+<div class="field">
+  <p class="label">
+    <ng-content select="label"></ng-content>
+  </p>
+
+  <p class="control">
+    <ng-content select="input, textarea"></ng-content>
+  </p>
+</div>
+
+<!-- aggiunte classi per maggior controllo del contenuto proiettato nel template del componente padre new-progetto -->

@@ -1,28 +1,47 @@
 <div class="backdrop" (click)="onCancel()"></div>
 
 <dialog open>
-  <form #f="ngForm" (ngSubmit)="submit(f)">
-    @for (header of headers; track header.key; let i = $index) {
+  <div class="np-panel">
+    <h2 class="np-title">Nuovo progetto</h2>
 
-      <app-text-input>
-        <label [attr.for]="toId(header.key, i)">{{ header.label }}</label>
+    <form
+      class="np-form np-form--grid"
+      #f="ngForm"
+      (ngSubmit)="submit(f)"
+    >
+      @for (header of headers; track header.key; let i = $index) {
+        <div class="np-field np-field--grid">
+          <app-text-input>
+            <label
+              class="np-label"
+              [attr.for]="toId(header.key, i)"
+            >
+              {{ header.label }}
+            </label>
 
-        <input
-          type="text"
-          [attr.id]="toId(header.key, i)"
-          [name]="header.key"
-          [(ngModel)]="formData[header.key]"
-          required
-        />
+            <input
+              class="np-input"
+              type="text"
+              [attr.id]="toId(header.key, i)"
+              [name]="header.key"
+              [(ngModel)]="formData[header.key]"
+              required
+            />
+          </app-text-input>
 
-        @if (f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)) {
-          <p class="error">Campo obbligatorio</p>
-        }
-      </app-text-input>
+          @if (
+            f.controls[header.key]?.invalid &&
+            (f.controls[header.key]?.touched || f.submitted)
+          ) {
+            <p class="error">*campo obbligatorio</p>
+          }
+        </div>
+      }
 
-    }
-
-    <button type="submit">Crea progetto</button>
-    <button type="button" (click)="onCancel()">Annulla</button>
-  </form>
+      <div class="actions">
+        <button type="submit">Crea progetto</button>
+        <button type="button" (click)="onCancel()">Annulla</button>
+      </div>
+    </form>
+  </div>
 </dialog>
