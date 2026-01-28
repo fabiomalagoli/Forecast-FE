@@ -1,3 +1,13 @@
+@if(isClienteInAggiunta){
+  <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)"/>
+}
+<header>
+  <button appButton (click)="onAggiuntaCliente()">
+    Aggiungi Cliente
+    <span class="icon">+</span>
+  </button>
+</header>
+
 <!-- Header -->
 <app-table-row [cols]="clientiColsCount">
   @for (c of columns; track c.header) {

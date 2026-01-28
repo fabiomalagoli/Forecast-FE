@@ -1,0 +1,21 @@
+:host {
+  display: contents;
+  min-width: 0;
+}
+
+.tbl-cell {
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+.tbl-cell--right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tbl-cell--center {
+  text-align: center;
+}

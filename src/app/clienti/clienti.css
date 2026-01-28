@@ -1,0 +1,10 @@
+.tbl-header {
+  padding: 0.6rem 0.8rem;
+  white-space: nowrap;
+}
+.progetti-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
