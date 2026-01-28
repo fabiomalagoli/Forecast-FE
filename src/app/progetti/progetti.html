@@ -18,7 +18,7 @@
 </app-table-row>
 
 <!-- Righe -->
-@for (progetto of dummyProgetti; track $index) {
+@for (progetto of Progetti(); track progetto.id) {
   <app-progetto [progetto]="progetto" [columns]="columns"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
 }
-<p>Numero progetti: {{ dummyProgetti.length }}</p> <!-- for debugging purposes -->
+<p>Numero progetti: {{ Progetti()?.length }}</p> <!-- for debugging purposes -->

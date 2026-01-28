@@ -1,10 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Progetto } from '../../progetti/progetto/progetto.model';
 import { TextInputComponent } from "../../shared/text-input/text-input";
-import { Progetti } from '../progetti';
-import { Column } from '../../shared/table-row/table.types';
 import { PROGETTO_HEADERS } from '../progetto/progetto.headers';
 
 @Component({
@@ -47,7 +45,7 @@ export class NewProgettoComponent {
       .replace(/\s+/g, '-')                             
       .replace(/[^a-zA-Z0-9_-]/g, '')                   
       .toLowerCase();
-  } //funzione per evitare probelmi di caratteri speciali e maiuscole eventuali
+  } //funzione per evitare problemi di caratteri speciali e maiuscole eventuali
 
 
 }
