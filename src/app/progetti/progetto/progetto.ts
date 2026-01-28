@@ -2,12 +2,12 @@ import { Component, Input } from '@angular/core';
 import { Progetto } from './progetto.model';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
-import { PROGETTO_HEADERS } from './progetto.headers';
+import { AppButton } from '../../shared/button/button';
 
 
 @Component({
   selector: 'app-progetto',
-  imports: [TableRowComponent],
+  imports: [TableRowComponent, AppButton],
   templateUrl: './progetto.html',
   styleUrl: './progetto.css',
   host: {
@@ -22,7 +22,7 @@ export class ProgettoComponent {
   @Input({required: true}) columns!: Column<Progetto>[];
 
   get colsCount(): number {
-      return this.columns.length;
+      return this.columns.length + 1;
   }
   
 

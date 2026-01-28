@@ -16,6 +16,7 @@ import { PROGETTO_HEADERS } from '../progetto/progetto.headers';
 export class NewProgettoComponent {
 
   readonly headers = (Object.entries(PROGETTO_HEADERS) as [keyof Progetto, string][])
+  .filter(([key]) => key !== 'id')
   .map(([key, label]) => ({ key, label }));
 
   created = output<Progetto>();
@@ -29,6 +30,15 @@ export class NewProgettoComponent {
       form.control.markAllAsTouched();
       return;
     }
+
+    const winProbability = Number(this.formData.winProbability);
+    const totalDays = Number(this.formData.totalDays);
+
+    if(isNaN(winProbability) || isNaN(totalDays)) {
+      console.error('I campi winProbability e totalDays devono essere numeri.');
+      return;
+    }
+
     const progettoCreato = { ...this.formData } as Progetto;
     this.created.emit(progettoCreato);
     form.resetForm();
@@ -37,6 +47,10 @@ export class NewProgettoComponent {
 
   onCancel() {
     this.cancel.emit();
+  }
+
+  isNumericField(key: string): boolean {
+    return key === 'winProbability' || key === 'totalDays';
   }
 
   toId(key: string, i: number): string {

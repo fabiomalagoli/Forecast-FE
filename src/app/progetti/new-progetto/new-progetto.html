@@ -26,6 +26,7 @@
               [name]="header.key"
               [(ngModel)]="formData[header.key]"
               required
+              [pattern]="isNumericField(header.key) ? '^[0-9]+$' : ''"
             />
           </app-text-input>
 
@@ -33,13 +34,20 @@
             f.controls[header.key]?.invalid &&
             (f.controls[header.key]?.touched || f.submitted)
           ) {
-            <p class="error">*campo obbligatorio</p>
+            <p class="error">
+              @if(f.controls[header.key]?.errors?.['required']){
+                *campo obbligatorio
+              }
+              @if(f.controls[header.key]?.errors?.['pattern']){
+                *sono accettati solo numeri
+              }
+            </p>
           }
         </div>
       }
 
       <div class="actions">
-        <button type="submit">Crea progetto</button>
+        <button type="submit" [disabled]="f.invalid">Crea progetto</button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
     </form>

@@ -86,6 +86,34 @@ export class Progetti {
     this.isProgettoInAggiunta = false;
   }
 
+  aggiornaProgetti(){
+    this.isFetching.set(true);
+    const timeoutId = setTimeout(() => {
+      const subscription = this.requestsService.caricaProgettiDisponibili()
+        .subscribe({
+          next: (progetti) => {
+            console.log('Progetti caricati:', progetti); // Log per verificare i dati
+            this.Progetti.set(progetti);
+          },
+          error: (error: Error) => {
+            this.error.set(error.message);
+          },
+          complete: () => {
+            this.isFetching.set(false);
+          }
+        });
+
+      this.destroyRef.onDestroy(() => {
+        subscription.unsubscribe();
+      });
+    }, 3000); // Ritardo di 3 secondi prima della richiesta
+
+    this.destroyRef.onDestroy(() => {
+      clearTimeout(timeoutId);
+    });
+  }
 }
+
+
 
 

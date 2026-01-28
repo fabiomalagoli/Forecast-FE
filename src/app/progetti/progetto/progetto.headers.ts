@@ -1,5 +1,5 @@
 export const PROGETTO_HEADERS = {
-  id: 'ID', // Add this line
+  id: 'ID', 
   activity: 'Attività',
   description: 'Descrizione',
   status: 'Stato',

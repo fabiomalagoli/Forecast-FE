@@ -1,20 +1,29 @@
+@if(isFetching()){
+  <h2>Acquisendo i progetti dal database...</h2>
+}
 @if(isProgettoInAggiunta){
   <app-new-progetto (cancel)="annullaAggiuntaProgetto()" (created)="aggiungiProgetto($event)"/>
 }
-<header>
+<header class="actions">
   <button appButton (click)="onAggiuntaProgetto()">
     Aggiungi Progetto
     <span class="icon">+</span>
   </button>
+  <button appButton (click)="aggiornaProgetti()">
+    Aggiorna
+  </button>
 </header>
 
 <!-- Header -->
-<app-table-row [cols]="progettiColsCount">
+<app-table-row [cols]="progettiColsCount + 1">
   @for (c of columns; track c.header) {
     <div class="tbl-header">
       <strong>{{ c.header }}</strong> <!-- inserimento dei titoli dei valori per numero di tipo di valori -->
     </div>
   }
+  <div class="tbl-header tbl-header--actions">
+    <strong>Azioni</strong>
+  </div>
 </app-table-row>
 
 <!-- Righe -->

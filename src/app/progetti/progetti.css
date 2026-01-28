@@ -2,9 +2,16 @@
   padding: 0.6rem 0.8rem;
   white-space: nowrap;
 }
+.tbl-header--actions {
+  text-align: right;
+}
 .progetti-layout {
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 24px;
   align-items: start;
+}
+.actions {
+  display: flex;
+  gap: 10px;
 }
