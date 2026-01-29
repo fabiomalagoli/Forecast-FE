@@ -1,3 +1,6 @@
+@if(isFetching()){
+  <h2>Acquisendo i clienti dal database...</h2>
+}
 @if (isClienteInAggiunta) {
   <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)" />
 }
@@ -9,20 +12,20 @@
 </header>
 
 <!-- Header -->
-<app-table-row [cols]="clientiColsCount">
+<app-table-row [cols]="clientiColsCount + 1">
   @for (c of columns; track c.header) {
     <div class="tbl-header">
       <!-- inserimento dei titoli dei valori per numero di tipo di valori -->
       <strong>{{ c.header }}</strong>
     </div>
   }
-  <!-- <div class="tbl-header tbl-header--actions">
+  <div class="tbl-header tbl-header--actions">
     <strong>Azioni</strong>
-  </div> -->
+  </div>
 </app-table-row>
 
 <!-- Righe -->
-@for (cliente of dummyClienti; track $index) {
+@for (cliente of Clienti(); track cliente.id) {
   <!-- inserimento dei dati per n. clienti presenti distribuiti sulle colonne -->
   <app-cliente [cliente]="cliente" [columns]="columns"></app-cliente>
 }

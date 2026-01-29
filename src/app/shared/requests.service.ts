@@ -16,7 +16,11 @@ export class RequestsService {
 
   private Progetti = signal<Progetto[]>([]);
 
+  private Clienti = signal<ModelloCliente[]>([]);
+
   progettiCaricati = this.Progetti.asReadonly();
+
+  clientiCaricati = this.Clienti.asReadonly();
 
   caricaProgettiDisponibili() {
     return this.fetchProgetti(
@@ -25,6 +29,17 @@ export class RequestsService {
     ).pipe(
       tap({
         next: (progetti) => this.Progetti.set(progetti),
+      }),
+    );
+  }
+
+  caricaClientiDisponibili() {
+    return this.fetchClienti(
+      `${environment.apiUrl}/customers`,
+      'Qualcosa è andato storto. Riprova più tardi.',
+    ).pipe(
+      tap({
+        next: (clienti) => this.Clienti.set(clienti),
       }),
     );
   }
@@ -88,6 +103,26 @@ export class RequestsService {
           pm: project.pm || 'N/A', // Mappa il PM
           totalDays: project.totalDays,
           winProbability: project.winProbability ? project.winProbability * 100 : undefined, // Converti in percentuale
+        })),
+      ),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error(errorMessage));
+      }),
+    );
+  }
+
+  private fetchClienti(url: string, errorMessage: string) {
+    return this.httpClient.get<any[]>(url).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend:', resData); // Log per verificare la risposta
+      }),
+      map((customers) =>
+        customers.map((customer) => ({
+          id: customer.id,
+          name: customer.name,
+          fullAddress: customer.fullAddress,
+          projects: customer.projects ? customer.projects.length : 0,
         })),
       ),
       catchError((error) => {
