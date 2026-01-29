@@ -5,6 +5,7 @@ import { ModelloCliente } from '../clienti/cliente/cliente.model';
 import { HttpClient } from '@angular/common/http';
 import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
+import { CardModel } from '../grid/card-home/card-home.model';
 
 @Injectable({
   providedIn: 'root',
@@ -18,9 +19,13 @@ export class RequestsService {
 
   private Clienti = signal<ModelloCliente[]>([]);
 
+  private Cards = signal<CardModel[]>([]);
+
   progettiCaricati = this.Progetti.asReadonly();
 
   clientiCaricati = this.Clienti.asReadonly();
+
+  cardsCaricate = this.Cards.asReadonly();
 
   caricaProgettiDisponibili() {
     return this.fetchProgetti(
@@ -58,6 +63,26 @@ export class RequestsService {
       .pipe(
         catchError((error) => {
           this.Progetti.set(progettiPrecedenti);
+          this.errorService.showError('Inserimento fallito.');
+          return throwError(() => new Error('Inserimento fallito.'));
+        }),
+      );
+  }
+
+  aggiungiNuovoCliente(cliente: ModelloCliente) {
+    const clientiPrecedenti = this.Clienti();
+
+    if (!clientiPrecedenti.some((c) => c.id === cliente.id)) {
+      this.Clienti.set([...clientiPrecedenti, cliente]);
+    }
+
+    return this.httpClient
+      .put(`${environment.apiUrl}/customers/${cliente.id}`, {
+        customerId: cliente.id,
+      })
+      .pipe(
+        catchError((error) => {
+          this.Clienti.set(clientiPrecedenti);
           this.errorService.showError('Inserimento fallito.');
           return throwError(() => new Error('Inserimento fallito.'));
         }),
@@ -141,7 +166,35 @@ export class RequestsService {
 
   //GET PER HOME (grid component)
 
-  //getSummary() {
-  //  return this.httpClient.get<[]>('https://localhost:5001/api/projects/summary');
-  //}
+  private fetchCards(url: string, errorMessage: string) {
+    return this.httpClient.get<any[]>(url).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend:', resData);
+      }),
+      map((summary) =>
+        summary.map((card) => ({
+          customer: card.customer,
+          activity: card.activity,
+          projectStatus: card.projectStatus,
+          employeeCount: card.assignmentSummary?.employeesCount,
+          totalBudget: card.totalBudget,
+        })),
+      ),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error(errorMessage));
+      }),
+    );
+  }
+
+  getCards() {
+    return this.fetchCards(
+      `${environment.apiUrl}/projects/summary`,
+      'Qualcosa è andato storto. Riprova più tardi.',
+    ).pipe(
+      tap({
+        next: (cards) => this.Cards.set(cards),
+      }),
+    );
+  }
 }

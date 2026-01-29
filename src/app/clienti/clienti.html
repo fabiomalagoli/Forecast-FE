@@ -4,10 +4,13 @@
 @if (isClienteInAggiunta) {
   <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)" />
 }
-<header>
+<header class="actions">
   <button appButton (click)="onAggiuntaCliente()">
     Aggiungi Cliente
     <span class="icon">+</span>
+  </button>
+  <button appButton (click)="aggiornaClienti()">
+    Aggiorna
   </button>
 </header>
 

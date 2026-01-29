@@ -1,7 +1,6 @@
 import { Component, output } from '@angular/core';
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { CLIENTE_HEADERS } from '../cliente/cliente.headers';
-import { Cliente } from '../cliente/cliente';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ModelloCliente } from '../cliente/cliente.model';
 
@@ -12,9 +11,9 @@ import { ModelloCliente } from '../cliente/cliente.model';
   styleUrl: './new-cliente.css',
 })
 export class NewCliente {
-  readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof ModelloCliente, string][]).map(
-    ([key, label]) => ({ key, label }),
-  );
+  readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof ModelloCliente, string][])
+    .filter(([key]) => key !== 'id')
+    .map(([key, label]) => ({ key, label }));
   created = output<ModelloCliente>();
   cancel = output<void>();
   formData: any = {};
@@ -24,6 +23,13 @@ export class NewCliente {
       form.control.markAllAsTouched();
       return;
     }
+
+    // const totalDays = Number(this.formData.totalDays);
+    // if (isNaN(totalDays)) {
+    //   console.error('Il campo totalDays deve essere un numero.');
+    //   return;
+    // }
+
     const clienteCreato = { ...this.formData } as ModelloCliente;
     this.created.emit(clienteCreato);
     form.resetForm();
@@ -42,5 +48,9 @@ export class NewCliente {
       .replace(/\s+/g, '-')
       .replace(/[^a-zA-Z0-9_-]/g, '')
       .toLowerCase();
+  }
+
+  isNumericField(key: string): boolean {
+    return key === 'projects';
   }
 }

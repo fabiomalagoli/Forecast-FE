@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, Input, input } from '@angular/core';
 import { CardModel } from './card-home.model';
 
 @Component({
@@ -8,5 +8,5 @@ import { CardModel } from './card-home.model';
   styleUrl: './card-home.css',
 })
 export class CardHome {
-  card = input.required<CardModel>();
+  @Input() cards!: CardModel;
 }

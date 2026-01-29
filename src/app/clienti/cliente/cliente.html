@@ -1,3 +1,4 @@
+<!-- elemento Cliente, equivalente ad una riga -->
 <app-table-row [cols]="colsCount">
   @for (c of columns; track c.header) {
     <div
@@ -8,4 +9,8 @@
       {{ c.value(cliente) }}
     </div>
   }
-</app-table-row> <!-- elemento Cliente, equivalente ad una riga -->
+  <div class="tbl-cell tbl-cell--actions">
+    <button appButton class="btn btn-primary">Visualizza</button>
+    <button appButton class="btn btn-secondary">Modifica</button>
+  </div>
+</app-table-row>
