@@ -1,6 +1,5 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { TableRowComponent } from '../shared/table-row/table-row';
-import { CLIENTI_DUMMY } from './clienti-dummy';
 import { CLIENTE_HEADERS } from './cliente/cliente.headers';
 import { Cliente } from './cliente/cliente';
 import { Column } from '../shared/table-row/table.types';
@@ -17,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
   styleUrl: './clienti.css',
 })
 export class Clienti {
-  dummyClienti = CLIENTI_DUMMY;
+  //dummyClienti = CLIENTI_DUMMY;
   Clienti = signal<ModelloCliente[] | undefined>(undefined);
   isFetching = signal(false);
   error = signal('');
@@ -54,23 +53,6 @@ export class Clienti {
     });
   }
 
-  get clientiColsCount(): number {
-    return this.columns.length;
-  }
-
-  onAggiuntaCliente() {
-    this.isClienteInAggiunta = true;
-  }
-
-  annullaAggiuntaCliente() {
-    this.isClienteInAggiunta = false;
-  }
-
-  aggiungiCliente(newCliente: ModelloCliente) {
-    this.dummyClienti = [...this.dummyClienti, newCliente];
-    this.isClienteInAggiunta = false;
-  }
-
   aggiornaClienti() {
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
@@ -95,6 +77,25 @@ export class Clienti {
     this.destroyRef.onDestroy(() => {
       clearTimeout(timeoutId);
     });
+  }
+
+  get clientiColsCount(): number {
+    return this.columns.length;
+  }
+
+  onAggiuntaCliente() {
+    this.isClienteInAggiunta = true;
+  }
+
+  annullaAggiuntaCliente() {
+    this.isClienteInAggiunta = false;
+  }
+
+  aggiungiCliente(newCliente: ModelloCliente) {
+    const newClienteWithId = { ...newCliente, id: this.generateId() }; // Genera un ID univoco
+    const clientiCorrenti = this.Clienti();
+    this.Clienti.set([...(clientiCorrenti || []), newClienteWithId]);
+    this.isClienteInAggiunta = false;
   }
 
   private generateId(): string {
