@@ -1,5 +1,9 @@
-<div class="griglia">
-  @for (card of grid(); track card.customer) {
-    <app-card-home [card]="card"></app-card-home>
-  }
-</div>
+@if (Cards()) {
+  <div class="griglia">
+    @for (card of Cards(); track $index) {
+      <app-card-home [cards]="card"></app-card-home>
+    }
+  </div>
+} @else {
+  <p>Caricamento in corso...</p>
+}

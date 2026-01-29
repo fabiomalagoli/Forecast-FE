@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CardHome } from './card-home/card-home';
-import { GridService } from './grid.service';
+import { RequestsService } from '../shared/requests.service';
+import { CardModel } from './card-home/card-home.model';
 
 @Component({
   selector: 'app-grid',
@@ -9,7 +10,30 @@ import { GridService } from './grid.service';
   styleUrl: './grid.css',
 })
 export class Grid {
-  private gridService = inject(GridService);
+  Cards = signal<CardModel[] | undefined>(undefined);
+  isFetching = signal(false);
+  error = signal('');
 
-  grid = this.gridService.allCards;
+  private requestService = inject(RequestsService);
+  private destroy = inject(DestroyRef);
+
+  isGettingCard = false;
+  ngOnInit() {
+    this.isFetching.set(true);
+    const sub = this.requestService.getCards().subscribe({
+      next: (cards: CardModel[]) => {
+        this.Cards.set(cards);
+        console.log('Cards caricate: ', cards);
+      },
+      error: (error: Error) => {
+        this.error.set(error.message);
+      },
+      complete: () => {
+        this.isFetching.set(false);
+      },
+    });
+    this.destroy.onDestroy(() => {
+      sub.unsubscribe();
+    });
+  }
 }

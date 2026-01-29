@@ -1,13 +1,15 @@
 import { CardModel } from './card-home/card-home.model';
 export const DUMMY_CARDS: CardModel[] = [
+  /*
   {
+    id: '1',
     customer: 'ACME S.p.A.',
     activity: 'Sito e-commerce',
     projectStatus: 'in corso',
-    employeeCount: '5',
+    assignmentSummary.employeesCount: '5',
     totalBudget: '32000',
-  },
-  /*   {
+  },  
+  {
     cliente: 'Beta Consulting',
     progetto: 'App mobile',
     stato: 'in attesa',
