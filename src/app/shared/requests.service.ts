@@ -69,6 +69,26 @@ export class RequestsService {
       );
   }
 
+  aggiungiNuovoCliente(cliente: ModelloCliente) {
+    const clientiPrecedenti = this.Clienti();
+
+    if (!clientiPrecedenti.some((c) => c.id === cliente.id)) {
+      this.Clienti.set([...clientiPrecedenti, cliente]);
+    }
+
+    return this.httpClient
+      .put(`${environment.apiUrl}/customers/${cliente.id}`, {
+        customerId: cliente.id,
+      })
+      .pipe(
+        catchError((error) => {
+          this.Clienti.set(clientiPrecedenti);
+          this.errorService.showError('Inserimento fallito.');
+          return throwError(() => new Error('Inserimento fallito.'));
+        }),
+      );
+  }
+
   // removeProgetto(progetto: Progetto) {
 
   //     const progettiPrecedenti = this.Progetti();

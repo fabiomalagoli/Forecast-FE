@@ -2,10 +2,11 @@ import { Component, Input } from '@angular/core';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
 import { ModelloCliente } from './cliente.model';
+import { AppButton } from '../../shared/button/button';
 
 @Component({
   selector: 'app-cliente',
-  imports: [TableRowComponent],
+  imports: [AppButton, TableRowComponent],
   templateUrl: './cliente.html',
   styleUrl: './cliente.css',
   host: {
@@ -19,6 +20,6 @@ export class Cliente {
   @Input({required: true}) columns!: Column<ModelloCliente>[];
 
   get colsCount(): number {
-    return this.columns.length;
+    return this.columns.length + 1;
   }
 }
