@@ -1,5 +1,5 @@
-@if(isClienteInAggiunta){
-  <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)"/>
+@if (isClienteInAggiunta) {
+  <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)" />
 }
 <header>
   <button appButton (click)="onAggiuntaCliente()">
@@ -12,12 +12,17 @@
 <app-table-row [cols]="clientiColsCount">
   @for (c of columns; track c.header) {
     <div class="tbl-header">
-      <strong>{{ c.header }}</strong> <!-- inserimento dei titoli dei valori per numero di tipo di valori -->
+      <!-- inserimento dei titoli dei valori per numero di tipo di valori -->
+      <strong>{{ c.header }}</strong>
     </div>
   }
+  <!-- <div class="tbl-header tbl-header--actions">
+    <strong>Azioni</strong>
+  </div> -->
 </app-table-row>
 
 <!-- Righe -->
 @for (cliente of dummyClienti; track $index) {
-  <app-cliente [cliente]="cliente" [columns]="columns"></app-cliente> <!-- inserimento dei dati per n. clienti presenti distribuiti sulle colonne -->
+  <!-- inserimento dei dati per n. clienti presenti distribuiti sulle colonne -->
+  <app-cliente [cliente]="cliente" [columns]="columns"></app-cliente>
 }

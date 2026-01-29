@@ -6,10 +6,11 @@ import { Cliente } from './cliente/cliente';
 import { Column } from '../shared/table-row/table.types';
 import { ModelloCliente } from './cliente/cliente.model';
 import { NewCliente } from './new-cliente/new-cliente';
+import { AppButton } from '../shared/button/button';
 
 @Component({
   selector: 'app-clienti',
-  imports: [TableRowComponent, Cliente, NewCliente],
+  imports: [AppButton, TableRowComponent, Cliente, NewCliente],
   templateUrl: './clienti.html',
   styleUrl: './clienti.css',
 })
