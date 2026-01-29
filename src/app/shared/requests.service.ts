@@ -96,13 +96,20 @@ export class RequestsService {
           id: project.id,
           activity: project.activity,
           description: project.description,
-          status: project.projectStatus || 'N/A', // Mappa lo stato
-          customer: project.customer || 'N/A', // Mappa il cliente
           head: project.head,
-          company: project.company || 'N/A', // Mappa l'azienda
-          pm: project.pm || 'N/A', // Mappa il PM
+          company: project.company || 'N/A',
+          pm: project.pm || 'N/A',
+          startDate: project.startDate || '',
+          endDate: project.endDate || '',
           totalDays: project.totalDays,
-          winProbability: project.winProbability ? project.winProbability * 100 : undefined, // Converti in percentuale
+          winProbability: project.winProbability
+            ? project.winProbability * 100
+            : 0,
+          projectEmployees: project.projectEmployees || [],
+          projectRoles: project.projectRoles || [],
+          projectStatus: project.projectStatus || 'Initiation',
+          customer: project.customer || 'N/A',
+          totalBudget: project.totalBudget || 0,
         })),
       ),
       catchError((error) => {

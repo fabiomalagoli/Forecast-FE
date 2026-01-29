@@ -6,6 +6,7 @@ import { Column } from '../shared/table-row/table.types';
 import { ProgettoComponent } from "./progetto/progetto";
 import { AppButton } from "../shared/button/button";
 import { PROGETTO_HEADERS } from './progetto/progetto.headers';
+import { PROGETTO_COMPLETO_HEADERS } from './progetto/progetto-completo.headers';
 import { NewProgettoComponent } from "./new-progetto/new-progetto";
 import { v4 as uuidv4 } from 'uuid';
 import { RequestsService } from '../shared/requests.service';
@@ -31,7 +32,7 @@ export class Progetti {
 
   // dummyProgetti = PROGETTI_DUMMY;
 
-  readonly headersProgetti: Record<keyof Progetto, string> = PROGETTO_HEADERS;  // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
+  readonly headersProgetti: Record<keyof Progetto, string> = PROGETTO_COMPLETO_HEADERS;  // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
 
   ngOnInit() {
     this.isFetching.set(true);
@@ -57,7 +58,7 @@ export class Progetti {
 
   columns: Column<Progetto>[] =
     (Object.keys(this.headersProgetti) as (keyof Progetto)[])
-      .filter(key => key !== 'id') // Escludi il campo 'id'
+      .filter(key => key !== 'id' && key in PROGETTO_HEADERS) // Escludi il campo 'id' e tieni solo quelli visibili
       .map(key => ({
         header: this.headersProgetti[key],
         value: p => p[key] as any,

@@ -1,12 +1,24 @@
+import { ProjectRole } from "./project-role.model";
+
 export interface Progetto {
-  id: string; // Guid dal backend
-  activity: string; // Activity dal backend
-  description?: string; // Description dal backend
-  status: string; // Stato del progetto
-  customer: string; // Cliente
-  head?: string; // Referente
-  company: string; // Azienda
-  pm: string; // Project Manager
-  totalDays?: number; // Giorni totali
-  winProbability?: number; // Win %
+  id: string;
+  description: string;
+  head: string;
+  company: string;
+  pm: string;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  winProbability: number;
+  projectEmployees: string[]; // array di ID (vuoto nel JSON)
+  projectRoles: ProjectRole[];
+  activity: string;
+  projectStatus:
+    | 'Initiation'
+    | 'Planning'
+    | 'Execution'
+    | 'Monitoring'
+    | 'Closing';
+  customer: string;
+  totalBudget: number;
 }

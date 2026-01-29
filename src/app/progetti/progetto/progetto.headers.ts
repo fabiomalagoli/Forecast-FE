@@ -2,7 +2,7 @@ export const PROGETTO_HEADERS = {
   id: 'ID', 
   activity: 'Attività',
   description: 'Descrizione',
-  status: 'Stato',
+  projectStatus: 'Stato',
   customer: 'Cliente',
   head: 'Referente',
   company: 'Azienda',

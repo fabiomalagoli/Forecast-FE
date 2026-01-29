@@ -1,0 +1,17 @@
+export const PROGETTO_COMPLETO_HEADERS = {
+  id: 'ID',
+  description: 'Descrizione',
+  head: 'Referente',
+  company: 'Azienda',
+  pm: 'Project Manager',
+  startDate: 'Data inizio',
+  endDate: 'Data fine',
+  totalDays: 'Giorni',
+  winProbability: 'Win %',
+  projectEmployees: 'Risorse',
+  projectRoles: 'Ruoli',
+  activity: 'Attivita',
+  projectStatus: 'Stato progetto',
+  customer: 'Cliente',
+  totalBudget: 'Budget totale',
+};
