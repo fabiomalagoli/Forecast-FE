@@ -1,13 +1,14 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, input, Input, output, signal } from '@angular/core';
 import { Progetto } from './progetto.model';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
 import { AppButton } from '../../shared/button/button';
+import { Router, RouterModule } from '@angular/router';
 
 
 @Component({
   selector: 'app-progetto',
-  imports: [TableRowComponent, AppButton],
+  imports: [TableRowComponent, AppButton, RouterModule],
   templateUrl: './progetto.html',
   styleUrl: './progetto.css',
   host: {
@@ -17,14 +18,20 @@ import { AppButton } from '../../shared/button/button';
 })
 export class ProgettoComponent {
 
-  @Input({required: true}) progetto!: Progetto;
   @Input() align: 'left' | 'center' | 'right' = 'left' //allineamento di default a sinistra
   @Input({required: true}) columns!: Column<Progetto>[];
+  progetto = input.required<Progetto>();
+  edit = output<Progetto>();
+
+  // Router usato per aprire il dettaglio del progetto
+  private router = inject(Router);
 
   get colsCount(): number {
       return this.columns.length + 1;
   }
-  
 
+  apriModifica(p: Progetto) {
+    this.edit.emit(p);
+  }
 
 }

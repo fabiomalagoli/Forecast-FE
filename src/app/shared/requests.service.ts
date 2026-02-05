@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { EMPTY, catchError, map, tap, throwError } from 'rxjs';
+import { EMPTY, catchError, map, tap, throwError, of } from 'rxjs';
 import { Progetto } from '../progetti/progetto/progetto.model';
 import { ModelloCliente } from '../clienti/cliente/cliente.model';
 import { HttpClient } from '@angular/common/http';
@@ -38,6 +38,28 @@ export class RequestsService {
     );
   }
 
+  caricaProgettoById(id: string) {
+  const cached = this.Progetti().find(p => p.id === id);
+  if (cached) {
+    return of(cached);
+  }
+
+  return this.fetchProgettoById(
+    `${environment.apiUrl}/projects/${encodeURIComponent(id)}`,
+    'Qualcosa è andato storto. Riprova più tardi.',
+  ).pipe(
+    tap({
+      next: (p) => {
+        const prev = this.Progetti();
+        const next = prev.some(x => x.id === p.id)
+          ? prev.map(x => (x.id === p.id ? p : x))
+          : [...prev, p];
+        this.Progetti.set(next);
+      },
+    }),
+  );
+}
+
   caricaClientiDisponibili() {
     return this.fetchClienti(
       `${environment.apiUrl}/customers`,
@@ -49,6 +71,21 @@ export class RequestsService {
     );
   }
 
+  aggiornaProgetto(progetto: Progetto) {
+    const payload = this.toProjectPayload(progetto);
+
+    return this.httpClient.put(`${environment.apiUrl}/projects/${progetto.id}`, payload).pipe(
+      tap(() => {
+        // Aggiorna il segnale locale per riflettere le modifiche immediatamente nella tabella
+        this.Progetti.update(prev => prev.map(p => p.id === progetto.id ? progetto : p));
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiornamento.');
+        return throwError(() => error);
+      })
+    );
+  }
+
   aggiungiNuovoProgetto(progetto: Progetto) {
     const progettiPrecedenti = this.Progetti();
 
@@ -56,15 +93,23 @@ export class RequestsService {
       this.Progetti.set([...progettiPrecedenti, progetto]);
     }
 
+    const payload = this.toProjectPayload(progetto) as any;
+    delete payload.id;
+
     return this.httpClient
-      .put(`${environment.apiUrl}/projects/{` + progetto.id + '}', {
-        progettoId: progetto.id,
-      })
+      .post<Progetto>(`${environment.apiUrl}/projects`, payload)
       .pipe(
+        tap((created) => {
+          if (created?.id) {
+            this.Progetti.update(prev =>
+              prev.map(p => (p.id === progetto.id ? created : p))
+            );
+          }
+        }),
         catchError((error) => {
           this.Progetti.set(progettiPrecedenti);
           this.errorService.showError('Inserimento fallito.');
-          return throwError(() => new Error('Inserimento fallito.'));
+          return throwError(() => error);
         }),
       );
   }
@@ -84,7 +129,7 @@ export class RequestsService {
         catchError((error) => {
           this.Clienti.set(clientiPrecedenti);
           this.errorService.showError('Inserimento fallito.');
-          return throwError(() => new Error('Inserimento fallito.'));
+          return throwError(() => error);
         }),
       );
   }
@@ -131,7 +176,7 @@ export class RequestsService {
             ? project.winProbability * 100
             : 0,
           projectEmployees: project.projectEmployees || [],
-          projectRoles: project.projectRoles || [],
+          projectJobRoles: project.projectJobRoles || [],
           projectStatus: project.projectStatus || 'Initiation',
           customer: project.customer || 'N/A',
           totalBudget: project.totalBudget || 0,
@@ -143,6 +188,34 @@ export class RequestsService {
       }),
     );
   }
+
+  private fetchProgettoById(url: string, errorMessage: string) {
+    return this.httpClient.get<any>(url).pipe(
+      tap((resData) => console.log('Risposta dal backend (byId):', resData)),
+      map((project) => ({
+        id: project.id,
+        activity: project.activity,
+        description: project.description,
+        head: project.head,
+        company: project.company || 'N/A',
+        pm: project.pm || 'N/A',
+        startDate: project.startDate || '',
+        endDate: project.endDate || '',
+        totalDays: project.totalDays,
+        winProbability: project.winProbability ? project.winProbability * 100 : 0,
+        projectEmployees: project.projectEmployees || [],
+        projectJobRoles: project.projectJobRoles || [],
+        projectStatus: project.projectStatus || 'Initiation',
+        customer: project.customer || 'N/A',
+        totalBudget: project.totalBudget || 0,
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error(errorMessage));
+      }),
+    );
+  }
+
 
   private fetchClienti(url: string, errorMessage: string) {
     return this.httpClient.get<any[]>(url).pipe(
@@ -196,5 +269,45 @@ export class RequestsService {
         next: (cards) => this.Cards.set(cards),
       }),
     );
+  }
+  private toProjectPayload(progetto: Progetto) {
+    const projectStatusId = (progetto as any).projectStatusId ?? (progetto as any).projectStatus;
+    const customerId = (progetto as any).customerId ?? (progetto as any).customer;
+    const companyId = (progetto as any).companyId ?? (progetto as any).company;
+    const pmId = (progetto as any).pmId ?? (progetto as any).pm;
+
+    return {
+      activity: progetto.activity,
+      description: progetto.description,
+      projectStatusId,
+      customerId,
+      head: progetto.head,
+      companyId,
+      pmId,
+      startDate: this.toBackendDate(progetto.startDate),
+      endDate: this.toBackendDate(progetto.endDate),
+      totalDays: this.toNumber(progetto.totalDays),
+      winProbability: this.normalizeWinProbability(this.toNumber(progetto.winProbability)),
+    };
+  }
+
+  private normalizeWinProbability(value: number): number {
+    if (!Number.isFinite(value)) return value;
+    return value > 1 ? value / 100 : value;
+  }
+
+  private toBackendDate(value: string): string {
+    if (!value) return value;
+    if (value.includes('T')) return value;
+    const [y, m, d] = value.split('-').map((v) => Number(v));
+    if (!y || !m || !d) return value;
+    return new Date(Date.UTC(y, m - 1, d)).toISOString();
+  }
+
+  private toNumber(value: unknown): number {
+    if (value === null || value === undefined || value === '') return NaN;
+    const raw = String(value).trim().replace(',', '.');
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : NaN;
   }
 }

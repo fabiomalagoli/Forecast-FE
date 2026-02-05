@@ -1,1 +1,126 @@
-<p>modifica works!</p>
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <div class="np-panel">
+    <h2 class="np-title">Modifica progetto</h2>
+
+    <form (ngSubmit)="submit(f)" #f="ngForm" class="np-form--grid">
+      @for (h of headers; track h.key) {
+        <div class="np-field--grid">
+          <app-text-input>
+            <label [for]="h.key">{{ h.label }}</label>
+            @if (h.key === 'projectStatus') {
+              <select
+                [id]="h.key"
+                [name]="h.key"
+                [(ngModel)]="formData[h.key]"
+                (ngModelChange)="onFieldChange()"
+                required>
+                @for (opt of statusOptions; track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            } @else {
+              <input
+                [id]="h.key"
+                [name]="h.key"
+                [(ngModel)]="formData[h.key]"
+                (ngModelChange)="onFieldChange(); h.key === 'startDate' || h.key === 'endDate' ? onDateChange() : h.key === 'totalDays' ? onTotalDaysChange() : null"
+                required
+                [pattern]="getPattern(h.key)"
+                [attr.min]="h.key === 'winProbability' ? 1 : (h.key === 'totalDays' ? 0 : (h.key === 'endDate' ? formData.startDate : null))"
+                [attr.max]="h.key === 'winProbability' ? 100 : null"
+                [attr.inputmode]="h.key === 'winProbability' ? 'numeric' : null"
+                [type]="h.key.toLowerCase().includes('date') ? 'date' : (h.key === 'totalDays' ? 'number' : (h.key === 'winProbability' ? 'text' : 'text'))" />
+            }
+          </app-text-input>
+
+          @if (f.controls[h.key]?.invalid && (f.controls[h.key]?.dirty || f.submitted || attemptedSubmit)) {
+            <span class="error">
+              @if (f.controls[h.key]?.errors?.['required']) { *campo obbligatorio }
+              @if (h.key === 'winProbability' && (f.controls[h.key]?.errors?.['min'] || f.controls[h.key]?.errors?.['max'] || f.controls[h.key]?.errors?.['pattern'])) { *sono validi solo numeri da 1 a 100 }
+              @if (h.key === 'totalDays' && (f.controls[h.key]?.errors?.['pattern'] || f.controls[h.key]?.errors?.['min'])) { *sono accettati solo numeri positivi o nulli }
+              @if (h.key !== 'winProbability' && h.key !== 'totalDays' && f.controls[h.key]?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
+            </span>
+          }
+          @if (h.key === 'endDate' && dateRangeError) {
+            <span class="error">*la data fine deve essere uguale o successiva alla data inizio</span>
+          }
+        </div>
+      }
+
+      <div class="np-roles-section">
+        <div class="roles-header">
+          <h3 class="np-title-sm">Ruoli e Risorse</h3>
+          <button type="button" class="btn-add-role" (click)="aggiungiRuolo()">+ Aggiungi Ruolo</button>
+        </div>
+        @if (formData.projectJobRoles?.length > 0) {
+          <div class="role-grid-header">
+            <span>Ruolo</span><span>Livello</span><span>Costo G.</span><span>Giorni</span><span>Win %</span><span></span>
+          </div>
+          @for (role of formData.projectJobRoles; track role.id; let i = $index) {
+            <div class="role-grid-row">
+              <div class="np-role-field">
+                <input type="text" class="np-input-direct" [(ngModel)]="role.jobRole" [name]="'r-name-'+i" required #rName="ngModel" (ngModelChange)="onFieldChange()" />
+                @if (rName.invalid && (rName.dirty || f.submitted || attemptedSubmit)) {
+                  <span class="error">*campo obbligatorio</span>
+                }
+              </div>
+              <div class="np-role-field">
+                <select class="np-input-direct" [(ngModel)]="role.jobRoleLevel" [name]="'r-lvl-'+i" required #rLvl="ngModel" (ngModelChange)="onFieldChange()">
+                  <option value="Junior">Junior</option><option value="Middle">Middle</option><option value="Senior">Senior</option>
+                </select>
+                @if (rLvl.invalid && (rLvl.dirty || f.submitted || attemptedSubmit)) {
+                  <span class="error">*campo obbligatorio</span>
+                }
+              </div>
+              <div class="np-role-field">
+                <input type="number" class="np-input-direct np-input--currency" [(ngModel)]="role.dailyCost" [name]="'r-cost-'+i" required #rCost="ngModel" #rCostEl (ngModelChange)="onFieldChange()" min="0" />
+                @if (rCost.invalid && (rCost.dirty || f.submitted || attemptedSubmit)) {
+                  @if (rCostEl.value === '') { <span class="error">*campo obbligatorio</span> }
+                  @if (rCostEl.value !== '' && (rCost.errors?.['min'] || rCost.errors?.['number'] || rCost.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
+                }
+              </div>
+              <div class="np-role-field">
+                <input type="number" class="np-input-direct" [(ngModel)]="role.daysSpent" [name]="'r-days-'+i" required #rDays="ngModel" #rDaysEl (ngModelChange)="onFieldChange()" min="0" />
+                @if (rDays.invalid && (rDays.dirty || f.submitted || attemptedSubmit)) {
+                  @if (rDaysEl.value === '') { <span class="error">*campo obbligatorio</span> }
+                  @if (rDaysEl.value !== '' && (rDays.errors?.['min'] || rDays.errors?.['number'] || rDays.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
+                }
+              </div>
+              <div class="np-role-field">
+                <input type="text" inputmode="decimal" class="np-input-direct" [(ngModel)]="role.winProbability" [name]="'r-win-'+i" required #rWin="ngModel" (ngModelChange)="onFieldChange()" />
+                @if ((rWin.dirty || f.submitted || attemptedSubmit) && getRoleWinError(role)) {
+                  @if (getRoleWinError(role) === 'required') { <span class="error">*campo obbligatorio</span> }
+                  @if (getRoleWinError(role) === 'range') { <span class="error">*valori validi da 0,1 a 1</span> }
+                }
+              </div>
+              <button type="button" class="btn-remove" (click)="rimuoviRuolo(i)">×</button>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="actions">
+        <button
+          type="submit"
+          [attr.aria-disabled]="isSubmitDisabled(f)"
+          [class.btn--disabled]="isSubmitDisabled(f)"
+          (click)="onSubmitClick(f, $event)">
+          Salva Modifiche
+        </button>
+        <button type="button" (click)="onCancel()">Annulla</button>
+      </div>
+      @if (noChangesMessage) {
+        <div class="no-changes-msg">Nessuna modifica rilevata: i dati restano invariati.</div>
+      }
+    </form>
+  </div>
+</dialog>
+@if (statusMessage) {
+  <div class="toast-msg" [class.success]="statusMessage.type === 'success'" [class.error]="statusMessage.type === 'error'">
+    {{ statusMessage.text }}
+  </div>
+}
+
+

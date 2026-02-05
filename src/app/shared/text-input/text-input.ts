@@ -11,8 +11,4 @@ import { Progetto } from '../../progetti/progetto/progetto.model';
 })
 export class TextInputComponent {
 
-  onSubmit(){
-    //to-do
-  }
-
 }

@@ -1,0 +1,56 @@
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  max-width: 900px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row span {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.roles-table th {
+  text-align: left;
+  color: #666;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.roles-table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #fafafa;
+  font-size: 0.95rem;
+}
+
+.roles-table tr:last-child td {
+  border-bottom: none;
+}

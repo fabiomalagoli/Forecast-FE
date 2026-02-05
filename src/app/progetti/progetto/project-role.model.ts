@@ -1,8 +1,8 @@
 export interface ProjectRole {
   id: string;
   project: string;
-  role: string; // Es. "Full-stack developer"
-  roleLevel: 'Junior' | 'Middle' | 'Senior';
+  jobRole: string; // Es. "Full-stack developer"
+  jobRoleLevel: 'Junior' | 'Middle' | 'Senior';
   dailyCost: number;
   daysSpent: number;
   effort: number;   

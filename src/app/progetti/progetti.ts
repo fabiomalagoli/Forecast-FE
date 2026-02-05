@@ -8,13 +8,14 @@ import { AppButton } from "../shared/button/button";
 import { PROGETTO_HEADERS } from './progetto/progetto.headers';
 import { PROGETTO_COMPLETO_HEADERS } from './progetto/progetto-completo.headers';
 import { NewProgettoComponent } from "./new-progetto/new-progetto";
-import { v4 as uuidv4 } from 'uuid';
 import { RequestsService } from '../shared/requests.service';
+import { Router } from '@angular/router';
+import { ModificaComponent } from "./progetto/modifica/modifica";
 
 
 @Component({
   selector: 'app-progetti',
-  imports: [TableRowComponent, ProgettoComponent, AppButton, NewProgettoComponent],
+  imports: [TableRowComponent, ProgettoComponent, AppButton, NewProgettoComponent, ModificaComponent],
   templateUrl: './progetti.html',
   styleUrl: './progetti.css',
   
@@ -27,12 +28,18 @@ export class Progetti {
   error = signal('');
   private requestsService = inject(RequestsService);
   private destroyRef = inject(DestroyRef);
+  statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
   isProgettoInAggiunta = false;
+
+  progettoInModifica = signal<Progetto | null>(null);
 
   // dummyProgetti = PROGETTI_DUMMY;
 
   readonly headersProgetti: Record<keyof Progetto, string> = PROGETTO_COMPLETO_HEADERS;  // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
+
+  // Router per spostarci tra pagine/viste dei progetti
+  constructor(private router: Router) {}
 
   ngOnInit() {
     this.isFetching.set(true);
@@ -73,14 +80,11 @@ export class Progetti {
   }
 
   aggiungiProgetto(newProgetto: Progetto) {
-    const newProgettoWithId = { ...newProgetto, id: this.generateId() }; // Genera un ID univoco
     const progettiCorrenti = this.Progetti();
-    this.Progetti.set([...(progettiCorrenti || []), newProgettoWithId]);
+    this.Progetti.set([...(progettiCorrenti || []), newProgetto]);
     this.isProgettoInAggiunta = false;
-  }
-
-  private generateId(): string {
-    return uuidv4();
+    this.showNotification('Progetto creato con successo!', 'success');
+    this.isProgettoInAggiunta = false;
   }
 
   annullaAggiuntaProgetto(){
@@ -113,6 +117,31 @@ export class Progetti {
       clearTimeout(timeoutId);
     });
   }
+
+  apriModifica(p: Progetto) {
+    this.progettoInModifica.set(p); // Fa apparire l' @if nel template
+  }
+
+  chiudiModifica() {
+    this.progettoInModifica.set(null);
+  }
+
+  salvaModifica(progettoAggiornato: Progetto) {
+    // La logica di aggiornamento è già gestita dentro il componente Modifica tramite il Service, qui dobbiamo solo chiudere il pannello.
+    this.chiudiModifica();
+    this.showNotification('Modifiche salvate correttamente!', 'success');
+    this.progettoInModifica.set(null);
+  }
+
+  showNotification(text: string, type: 'success' | 'error') {
+    this.statusMessage.set({ text, type });
+    setTimeout(() => this.statusMessage.set(null), 3000);
+  }
+
+  apriPaginaVisualizza(id: string){
+    this.router.navigate(['/progetti', id]);
+  }
+
 }
 
 

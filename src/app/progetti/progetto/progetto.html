@@ -5,11 +5,12 @@
       [class.tbl-cell--right]="c.align === 'right'"
       [class.tbl-cell--center]="c.align === 'center'"
     >
-      {{ c.value(progetto) }}
+      {{ c.value(progetto()) }}
     </div> 
   }
     <div class="tbl-cell tbl-cell--actions">
-      <button appButton class="btn btn-primary" >Visualizza</button>
-      <button appButton class="btn btn-secondary" >Modifica</button>
+      <!-- Link diretto al dettaglio del progetto -->
+      <button appButton [routerLink]="['/progetti', progetto().id]" class="btn btn-primary">Visualizza</button>
+      <button appButton class="btn btn-secondary" (click)="apriModifica(progetto())">Modifica</button>
     </div>
 </app-table-row> <!-- elemento Progetto, equivalente ad una riga -->

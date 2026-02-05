@@ -11,7 +11,7 @@ export interface Progetto {
   totalDays: number;
   winProbability: number;
   projectEmployees: string[]; // array di ID (vuoto nel JSON)
-  projectRoles: ProjectRole[];
+  projectJobRoles: ProjectRole[];
   activity: string;
   projectStatus:
     | 'Initiation'

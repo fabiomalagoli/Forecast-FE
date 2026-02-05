@@ -15,3 +15,31 @@
   display: flex;
   gap: 10px;
 }
+
+/* Toast Notification */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 9999;
+  animation: slideUp 0.3s ease-out;
+}
+
+.toast-container.success { background-color: #10b981; } /* Verde */
+.toast-container.error { background-color: #ef4444; }   /* Rosso */
+
+@keyframes slideUp {
+  from { bottom: -50px; opacity: 0; }
+  to { bottom: 20px; opacity: 1; }
+}
+
+button[type="submit"]:not(.btn--disabled) {
+  color: #000 !important;
+  font-weight: 700;
+}

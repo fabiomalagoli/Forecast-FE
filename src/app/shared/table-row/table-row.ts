@@ -12,11 +12,11 @@ import { Component, Input } from '@angular/core';
   }
 })
 export class TableRowComponent {
-  @Input({required: true}) cols = 1; //così si ha almeno una colonna nella tabella
+  @Input({required: true}) cols = 1; // Così si ha almeno una colonna nella tabella
 
   get gridTemplate(){
-    const safeCols = Math.max(1, Number(this.cols) || 1); //per avere un numero positivo >= 1 come numero di colonne
-    return `repeat(${safeCols}, minmax(0, 1fr))`; // ripetizione per numero di colonne di frazioni eguali di spazio disponibile
+    const safeCols = Math.max(1, Number(this.cols) || 1); // Per avere un numero positivo >= 1 come numero di colonne
+    return `repeat(${safeCols}, minmax(0, 1fr))`; // Ripetizione per numero di colonne di frazioni eguali di spazio disponibile
   }
 
 }

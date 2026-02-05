@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { Visualizza } from './progetti/progetto/visualizza/visualizza';
 import { Progetti } from './progetti/progetti';
-import { Clienti } from './clienti/clienti';
+import { Visualizza } from './progetti/progetto/visualizza/visualizza';
 import { Grid } from './grid/grid';
+import { Clienti } from './clienti/clienti';
 
-export const routes: Routes = [  
+export const routes: Routes = [
   { path: 'home', component: Grid },
   { path: 'clienti', component: Clienti },
 

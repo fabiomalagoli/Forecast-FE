@@ -1,6 +1,14 @@
 @if(isFetching()){
   <h2>Acquisendo i progetti dal database...</h2>
 }
+
+@if(progettoInModifica()) {
+  <app-modifica-progetto 
+    [progettoDaModificare]="progettoInModifica()!" 
+    (cancel)="chiudiModifica()" 
+    (saved)="salvaModifica($event)"/>
+}
+
 @if(isProgettoInAggiunta){
   <app-new-progetto (cancel)="annullaAggiuntaProgetto()" (created)="aggiungiProgetto($event)"/>
 }
@@ -28,6 +36,12 @@
 
 <!-- Righe -->
 @for (progetto of Progetti(); track progetto.id) {
-  <app-progetto [progetto]="progetto" [columns]="columns"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
+  <app-progetto [progetto]="progetto" [columns]="columns" (edit)="apriModifica($event)"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
 }
 <p>Numero progetti: {{ Progetti()?.length }}</p> <!-- for debugging purposes -->
+
+@if (statusMessage()) {
+  <div class="toast-container" [class]="statusMessage()?.type">
+    {{ statusMessage()?.text }}
+  </div>
+}

@@ -1,1 +1,53 @@
-<p>visualizza works!</p>
+<header class="detail-header">
+  <button appButton type="button" (click)="indietro()">← Indietro</button>
+</header>
+<h2>Dettaglio progetto</h2>
+
+@if (loading()) {
+  <p>Caricamento...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (!progetto()) {
+  <p>Progetto non trovato.</p>
+} @else {
+  @let p = progetto()!;
+
+  <section class="card">
+    @for (h of headersArray; track h.key) {
+      @if (h.key !== 'projectJobRoles' && h.key !== 'projectEmployees') {
+        <div class="row">
+          <span class="label">{{ h.label }}</span>
+          <strong class="value">{{ getValue(p, h.key) }}</strong>
+        </div>
+      }
+    }
+  </section>
+
+  @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
+    <h3 style="margin-top: 2rem; margin-left: 1rem;">Ruoli e Risorse</h3>
+    <section class="card">
+      <table class="roles-table">
+        <thead>
+          <tr>
+            <th>Ruolo</th>
+            <th>Livello</th>
+            <th>Costo Giornaliero</th>
+            <th>Giorni Spesi</th>
+            <th>Win %</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of p.projectJobRoles; track role.id) {
+            <tr>
+              <td><strong>{{ role.jobRole }}</strong></td>
+              <td>{{ role.jobRoleLevel }}</td>
+              <td>€{{ role.dailyCost }}</td>
+              <td>{{ role.daysSpent }}</td>
+              <td>{{ role.winProbability }}%</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+}
