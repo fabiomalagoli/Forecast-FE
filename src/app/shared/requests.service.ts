@@ -196,7 +196,7 @@ export class RequestsService {
   private fetchProgetti(url: string, errorMessage: string) {
     return this.httpClient.get<any[]>(url).pipe(
       tap((resData) => {
-        console.log('Risposta dal backend:', resData); // Log per verificare la risposta
+        console.log('Risposta dal backend (progetti):', resData); // Log per verificare la risposta
       }),
       map((projects) =>
         projects.map((project) => ({
@@ -265,7 +265,7 @@ export class RequestsService {
   private fetchClienti(url: string, errorMessage: string) {
     return this.httpClient.get<any[]>(url).pipe(
       tap((resData) => {
-        console.log('Risposta dal backend:', resData); // Log per verificare la risposta
+        console.log('Risposta dal backend (clienti):', resData); // Log per verificare la risposta
       }),
       map((customers) =>
         customers.map((customer) => ({

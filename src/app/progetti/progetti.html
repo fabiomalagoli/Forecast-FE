@@ -12,15 +12,8 @@
 @if(isProgettoInAggiunta){
   <app-new-progetto (cancel)="annullaAggiuntaProgetto()" (created)="aggiungiProgetto($event)"/>
 }
-<header class="actions">
-  <button appButton (click)="onAggiuntaProgetto()">
-    Aggiungi Progetto
-    <span class="icon">+</span>
-  </button>
-  <button appButton (click)="aggiornaProgetti()">
-    Aggiorna
-  </button>
-</header>
+
+<h2>Progetti</h2>
 
 <!-- Header -->
 <app-table-row [cols]="progettiColsCount + 1">
@@ -39,6 +32,13 @@
   <app-progetto [progetto]="progetto" [columns]="columns" (edit)="apriModifica($event)"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
 }
 <p>Numero progetti: {{ progetti().length }}</p> <!-- for debugging purposes -->
+
+<header class="actions">
+  <button appButton (click)="onAggiuntaProgetto()">
+    Aggiungi Progetto
+    <span class="icon">+</span>
+  </button>
+</header>
 
 @if (statusMessage()) {
   <div class="toast-container" [class]="statusMessage()?.type">

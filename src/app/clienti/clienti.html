@@ -12,17 +12,10 @@
 @if (isClienteInAggiunta) {
   <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)" />
 }
-<header class="actions">
-  <button appButton (click)="onAggiuntaCliente()">
-    Aggiungi Cliente
-    <span class="icon">+</span>
-  </button>
-  <button appButton (click)="aggiornaClienti()">
-    Aggiorna
-  </button>
-</header>
 
-<!-- Header -->
+<h2>Clienti</h2>
+
+<!-- Headers Tabella -->
 <app-table-row [cols]="clientiColsCount + 1">
   @for (c of columns; track c.header) {
     <div class="tbl-header">
@@ -40,9 +33,19 @@
   <!-- inserimento dei dati per n. clienti presenti distribuiti sulle colonne -->
   <app-cliente [cliente]="cliente" [columns]="columns" (edit)="apriModifica($event)"></app-cliente>
 }
+<p>Numero clienti: {{ Clienti()?.length }}</p> <!-- for debugging purposes -->
+
+<header class="actions">
+  <button appButton (click)="onAggiuntaCliente()">
+    Aggiungi Cliente
+    <span class="icon">+</span>
+  </button>
+</header>
 
 @if (statusMessage()) {
   <div class="toast-container" [class]="statusMessage()?.type">
     {{ statusMessage()?.text }}
   </div>
 }
+
+
