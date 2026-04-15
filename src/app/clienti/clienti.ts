@@ -1,37 +1,48 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { TableRowComponent } from '../shared/table-row/table-row';
 import { CLIENTE_HEADERS } from './cliente/cliente.headers';
-import { Cliente } from './cliente/cliente';
+import { Cliente } from './cliente/cliente.model';
 import { Column } from '../shared/table-row/table.types';
-import { ModelloCliente } from './cliente/cliente.model';
 import { NewCliente } from './new-cliente/new-cliente';
+import { ClienteComponent } from './cliente/cliente';
 import { AppButton } from '../shared/button/button';
 import { RequestsService } from '../shared/requests.service';
+import { ModificaCliente } from './modifica/modifica';
 import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-clienti',
-  imports: [AppButton, TableRowComponent, Cliente, NewCliente],
+  imports: [AppButton, TableRowComponent, NewCliente, ClienteComponent, ModificaCliente],
   templateUrl: './clienti.html',
   styleUrl: './clienti.css',
 })
 export class Clienti {
   //dummyClienti = CLIENTI_DUMMY;
-  Clienti = signal<ModelloCliente[] | undefined>(undefined);
+  Clienti = signal<Cliente[] | undefined>(undefined);
   isFetching = signal(false);
   error = signal('');
+  statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   private requestsService = inject(RequestsService);
   private destroyRef = inject(DestroyRef);
   isClienteInAggiunta = false;
+  clienteInModifica = signal<Cliente | null>(null);
   //Record per inserire i titoli (headers) dei dati della tabella Clienti corrispondenti ai parametri del tipo Cliente.
   readonly headersClienti = CLIENTE_HEADERS;
   //Mappatura fra il tipo di colonne e gli headers ed i rispettivi valori del tipo Cliente.
-  columns: Column<ModelloCliente>[] = (Object.keys(this.headersClienti) as (keyof ModelloCliente)[])
-    .filter((key) => key !== 'id')
-    .map((key) => ({
-      header: this.headersClienti[key],
-      value: (p) => p[key] as any,
-    }));
+  columns: Column<Cliente>[] = [
+    {
+      header: 'Nome',
+      value: (cliente) => cliente.name,
+    },
+    {
+      header: 'Indirizzo',
+      value: (cliente) => this.formatIndirizzo(cliente),
+    },
+    {
+      header: 'Progetti Attivi',
+      value: (cliente) => cliente.projects,
+    },
+  ];
 
   ngOnInit() {
     this.isFetching.set(true);
@@ -79,6 +90,27 @@ export class Clienti {
     });
   }
 
+  ricaricaClienti() {
+    this.isFetching.set(true);
+    const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
+      next: (clienti) => {
+        console.log('Clienti ricaricati:', clienti);
+        this.Clienti.set(clienti);
+      },
+      error: (error: Error) => {
+        this.error.set(error.message);
+        this.showNotification('Errore nel caricamento dei clienti', 'error');
+      },
+      complete: () => {
+        this.isFetching.set(false);
+      },
+    });
+
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
+  }
+
   get clientiColsCount(): number {
     return this.columns.length;
   }
@@ -91,11 +123,52 @@ export class Clienti {
     this.isClienteInAggiunta = false;
   }
 
-  aggiungiCliente(newCliente: ModelloCliente) {
-    const newClienteWithId = { ...newCliente, id: this.generateId() }; // Genera un ID univoco
-    const clientiCorrenti = this.Clienti();
-    this.Clienti.set([...(clientiCorrenti || []), newClienteWithId]);
+  aggiungiCliente(newCliente: Cliente) {
+    // Invece di aggiornare localmente, ricarica i dati dal backend
+    this.ricaricaClienti();
     this.isClienteInAggiunta = false;
+    this.showNotification('Cliente creato con successo!', 'success');
+  }
+
+  apriModifica(c: Cliente) {
+    this.clienteInModifica.set(c); // Fa apparire l' @if nel template
+  }
+
+  chiudiModifica() {
+    this.clienteInModifica.set(null);
+  }
+
+  salvaModifica(clienteAggiornato: Cliente) {
+    // Ricarica i dati dal backend per riflettere le modifiche effettive
+    this.ricaricaClienti();
+    this.chiudiModifica();
+    this.showNotification('Modifiche salvate correttamente!', 'success');
+  }
+
+  showNotification(text: string, type: 'success' | 'error') {
+    this.statusMessage.set({ text, type });
+    setTimeout(() => this.statusMessage.set(null), 3000);
+  }
+
+  private formatIndirizzo(cliente: Cliente): string {
+    const parti: string[] = [];
+
+    if (cliente.address) parti.push(cliente.address);
+    if (cliente.streetNumber) parti.push(cliente.streetNumber);
+    if (cliente.city) parti.push(cliente.city);
+    if (cliente.province) parti.push(`(${cliente.province})`);
+    if (cliente.postalCode) parti.push(cliente.postalCode);
+    if (cliente.country && cliente.country !== 'Italia') parti.push(cliente.country);
+
+    if (parti.length > 0) {
+      return parti.join(', ');
+    }
+
+    if (cliente.fullAddress) {
+      return cliente.fullAddress;
+    }
+
+    return 'Indirizzo non specificato';
   }
 
   private generateId(): string {

@@ -1,12 +1,13 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject, input, Input, output } from '@angular/core';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
-import { ModelloCliente } from './cliente.model';
+import { Cliente } from './cliente.model';
 import { AppButton } from '../../shared/button/button';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cliente',
-  imports: [AppButton, TableRowComponent],
+  imports: [AppButton, TableRowComponent, RouterModule],
   templateUrl: './cliente.html',
   styleUrl: './cliente.css',
   host: {
@@ -14,12 +15,19 @@ import { AppButton } from '../../shared/button/button';
     '[class.cell-center]': 'align === "center"', //Classe per allineamneto al centro.
   },
 })
-export class Cliente {
-  @Input({required: true}) cliente!: ModelloCliente;
+export class ClienteComponent {
   @Input() align: 'left' | 'center' | 'right' = 'left' //Allineamento di default a sinistra.
-  @Input({required: true}) columns!: Column<ModelloCliente>[];
+  @Input({required: true}) columns!: Column<Cliente>[];
+  cliente = input.required<Cliente>();
+  edit = output<Cliente>();
+
+  private router = inject(Router);
 
   get colsCount(): number {
-    return this.columns.length + 1;
+    return this.columns.length + 1; //+1 per la colonna dei bottoni
+  }
+
+  apriModifica(c: Cliente) {
+    this.edit.emit(c);
   }
 }

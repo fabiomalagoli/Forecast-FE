@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { EMPTY, catchError, map, tap, throwError, of } from 'rxjs';
+import { EMPTY, catchError, map, tap, throwError, of, Observable } from 'rxjs';
 import { Progetto } from '../progetti/progetto/progetto.model';
-import { ModelloCliente } from '../clienti/cliente/cliente.model';
+import { Cliente } from '../clienti/cliente/cliente.model';
 import { HttpClient } from '@angular/common/http';
 import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
@@ -17,13 +17,29 @@ export class RequestsService {
 
   private Progetti = signal<Progetto[]>([]);
 
-  private Clienti = signal<ModelloCliente[]>([]);
+  private Clienti = signal<Cliente[]>([]);
+
+  private Aziende = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
+
+  private JobRoles = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
+
+  private StatiProgetto = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
+
+  private JobRoleLevels = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
 
   private Cards = signal<CardModel[]>([]);
 
   progettiCaricati = this.Progetti.asReadonly();
 
   clientiCaricati = this.Clienti.asReadonly();
+
+  aziendeCaricate = this.Aziende.asReadonly();
+
+  jobRolesCaricati = this.JobRoles.asReadonly();
+
+  statiProgettoCaricati = this.StatiProgetto.asReadonly();
+
+  jobRoleLevelsCaricati = this.JobRoleLevels.asReadonly();
 
   cardsCaricate = this.Cards.asReadonly();
 
@@ -38,7 +54,7 @@ export class RequestsService {
     );
   }
 
-  caricaProgettoById(id: string) {
+  caricaProgettoById(id: string): Observable<Progetto> {
   const cached = this.Progetti().find(p => p.id === id);
   if (cached) {
     return of(cached);
@@ -71,17 +87,38 @@ export class RequestsService {
     );
   }
 
+  caricaClienteById(id: string): Observable<Cliente> {
+    const cached = this.Clienti().find(c => c.id === id);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.fetchClienteById(
+      `${environment.apiUrl}/customers/${encodeURIComponent(id)}`,
+      'Qualcosa è andato storto. Riprova più tardi.',
+    ).pipe(
+      tap({
+        next: (c) => {
+          const prev = this.Clienti();
+          const next = prev.some(x => x.id === c.id)
+            ? prev.map(x => (x.id === c.id ? c : x))
+            : [...prev, c];
+          this.Clienti.set(next);
+        },
+      }),
+    );
+  }
+
   aggiornaProgetto(progetto: Progetto) {
     const payload = this.toProjectPayload(progetto);
-
     return this.httpClient.put(`${environment.apiUrl}/projects/${progetto.id}`, payload).pipe(
       tap(() => {
-        // Aggiorna il segnale locale per riflettere le modifiche immediatamente nella tabella
-        this.Progetti.update(prev => prev.map(p => p.id === progetto.id ? progetto : p));
-      }),
-      catchError((error) => {
-        this.errorService.showError('Errore durante l\'aggiornamento.');
-        return throwError(() => error);
+        this.Progetti.update(prev => 
+          prev.map(p => p.id === progetto.id 
+            ? {...p, ...progetto }
+            : p
+          )
+        );
       })
     );
   }
@@ -114,7 +151,7 @@ export class RequestsService {
       );
   }
 
-  aggiungiNuovoCliente(cliente: ModelloCliente) {
+  aggiungiNuovoCliente(cliente: Cliente) {
     const clientiPrecedenti = this.Clienti();
 
     if (!clientiPrecedenti.some((c) => c.id === cliente.id)) {
@@ -179,6 +216,10 @@ export class RequestsService {
           projectJobRoles: project.projectJobRoles || [],
           projectStatus: project.projectStatus || 'Initiation',
           customer: project.customer || 'N/A',
+          companyId: project.companyId ?? project.companyId,
+          pmId: project.pmId ?? project.pmId,
+          customerId: project.customerId ?? project.customerId,
+          projectStatusId: project.projectStatusId ?? project.projectStatusId,
           totalBudget: project.totalBudget || 0,
         })),
       ),
@@ -189,7 +230,7 @@ export class RequestsService {
     );
   }
 
-  private fetchProgettoById(url: string, errorMessage: string) {
+  private fetchProgettoById(url: string, errorMessage: string): Observable<Progetto> {
     return this.httpClient.get<any>(url).pipe(
       tap((resData) => console.log('Risposta dal backend (byId):', resData)),
       map((project) => ({
@@ -207,6 +248,10 @@ export class RequestsService {
         projectJobRoles: project.projectJobRoles || [],
         projectStatus: project.projectStatus || 'Initiation',
         customer: project.customer || 'N/A',
+        companyId: project.companyId ?? project.companyId,
+        pmId: project.pmId ?? project.pmId,
+        customerId: project.customerId ?? project.customerId,
+        projectStatusId: project.projectStatusId ?? project.projectStatusId,
         totalBudget: project.totalBudget || 0,
       })),
       catchError((error) => {
@@ -225,9 +270,17 @@ export class RequestsService {
       map((customers) =>
         customers.map((customer) => ({
           id: customer.id,
+          vatNumber: customer.vatNumber,
           name: customer.name,
           fullAddress: customer.fullAddress,
+          address: customer.address ?? customer.fullAddress,
+          streetNumber: customer.streetNumber,
+          postalCode: customer.postalCode,
+          city: customer.city,
+          province: customer.province,
+          country: customer.country,
           projects: customer.projects ? customer.projects.length : 0,
+          activeProjects: customer.projects || [],
         })),
       ),
       catchError((error) => {
@@ -236,6 +289,291 @@ export class RequestsService {
       }),
     );
   }
+
+  private fetchClienteById(url: string, errorMessage: string): Observable<Cliente> {
+    return this.httpClient.get<any>(url).pipe(
+      tap((resData) => console.log('Risposta dal backend (byId):', resData)),
+      map((customer) => ({
+        id: customer.id,
+        vatNumber: customer.vatNumber,
+        name: customer.name,
+        fullAddress: customer.fullAddress,
+        address: customer.address ?? customer.fullAddress,
+        streetNumber: customer.streetNumber,
+        postalCode: customer.postalCode,
+        city: customer.city,
+        province: customer.province,
+        country: customer.country,
+        projects: customer.projects ? customer.projects.length : 0,
+        activeProjects: customer.projects || [],
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error(errorMessage));
+      }),
+    );
+  }
+
+  //GET PER PROGETTI PER CLIENTE (visualizza progetti attivi cliente)
+
+  caricaProgettiAttiviCliente(clienteId: string) {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/customers/${encodeURIComponent(clienteId)}/projects`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (progetti attivi cliente):', resData);
+      }),
+      map((projects) =>
+        projects.map((project) => ({
+          id: project.id,
+          activity: project.activity,
+          description: project.description,
+          head: project.head,
+          company: project.company || 'N/A',
+          pm: project.pm || 'N/A',
+          startDate: project.startDate || '',
+          endDate: project.endDate || '',
+          totalDays: project.totalDays,
+          winProbability: project.winProbability ? project.winProbability * 100 : 0,
+          projectEmployees: project.projectEmployees || [],
+          projectJobRoles: project.projectJobRoles || [],
+          projectStatus: project.projectStatus || 'Initiation',
+          customer: project.customer || 'N/A',
+          companyId: project.companyId ?? project.companyId,
+          pmId: project.pmId ?? project.pmId,
+          customerId: project.customerId ?? project.customerId,
+          projectStatusId: project.projectStatusId ?? project.projectStatusId,
+          totalBudget: project.totalBudget || 0,
+        })),
+      ),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  aggiornaCliente(cliente: Cliente) {
+    return this.httpClient.put(`${environment.apiUrl}/customers/${cliente.id}`, {
+      vatNumber: cliente.vatNumber,
+      name: cliente.name,
+      address: cliente.address,
+      streetNumber: cliente.streetNumber,
+      postalCode: cliente.postalCode,
+      city: cliente.city,
+      province: cliente.province,
+      country: cliente.country,
+    }).pipe(
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiornamento.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+
+  //Metodo GET per Aziende, PM e Clienti per dropdown nei form di inserimento/modifica progetto
+
+  CaricaAziende() {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/companies`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (aziende):', resData);
+      }),
+      map((companies) => companies.map(
+        (company) => ({
+          id: company.id,
+          name: company.name,
+          isDefault: company.isDefault,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  CaricaAziendeById(id: string) {
+    return this.httpClient.get<any>(`${environment.apiUrl}/companies/${encodeURIComponent(id)}`).pipe(
+      tap((resData) => console.log('Risposta dal backend (azienda byId):', resData)), 
+      map((company) => ({
+        id: company.id,
+        name: company.name,
+        isDefault: company.isDefault,
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  CaricaProjectStatus() {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/projectstatus`).pipe(
+      tap((resData) => {  
+        console.log('Risposta dal backend (project status):', resData);
+      }),
+      map((statusList) => statusList.map(
+        (status) => ({
+          id: status.id,
+          name: status.name,
+          isDefault: status.isDefault,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  CaricaProjectStatusById(id: string) {
+    return this.httpClient.get<any>(`${environment.apiUrl}/projectstatus/${encodeURIComponent(id)}`).pipe(
+      tap((resData) => console.log('Risposta dal backend (project status byId):', resData)),
+      map((status) => ({
+        id: status.id,
+        name: status.name,
+        isDefault: status.isDefault,
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaJobRoles() {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/jobroles`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (job roles):', resData);
+      }),
+      map((roles) => roles.map(
+        (role) => ({
+          id: role.id,
+          name: role.name,
+          isDefault: role.isDefault,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaJobRoleById(id: string) {
+    return this.httpClient.get<any>(`${environment.apiUrl}/jobroles/${encodeURIComponent(id)}`).pipe(
+      tap((resData) => console.log('Risposta dal backend (job role byId):', resData)),
+      map((role) => ({
+        id: role.id,
+        name: role.name,
+        isDefault: role.isDefault,
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaJobRoleLevels() {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/jobrolelevels`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (job role levels):', resData);
+      }),
+      map((levels) => levels.map(
+        (level) => ({
+          id: level.id,
+          name: level.name,
+          isDefault: level.isDefault,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaJobRoleLevelById(id: string) {
+    return this.httpClient.get<any>(`${environment.apiUrl}/jobrolelevels/${encodeURIComponent(id)}`).pipe(
+      tap((resData) => console.log('Risposta dal backend (job role level byId):', resData)),
+      map((level) => ({
+        id: level.id,
+        name: level.name,
+        isDefault: level.isDefault,
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaEmployees() {
+
+    this.CaricaAziende().subscribe({
+      next: (aziende) => this.Aziende.set(aziende),
+      error: (err) => console.log('Errore caricamento aziende:', err),
+    });
+    this.caricaJobRoles().subscribe({
+      next: (roles) => this.JobRoles.set(roles),
+      error: (err) => console.log('Errore caricamento job roles:', err),
+    });
+    this.caricaJobRoleLevels().subscribe({
+      next: (levels) => this.JobRoleLevels.set(levels),
+      error: (err) => console.log('Errore caricamento job role levels:', err),
+    });
+
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/employees`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (employees):', resData);
+      }),
+      map((employees) => employees.map(
+        (employee) => ({
+          id: employee.Id || employee.id, 
+          name: employee.Name || employee.name,
+          surname: employee.Surname || employee.surname,
+          jobRole: this.jobRolesCaricati().find(r => r.name === employee.jobRole)?.name || 'N/A',
+          jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === employee.jobRoleLevel)?.name || 'N/A',
+          company: this.aziendeCaricate().find(c => c.name === employee.company)?.name || 'N/A',
+          isActive: employee.isActive,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaEmployeeById(id: string) {
+    return this.httpClient.get<any>(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`).pipe(
+      tap((resData) => console.log('Risposta dal backend (employee byId):', resData)),
+      map((employee) => ({
+        id: employee.Id || employee.id, 
+        name: employee.Name || employee.name,
+        surname: employee.Surname || employee.surname,
+        jobRole: this.jobRolesCaricati().find(r => r.name === employee.jobRole)?.name || 'N/A',
+        jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === employee.jobRoleLevel)?.name || 'N/A',
+        company: this.aziendeCaricate().find(c => c.name === employee.company)?.name || 'N/A',
+        isActive: employee.isActive,
+      })),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  getDropdownOptions() {
+    return this.httpClient.get<any>(`${environment.apiUrl}/dropdown-options`).pipe(
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  //TODO: aggiungere metodo per eliminazione cliente (DELETE) e chiedere se è necessario un metodo per eliminazione progetto (DELETE)
 
   //GET PER HOME (grid component)
 
@@ -271,19 +609,15 @@ export class RequestsService {
     );
   }
   private toProjectPayload(progetto: Progetto) {
-    const projectStatusId = (progetto as any).projectStatusId ?? (progetto as any).projectStatus;
-    const customerId = (progetto as any).customerId ?? (progetto as any).customer;
-    const companyId = (progetto as any).companyId ?? (progetto as any).company;
-    const pmId = (progetto as any).pmId ?? (progetto as any).pm;
-
+    // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
     return {
       activity: progetto.activity,
       description: progetto.description,
-      projectStatusId,
-      customerId,
+      projectStatusId: progetto.projectStatusId,
+      customerId: progetto.customerId,
       head: progetto.head,
-      companyId,
-      pmId,
+      companyId: progetto.companyId,
+      pmId: progetto.pmId, // Deve essere un GUID o null, mai una stringa nome
       startDate: this.toBackendDate(progetto.startDate),
       endDate: this.toBackendDate(progetto.endDate),
       totalDays: this.toNumber(progetto.totalDays),
@@ -298,10 +632,10 @@ export class RequestsService {
 
   private toBackendDate(value: string): string {
     if (!value) return value;
-    if (value.includes('T')) return value;
-    const [y, m, d] = value.split('-').map((v) => Number(v));
+    const dateOnly = value.split('T')[0];
+    const [y, m, d] = dateOnly.split('-').map((v) => Number(v));
     if (!y || !m || !d) return value;
-    return new Date(Date.UTC(y, m - 1, d)).toISOString();
+    return `${y.toString().padStart(4, '0')}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
   }
 
   private toNumber(value: unknown): number {

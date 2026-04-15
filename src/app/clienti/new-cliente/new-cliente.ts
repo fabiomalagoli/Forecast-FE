@@ -2,19 +2,19 @@ import { Component, output } from '@angular/core';
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { CLIENTE_HEADERS } from '../cliente/cliente.headers';
 import { FormsModule, NgForm } from '@angular/forms';
-import { ModelloCliente } from '../cliente/cliente.model';
+import { Cliente } from '../cliente/cliente.model';
 
 @Component({
   selector: 'app-new-cliente',
   imports: [FormsModule, TextInputComponent],
   templateUrl: './new-cliente.html',
-  styleUrl: './new-cliente.css',
+  styleUrls: ['./new-cliente.css', '../../shared/cliente-form.css'],
 })
 export class NewCliente {
-  readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof ModelloCliente, string][])
+  readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof Cliente, string][])
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({ key, label }));
-  created = output<ModelloCliente>();
+  created = output<Cliente>();
   cancel = output<void>();
   formData: any = {};
 
@@ -30,7 +30,7 @@ export class NewCliente {
     //   return;
     // }
 
-    const clienteCreato = { ...this.formData } as ModelloCliente;
+    const clienteCreato = { ...this.formData } as Cliente;
     this.created.emit(clienteCreato);
     form.resetForm();
     this.formData = {};

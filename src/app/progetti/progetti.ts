@@ -11,6 +11,7 @@ import { NewProgettoComponent } from "./new-progetto/new-progetto";
 import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { ModificaComponent } from "./progetto/modifica/modifica";
+import { effect } from '@angular/core';
 
 
 @Component({
@@ -23,12 +24,12 @@ import { ModificaComponent } from "./progetto/modifica/modifica";
 
 export class Progetti {
 
-  Progetti = signal<Progetto[] | undefined>(undefined);
   isFetching = signal(false);
   error = signal('');
   private requestsService = inject(RequestsService);
   private destroyRef = inject(DestroyRef);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
+  progetti = this.requestsService.progettiCaricati;
 
   isProgettoInAggiunta = false;
 
@@ -36,40 +37,42 @@ export class Progetti {
 
   // dummyProgetti = PROGETTI_DUMMY;
 
-  readonly headersProgetti: Record<keyof Progetto, string> = PROGETTO_COMPLETO_HEADERS;  // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
+  readonly headersProgetti: Partial<Record<keyof Progetto, string>> = PROGETTO_COMPLETO_HEADERS;  // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
 
   // Router per spostarci tra pagine/viste dei progetti
-  constructor(private router: Router) {}
+  constructor(private router: Router) {
+    // Questo log scatterà ogni singola volta che il segnale del service cambia
+    effect(() => {
+      console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.progetti());
+    });
+  }
 
   ngOnInit() {
     this.isFetching.set(true);
     const subscription = this.requestsService.caricaProgettiDisponibili()
-    .subscribe({
-      next: (progetti) => {
-        console.log('Progetti caricati:', progetti); // Log per verificare i dati
-        this.Progetti.set(progetti);
-      },
-      error: (error: Error) => {
-        this.error.set(error.message);
-      },
-      complete: () => {
-        this.isFetching.set(false);
-      }
-    });
+      .subscribe({
+        // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
+        error: (error: Error) => {
+          this.error.set(error.message);
+        },
+        complete: () => {
+          this.isFetching.set(false);
+        }
+      });
 
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();
-    })
-
+    });
   }
 
   columns: Column<Progetto>[] =
     (Object.keys(this.headersProgetti) as (keyof Progetto)[])
       .filter(key => key !== 'id' && key in PROGETTO_HEADERS) // Escludi il campo 'id' e tieni solo quelli visibili
       .map(key => ({
-        header: this.headersProgetti[key],
-        value: p => p[key] as any,
-      }));
+        header: this.headersProgetti[key] ?? '',
+        value: (p: Progetto) => p[key] as any,
+      }))
+      .filter(column => column.header !== '');
 
   get progettiColsCount(): number{
     return this.columns.length;
@@ -80,11 +83,8 @@ export class Progetti {
   }
 
   aggiungiProgetto(newProgetto: Progetto) {
-    const progettiCorrenti = this.Progetti();
-    this.Progetti.set([...(progettiCorrenti || []), newProgetto]);
     this.isProgettoInAggiunta = false;
     this.showNotification('Progetto creato con successo!', 'success');
-    this.isProgettoInAggiunta = false;
   }
 
   annullaAggiuntaProgetto(){
@@ -95,11 +95,7 @@ export class Progetti {
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
       const subscription = this.requestsService.caricaProgettiDisponibili()
-        .subscribe({
-          next: (progetti) => {
-            console.log('Progetti caricati:', progetti); // Log per verificare i dati
-            this.Progetti.set(progetti);
-          },
+        .subscribe({ // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
           error: (error: Error) => {
             this.error.set(error.message);
           },
@@ -143,7 +139,3 @@ export class Progetti {
   }
 
 }
-
-
-
-

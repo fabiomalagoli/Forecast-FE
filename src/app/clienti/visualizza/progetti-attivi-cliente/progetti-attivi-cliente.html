@@ -1,0 +1,26 @@
+<header class="detail-header">
+  <button appButton type="button" (click)="indietro()">← Indietro</button>
+</header>
+<h2>Progetti attivi del cliente</h2>
+
+@if (loading()) {
+  <p>Caricamento...</p>
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (progetti().length === 0) {
+  <p>Nessun progetto trovato.</p>
+} @else {
+  @for (p of progetti(); track p.id) {
+    <section class="card">
+      <h3>{{ p.activity }}</h3>
+      @for (h of headersArray; track h.key) {
+        <div class="row">
+          <span class="label">{{ h.label }}</span>
+          <div class="value-container">
+            <strong class="value">{{ getValue(p, h.key) }}</strong>
+          </div>
+        </div>
+      }
+    </section>
+  }
+}

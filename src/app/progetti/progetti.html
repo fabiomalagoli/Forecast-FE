@@ -35,10 +35,10 @@
 </app-table-row>
 
 <!-- Righe -->
-@for (progetto of Progetti(); track progetto.id) {
+@for (progetto of progetti(); track progetto.id) {
   <app-progetto [progetto]="progetto" [columns]="columns" (edit)="apriModifica($event)"></app-progetto> <!-- inserimento dei dati per n. progetti presenti distribuiti sulle colonne -->
 }
-<p>Numero progetti: {{ Progetti()?.length }}</p> <!-- for debugging purposes -->
+<p>Numero progetti: {{ progetti().length }}</p> <!-- for debugging purposes -->
 
 @if (statusMessage()) {
   <div class="toast-container" [class]="statusMessage()?.type">

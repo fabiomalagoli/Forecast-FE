@@ -1,0 +1,54 @@
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <div class="np-panel">
+    <h2 class="np-title">Modifica cliente</h2>
+
+    @if (statusMessage) {
+      <div class="message message--{{ statusMessage.type }}">
+        {{ statusMessage.text }}
+      </div>
+    }
+
+    <form class="np-form np-form--grid" #f="ngForm" (ngSubmit)="submit(f)">
+      @for (header of headers; track header.key; let i = $index) {
+        <div class="np-field np-field--grid">
+          <app-text-input>
+            <label class="np-label" [attr.for]="toId(header.key, i)">
+              {{ header.label }}
+            </label>
+
+            <input
+              class="np-input"
+              type="text"
+              [attr.id]="toId(header.key, i)"
+              [name]="header.key"
+              [(ngModel)]="formData[header.key]"
+              [required]="isRequiredField(header.key)"
+              [maxlength]="getMaxLength(header.key)"
+              (input)="onFieldChange()"
+            />
+          </app-text-input>
+
+          @if (
+            f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
+          ) {
+            <p class="error">
+              @if (f.controls[header.key]?.errors?.['required']) {
+                *{{ getRequiredErrorMessage(header.key) }}
+              }
+              @if (f.controls[header.key]?.errors?.['maxlength']) {
+                *{{ getMaxLengthErrorMessage(header.key) }}
+              }
+            </p>
+          }
+        </div>
+      }
+
+      <div class="actions">
+        <button type="submit" [disabled]="isSubmitDisabled(f)">Modifica cliente</button>
+        <button type="button" (click)="onCancel()">Annulla</button>
+      </div>
+    </form>
+  </div>
+</dialog>

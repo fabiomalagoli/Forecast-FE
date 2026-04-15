@@ -4,6 +4,7 @@ export interface Progetto {
   id: string;
   description: string;
   head: string;
+  //Id per PUT: companyId, pmId, customerId, projectStatusId; correlazione con il ProjectForManipulationDto lato backend
   company: string;
   pm: string;
   startDate: string;
@@ -20,5 +21,9 @@ export interface Progetto {
     | 'Monitoring'
     | 'Closing';
   customer: string;
+  companyId?: string;
+  pmId?: string;
+  customerId?: string;
+  projectStatusId?: string;
   totalBudget: number;
 }

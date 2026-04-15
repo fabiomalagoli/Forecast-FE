@@ -1,19 +1,19 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { Progetto } from '../progetto.model';
+import { Progetto } from '../../../progetti/progetto/progetto.model';
 import { RequestsService } from '../../../shared/requests.service';
-import { PROGETTO_COMPLETO_HEADERS } from '../progetto-completo.headers';
+import { PROGETTO_COMPLETO_HEADERS } from '../../../progetti/progetto/progetto-completo.headers';
 import { AppButton } from '../../../shared/button/button';
 
 @Component({
   selector: 'app-visualizza',
   standalone: true,
   imports: [AppButton],
-  templateUrl: './visualizza.html',
-  styleUrls: ['./visualizza.css', '../../../shared/progetto-form.css'],
+  templateUrl: './progetti-attivi-cliente.html',
+  styleUrls: ['../visualizza.css', '../../../shared/progetto-form.css'],
 })
-export class Visualizza {
+export class elencoProgettiCliente implements OnInit {
   // Leggiamo l’ID dalla route (es. /progetti/:id)
   private route = inject(ActivatedRoute);
   // Usiamo la history del browser per tornare indietro
@@ -22,7 +22,7 @@ export class Visualizza {
 
   loading = signal(true);
   error = signal<string | null>(null);
-  progetto = signal<Progetto | null>(null);
+  progetti = signal<Progetto[]>([]);
 
   readonly headersProgetti: Partial<Record<keyof Progetto, string>> = PROGETTO_COMPLETO_HEADERS;
   readonly headersArray = Object.entries(this.headersProgetti)
@@ -33,25 +33,25 @@ export class Visualizza {
     }));
 
   ngOnInit() {
-    console.log("Componente Visualizza Inizializzato");
+    console.log("Elenco Progetti del Cliente Inizializzato");
     const id = this.route.snapshot.paramMap.get('id');
     console.log('ID recuperato:', id);
 
     if (!id) {
-      this.error.set('ID progetto mancante.');
+      this.error.set('ID cliente mancante.');
       this.loading.set(false);
       return;
     }
 
-    this.requests.caricaProgettoById(id).subscribe({
+    this.requests.caricaProgettiAttiviCliente(id).subscribe({
       next: (p) => {
-        console.log('Progetto caricato:', p);
-        this.progetto.set(p);
+        console.log('Progetti caricati:', p);
+        this.progetti.set(p);
         this.loading.set(false);
       },
       error: (err) => {
         console.error('Errore API:', err);
-        this.error.set('Errore nel caricamento del progetto.');
+        this.error.set('Errore nel caricamento dei progetti.');
         this.loading.set(false);
       },
     });

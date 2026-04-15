@@ -9,18 +9,34 @@
         <div class="np-field--grid">
           <app-text-input>
             <label [for]="h.key">{{ h.label }}</label>
-            @if (h.key === 'projectStatus') {
+            @if (h.key === 'projectStatusId' || h.key === 'companyId' || h.key === 'customerId') {
               <select
                 [id]="h.key"
                 [name]="h.key"
                 [(ngModel)]="formData[h.key]"
                 (ngModelChange)="onFieldChange()"
                 required>
-                @for (opt of statusOptions; track opt) {
-                  <option [value]="opt">{{ opt }}</option>
+                @for (opt of getOptions(h.key); track (opt.id)) {
+                  <option [value]="opt.id">{{ opt.name || opt.nome || opt }}</option>
                 }
               </select>
-            } @else {
+            }
+            @else if (h.key === 'pmId') {
+              <select
+                [id]="h.key"
+                [name]="h.key"
+                [(ngModel)]="formData[h.key]"
+                (ngModelChange)="onFieldChange()"
+                required>
+                <option [value]="null" disabled>Seleziona un'opzione</option>
+                @for (opt of getOptions(h.key); track (opt.id || opt.Id || opt)) {
+                  <option [value]="opt.id || opt.Id || opt">
+                    {{ (opt.name || opt.Name) }} {{ (opt.surname || opt.Surname || '') }}
+                  </option>
+                }
+              </select>
+            }
+            @else {
               <input
                 [id]="h.key"
                 [name]="h.key"

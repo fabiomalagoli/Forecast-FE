@@ -1,6 +1,14 @@
 @if(isFetching()){
   <h2>Acquisendo i clienti dal database...</h2>
 }
+
+@if(clienteInModifica()) {
+  <app-modifica-cliente 
+    [clienteDaModificare]="clienteInModifica()!" 
+    (cancel)="chiudiModifica()" 
+    (modified)="salvaModifica($event)"/>
+}
+
 @if (isClienteInAggiunta) {
   <app-new-cliente (cancel)="annullaAggiuntaCliente()" (created)="aggiungiCliente($event)" />
 }
@@ -30,5 +38,11 @@
 <!-- Righe -->
 @for (cliente of Clienti(); track cliente.id) {
   <!-- inserimento dei dati per n. clienti presenti distribuiti sulle colonne -->
-  <app-cliente [cliente]="cliente" [columns]="columns"></app-cliente>
+  <app-cliente [cliente]="cliente" [columns]="columns" (edit)="apriModifica($event)"></app-cliente>
+}
+
+@if (statusMessage()) {
+  <div class="toast-container" [class]="statusMessage()?.type">
+    {{ statusMessage()?.text }}
+  </div>
 }

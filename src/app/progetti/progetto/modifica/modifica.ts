@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output, OnInit, inject } from '@angular/core';
+import { Component, input, output, OnInit, inject, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Progetto } from '../../../progetti/progetto/progetto.model';
 import { TextInputComponent } from "../../../shared/text-input/text-input";
@@ -16,11 +16,21 @@ import { RequestsService } from '../../../shared/requests.service';
 export class ModificaComponent implements OnInit {
   private requests = inject(RequestsService);
 
+  // Liste per dropdown
+  listaAziende = signal<any[]>([]);
+  listaPM = signal<any[]>([]);
+  listaClienti = signal<any[]>([]);
+  listaStatiProgetto = signal<any[]>([]);
+  listaEmployee = signal<any[]>([]);
+
   // Riceviamo il progetto da modificare
   progettoDaModificare = input.required<Progetto>();
 
+  // Output per comunicare al padre il progetto modificato o l'annullamento
   saved = output<Progetto>();
   cancel = output<void>();
+
+  // Variabili per gestione stato del form e messaggi
   private dataOriginale: string = '';
   attemptedSubmit = false;
   noChangesMessage = false;
@@ -28,9 +38,18 @@ export class ModificaComponent implements OnInit {
   dateRangeError = false;
 
   formData: any = {};
+
+  // Headers dinamici basati su PROGETTO_COMPLETO_HEADERS, escludendo campi non editabili
   readonly headers = (Object.entries(PROGETTO_COMPLETO_HEADERS) as [keyof Progetto, string][])
     .filter(([key]) => key !== 'id' && key !== 'projectEmployees' && key !== 'projectJobRoles')
-    .map(([key, label]) => ({ key, label }));
+    .map(([key, label]) => {
+      // Trasformiamo le chiavi 'visuali' in chiavi 'tecniche' per le tendine
+      let finalKey = key as string;
+      if (['company', 'customer', 'pm', 'projectStatus'].includes(finalKey)) {
+        finalKey += 'Id';
+      }
+      return { key: finalKey, label };
+    });
   readonly statusOptions: Progetto['projectStatus'][] = [
     'Initiation',
     'Planning',
@@ -39,18 +58,51 @@ export class ModificaComponent implements OnInit {
     'Closing',
   ];
 
-  ngOnInit() {
-    const p = this.progettoDaModificare();
-    // Creiamo una copia profonda dei dati in entrata
-    this.formData = JSON.parse(JSON.stringify(p));
+ngOnInit() {
+  const p = this.progettoDaModificare();
+  this.formData = JSON.parse(JSON.stringify(p)); // Creiamo formData SUBITO
 
-    // Puliamo le date per gli input HTML
-    if (this.formData.startDate) this.formData.startDate = this.formData.startDate.split('T')[0];
-    if (this.formData.endDate) this.formData.endDate = this.formData.endDate.split('T')[0];
+  // Carichiamo le aziende e cerchiamo l'ID
+  this.requests.CaricaAziende().subscribe(data => {
+    this.listaAziende.set(data);
+    if (!this.formData.companyId && this.formData.company) {
+      this.formData.companyId = data.find(a => a.name === this.formData.company)?.id;
+    }
+  });
 
-    // Salviamo lo stato "perfetto" iniziale come stringa
-    this.dataOriginale = JSON.stringify(this.formData);
-  }
+  // Carichiamo i clienti e cerchiamo l'ID
+  this.requests.caricaClientiDisponibili().subscribe(data => {
+    this.listaClienti.set(data);
+    if (!this.formData.customerId && this.formData.customer) {
+      this.formData.customerId = data.find(c => c.name === this.formData.customer)?.id;
+    }
+  });
+
+  // Carichiamo gli stati e cerchiamo l'ID
+  this.requests.CaricaProjectStatus().subscribe(data => {
+    this.listaStatiProgetto.set(data);
+    if (!this.formData.projectStatusId && this.formData.projectStatus) {
+      this.formData.projectStatusId = data.find(s => s.name === this.formData.projectStatus)?.id;
+    }
+  });
+
+  // CARICAMENTO EMPLOYEE + FIX PM
+  this.requests.caricaEmployees().subscribe(data => {
+    this.listaEmployee.set(data);
+    // Se pmId è undefined, cerchiamolo usando il nome che abbiamo in formData.pm
+    if (!this.formData.pmId && this.formData.pm) {
+      const trovato = data.find(e => `${e.name} ${e.surname}` === this.formData.pm);
+      if (trovato) {
+        this.formData.pmId = trovato.id; // Assegniamo l'ID così la tendina si popola!
+      }
+    }
+  });
+
+  if (this.formData.startDate) this.formData.startDate = this.formData.startDate.split('T')[0];
+  if (this.formData.endDate) this.formData.endDate = this.formData.endDate.split('T')[0];
+
+  this.dataOriginale = JSON.stringify(this.formData);
+}
 
   isChanged(): boolean {
     // Se la stringa attuale è diversa da quella iniziale, l'utente ha toccato qualcosa
@@ -58,10 +110,12 @@ export class ModificaComponent implements OnInit {
   }
 
   isSubmitDisabled(form: NgForm): boolean {
+    // Disabilitiamo il submit se il form è invalido, se non ci sono cambiamenti o se i ruoli non sono completi
     return form.invalid || !this.hasValidRoles() || !this.isChanged();
   }
 
   onSubmitClick(form: NgForm, event: Event) {
+    // Se non ci sono cambiamenti, blocchiamo il submit e mostriamo un messaggio
     if (!this.isChanged()) {
       event.preventDefault();
       this.noChangesMessage = true;
@@ -69,6 +123,7 @@ export class ModificaComponent implements OnInit {
     }
 
     if (form.invalid || !this.hasValidRoles()) {
+      // Se il form è invalido o i ruoli non sono completi, blocchiamo il submit e mostriamo un messaggio
       event.preventDefault();
       this.attemptedSubmit = true;
     }
@@ -79,42 +134,38 @@ export class ModificaComponent implements OnInit {
   }
 
   submit(form: NgForm) {
-    if (form.invalid || !this.hasValidRoles() || !this.isChanged()) {
-      return;
-    }
+    if (form.invalid || !this.hasValidRoles() || !this.isChanged()) return;
 
-    const totalBudget = this.parseBudgetNumber(this.formData.totalBudget);
 
-    if (!Number.isFinite(totalBudget)) {
-      console.error('Il campo totalBudget deve essere un numero valido.');
-      return;
-    }
-    if (totalBudget < 0) {
-      console.error('Il campo totalBudget non può essere negativo.');
-      return;
-    }
+    const p = this.formData;
+    // Cerchiamo i nomi corrispondenti agli ID selezionati per la tabella
+    const selectedCompany = this.listaAziende().find(a => a.id === p.companyId)?.name;
+    const selectedCustomer = this.listaClienti().find(c => c.id === p.customerId)?.name;
+    const selectedStatus = this.listaStatiProgetto().find(s => s.id === p.projectStatusId)?.name;
+    const selectedPm = this.listaEmployee().find(e => e.id === p.pmId);
 
-    const progettoAggiornato = {
-      ...this.formData,
-      // Assicuriamoci che i campi numerici siano numeri reali
-      winProbability: Number(this.formData.winProbability),
-      totalDays: Number(this.formData.totalDays),
-      totalBudget
+    const payloadCompleto: any = {
+      ...p,
+      id: this.progettoDaModificare().id,
+      company: selectedCompany,
+      customer: selectedCustomer,
+      projectStatus: selectedStatus,
+      pm: selectedPm ? `${selectedPm.name} ${selectedPm.surname}` : p.pm,
+      // Numeri formattati per la tabella
+      winProbability: Number(p.winProbability), 
+      totalDays: Number(p.totalDays),
     };
 
-    if (progettoAggiornato.winProbability < 1 || progettoAggiornato.winProbability > 100) {
-      console.error('Il campo winProbability deve essere tra 1 e 100.');
-      return;
-    }
+    console.log("Payload finale inviato:", payloadCompleto);
 
-    this.requests.aggiornaProgetto(progettoAggiornato).subscribe({
+    this.requests.aggiornaProgetto(payloadCompleto).subscribe({
       next: () => {
-        this.attemptedSubmit = false;
-        this.noChangesMessage = false;
-        this.saved.emit(progettoAggiornato);
+        this.saved.emit(payloadCompleto);
+        this.showNotification('Progetto modificato con successo!', 'success');
       },
       error: (error) => {
-        this.showNotification(this.getErrorMessage(error, 'Errore durante il salvataggio delle modifiche.'), 'error');
+        console.error("Errore server:", error);
+        this.showNotification('Errore durante il salvataggio.', 'error');
       }
     });
   }
@@ -138,6 +189,16 @@ export class ModificaComponent implements OnInit {
       return '^[0-9]+$';
     }
     return '';
+  }
+
+  getOptions(key: string): any[] {
+  switch (key) {
+    case 'projectStatusId': return this.listaStatiProgetto();
+    case 'companyId': return this.listaAziende();
+    case 'customerId': return this.listaClienti();
+    case 'pmId': return this.listaEmployee();
+    default: return [];
+    }
   }
 
   private getTodayIsoDate(): string {
