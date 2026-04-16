@@ -27,7 +27,13 @@ export class RequestsService {
 
   private JobRoleLevels = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
 
+  private Employees = signal<{ id: string; name: string; surname: string; jobRole: string; jobRoleLevel: string; company: string; isActive: boolean }[]>([]);
+
   private Cards = signal<CardModel[]>([]);
+
+  private ProjectJobRoles = signal<{ id: string; project: string; jobRole: string; jobRoleLevel: string; dailyCost: number; daysSpent: number; effort: number; winProbability: number }[]>([]);
+
+  projectJobRolesCaricati = this.ProjectJobRoles.asReadonly();
 
   progettiCaricati = this.Progetti.asReadonly();
 
@@ -40,6 +46,8 @@ export class RequestsService {
   statiProgettoCaricati = this.StatiProgetto.asReadonly();
 
   jobRoleLevelsCaricati = this.JobRoleLevels.asReadonly();
+
+  employeesCaricati = this.Employees.asReadonly();
 
   cardsCaricate = this.Cards.asReadonly();
 
@@ -109,18 +117,25 @@ export class RequestsService {
     );
   }
 
-  aggiornaProgetto(progetto: Progetto) {
-    const payload = this.toProjectPayload(progetto);
-    return this.httpClient.put(`${environment.apiUrl}/projects/${progetto.id}`, payload).pipe(
+  private updateProgetto(progetto: Progetto) {
+    return this.httpClient.put(`${environment.apiUrl}/projects/${progetto.id}`, this.toProjectPayload(progetto)).pipe(
       tap(() => {
-        this.Progetti.update(prev => 
-          prev.map(p => p.id === progetto.id 
+        this.Progetti.update(prev =>
+          prev.map(p => p.id === progetto.id
             ? {...p, ...progetto }
             : p
           )
         );
-      })
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiornamento.');
+        return throwError(() => error);
+      }),
     );
+  }
+
+  aggiornaProgetto(progetto: Progetto) {
+    return this.updateProgetto(progetto);
   }
 
   aggiungiNuovoProgetto(progetto: Progetto) {
@@ -316,7 +331,7 @@ export class RequestsService {
 
   //GET PER PROGETTI PER CLIENTE (visualizza progetti attivi cliente)
 
-  caricaProgettiAttiviCliente(clienteId: string) {
+  private fetchProgettiAttiviCliente(clienteId: string) {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/customers/${encodeURIComponent(clienteId)}/projects`).pipe(
       tap((resData) => {
         console.log('Risposta dal backend (progetti attivi cliente):', resData);
@@ -342,7 +357,7 @@ export class RequestsService {
           customerId: project.customerId ?? project.customerId,
           projectStatusId: project.projectStatusId ?? project.projectStatusId,
           totalBudget: project.totalBudget || 0,
-        })),
+        }))
       ),
       catchError((error) => {
         console.log(error);
@@ -351,7 +366,20 @@ export class RequestsService {
     );
   }
 
-  aggiornaCliente(cliente: Cliente) {
+
+  caricaProgettiAttiviCliente(clienteId: string) {
+    return this.fetchProgettiAttiviCliente(clienteId).pipe(
+      tap({
+        next: (progetti) => {
+          const clienti = this.Clienti();
+        }
+      })
+    );
+
+  }
+    
+
+  private updateCliente(cliente: Cliente) {
     return this.httpClient.put(`${environment.apiUrl}/customers/${cliente.id}`, {
       vatNumber: cliente.vatNumber,
       name: cliente.name,
@@ -362,6 +390,14 @@ export class RequestsService {
       province: cliente.province,
       country: cliente.country,
     }).pipe(
+      tap(() => {
+        this.Clienti.update(prev =>
+          prev.map(c => c.id === cliente.id
+            ? {...c, ...cliente }
+            : c
+          )
+        );
+      }),
       catchError((error) => {
         this.errorService.showError('Errore durante l\'aggiornamento.');
         return throwError(() => error);
@@ -369,10 +405,14 @@ export class RequestsService {
     );
   }
 
+  aggiornaCliente(cliente: Cliente) {
+    return this.updateCliente(cliente);
+  }
+
 
   //Metodo GET per Aziende, PM e Clienti per dropdown nei form di inserimento/modifica progetto
 
-  CaricaAziende() {
+  private fetchAziende() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/companies`).pipe(
       tap((resData) => {
         console.log('Risposta dal backend (aziende):', resData);
@@ -391,7 +431,7 @@ export class RequestsService {
     );
   }
 
-  CaricaAziendeById(id: string) {
+  private fetchAziendaById(id: string) {
     return this.httpClient.get<any>(`${environment.apiUrl}/companies/${encodeURIComponent(id)}`).pipe(
       tap((resData) => console.log('Risposta dal backend (azienda byId):', resData)), 
       map((company) => ({
@@ -406,7 +446,34 @@ export class RequestsService {
     );
   }
 
-  CaricaProjectStatus() {
+  caricaAziendeDisponibili() {
+    return this.fetchAziende().pipe(
+      tap({
+        next: (aziende) => this.Aziende.set(aziende),
+      }),
+    );
+  }
+
+  caricaAziendaById(id: string) {
+    const cached = this.Aziende().find(a => a.id === id);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.fetchAziendaById(id).pipe(
+      tap({
+        next: (a) => {
+          const prev = this.Aziende();
+          const next = prev.some(x => x.id === a.id)
+            ? prev.map(x => (x.id === a.id ? a : x))
+            : [...prev, a];
+          this.Aziende.set(next);
+        },
+      }),
+    );
+  }
+
+  private fetchProjectStatus() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/projectstatus`).pipe(
       tap((resData) => {  
         console.log('Risposta dal backend (project status):', resData);
@@ -425,7 +492,7 @@ export class RequestsService {
     );
   }
 
-  CaricaProjectStatusById(id: string) {
+  private fetchProjectStatusById(id: string) {
     return this.httpClient.get<any>(`${environment.apiUrl}/projectstatus/${encodeURIComponent(id)}`).pipe(
       tap((resData) => console.log('Risposta dal backend (project status byId):', resData)),
       map((status) => ({
@@ -440,7 +507,34 @@ export class RequestsService {
     );
   }
 
-  caricaJobRoles() {
+  caricaStatiProgettoDisponibili() {
+    return this.fetchProjectStatus().pipe(
+      tap({
+        next: (stati) => this.StatiProgetto.set(stati),
+      }),
+    );
+  }
+
+  caricaStatoProgettoById(id: string) {
+    const cached = this.StatiProgetto().find(s => s.id === id);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.fetchProjectStatusById(id).pipe(
+      tap({
+        next: (s) => {
+          const prev = this.StatiProgetto();
+          const next = prev.some(x => x.id === s.id)
+            ? prev.map(x => (x.id === s.id ? s : x))
+            : [...prev, s];
+          this.StatiProgetto.set(next);
+        },
+      }),
+    );
+  }
+
+  private fetchJobRoles() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobroles`).pipe(
       tap((resData) => {
         console.log('Risposta dal backend (job roles):', resData);
@@ -459,7 +553,7 @@ export class RequestsService {
     );
   }
 
-  caricaJobRoleById(id: string) {
+  private fetchJobRoleById(id: string) {
     return this.httpClient.get<any>(`${environment.apiUrl}/jobroles/${encodeURIComponent(id)}`).pipe(
       tap((resData) => console.log('Risposta dal backend (job role byId):', resData)),
       map((role) => ({
@@ -474,7 +568,34 @@ export class RequestsService {
     );
   }
 
-  caricaJobRoleLevels() {
+  caricaJobRolesDisponibili() {
+    return this.fetchJobRoles().pipe(
+      tap({
+        next: (roles) => this.JobRoles.set(roles),
+      }),
+    );
+  }
+
+  caricaJobRoleById(id: string) {
+    const cached = this.JobRoles().find(r => r.id === id);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.fetchJobRoleById(id).pipe(
+      tap({
+        next: (r) => {
+          const prev = this.JobRoles();
+          const next = prev.some(x => x.id === r.id)
+            ? prev.map(x => (x.id === r.id ? r : x))
+            : [...prev, r];
+          this.JobRoles.set(next);
+        },
+      }),
+    );
+  }
+
+  private fetchJobRoleLevels() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobrolelevels`).pipe(
       tap((resData) => {
         console.log('Risposta dal backend (job role levels):', resData);
@@ -493,7 +614,7 @@ export class RequestsService {
     );
   }
 
-  caricaJobRoleLevelById(id: string) {
+  private fetchJobRoleLevelById(id: string) {
     return this.httpClient.get<any>(`${environment.apiUrl}/jobrolelevels/${encodeURIComponent(id)}`).pipe(
       tap((resData) => console.log('Risposta dal backend (job role level byId):', resData)),
       map((level) => ({
@@ -508,17 +629,44 @@ export class RequestsService {
     );
   }
 
-  caricaEmployees() {
+  caricaJobRoleLevelsDisponibili() {
+    return this.fetchJobRoleLevels().pipe(
+      tap({
+        next: (levels) => this.JobRoleLevels.set(levels),
+      }),
+    );
+  }
 
-    this.CaricaAziende().subscribe({
+  caricaJobRoleLevelById(id: string) {
+    const cached = this.JobRoleLevels().find(l => l.id === id);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.fetchJobRoleLevelById(id).pipe(
+      tap({
+        next: (l) => {
+          const prev = this.JobRoleLevels();
+          const next = prev.some(x => x.id === l.id)
+            ? prev.map(x => (x.id === l.id ? l : x))
+            : [...prev, l];
+          this.JobRoleLevels.set(next);
+        },
+      }),
+    );
+  }
+
+  private fetchEmployees() {
+
+    this.caricaAziendeDisponibili().subscribe({
       next: (aziende) => this.Aziende.set(aziende),
       error: (err) => console.log('Errore caricamento aziende:', err),
     });
-    this.caricaJobRoles().subscribe({
+    this.caricaJobRolesDisponibili().subscribe({
       next: (roles) => this.JobRoles.set(roles),
       error: (err) => console.log('Errore caricamento job roles:', err),
     });
-    this.caricaJobRoleLevels().subscribe({
+    this.caricaJobRoleLevelsDisponibili().subscribe({
       next: (levels) => this.JobRoleLevels.set(levels),
       error: (err) => console.log('Errore caricamento job role levels:', err),
     });
@@ -545,7 +693,7 @@ export class RequestsService {
     );
   }
 
-  caricaEmployeeById(id: string) {
+  private fetchEmployeeById(id: string) {
     return this.httpClient.get<any>(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`).pipe(
       tap((resData) => console.log('Risposta dal backend (employee byId):', resData)),
       map((employee) => ({
@@ -562,6 +710,113 @@ export class RequestsService {
         return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
       }),
     );
+  }
+
+  caricaEmployeesDisponibili() {
+    return this.fetchEmployees().pipe(
+      tap(emps => this.Employees.set(emps))
+    );
+  }
+
+  caricaEmployeeById(id: string) {
+    const cached = this.Employees().find(e => e.id === id);
+    if (cached) {
+      return of(cached);
+    }
+
+    return this.fetchEmployeeById(id).pipe(
+      tap({
+        next: (e) => {
+          const prev = this.Employees();
+          const next = prev.some(x => x.id === e.id)
+            ? prev.map(x => (x.id === e.id ? e : x))
+            : [...prev, e];
+          this.Employees.set(next);
+        },
+      }),
+    );
+  }
+
+  private fetchProjectJobRoles(projectId: string) {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (project job roles):', resData);
+      }),
+      map((roles) => roles.map(
+        (role) => ({
+          id: role.id,
+          project: this.Progetti().find(p => p.id === projectId)?.name || 'N/A',
+          jobRole: role.jobRole || 'N/A',
+          jobRoleLevel: role.jobRoleLevel || 'N/A',
+          dailyCost: role.dailycost || 0,
+          daysSpent: role.daysSpent || 0,
+          effort: role.effort || 0,
+          winProbability: role.winProbability ? role.winProbability : 0,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaProjectJobRoles(projectId: string) {
+    return this.fetchProjectJobRoles(projectId).pipe(
+      tap({
+        next: (roles) => this.ProjectJobRoles.set(roles),
+      }),
+    );
+  }
+
+  private updateProjectJobRole(projectId: string, Id: string, data: any) {
+    return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles/${encodeURIComponent(Id)}`, data).pipe(
+      tap(() => {
+        this.ProjectJobRoles.update(prev =>
+          prev.map(r => r.id === Id
+            ? {...r, ...data }
+            : r
+          )
+        );
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiornamento del ruolo di progetto.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  aggiornaProjectJobRole(projectId: string, roleId: string, data: any) {
+    return this.updateProjectJobRole(projectId, roleId, data);
+  }
+
+  private CreateProjectJobRole(projectId: string, data: any) {
+    return this.httpClient.post(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles`, data).pipe(
+      tap((created: any) => {
+        if (created?.id) {
+          this.ProjectJobRoles.update(prev =>
+            [...prev, {
+              id: created.id,
+              project: this.Progetti().find(p => p.id === projectId)?.name || 'N/A',
+              jobRole: created.jobRole || 'N/A',
+              jobRoleLevel: created.jobRoleLevel || 'N/A',
+              dailyCost: created.dailyCost || 0,
+              daysSpent: created.daysSpent || 0,
+              effort: created.effort || 0,
+              winProbability: created.winProbability ? created.winProbability : 0,
+            }]
+          );
+        }
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'inserimento del ruolo di progetto.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  aggiungiProjectJobRole(projectId: string, data: any) {
+    return this.CreateProjectJobRole(projectId, data);
   }
 
   getDropdownOptions() {
@@ -598,7 +853,7 @@ export class RequestsService {
     );
   }
 
-  getCards() {
+  caricaCardsDisponibili() {
     return this.fetchCards(
       `${environment.apiUrl}/projects/summary`,
       'Qualcosa è andato storto. Riprova più tardi.',
@@ -608,7 +863,7 @@ export class RequestsService {
       }),
     );
   }
-  private toProjectPayload(progetto: Progetto) {
+  toProjectPayload(progetto: Progetto) {
     // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
     return {
       name: progetto.name,

@@ -5,6 +5,7 @@ import { Progetto } from '../progetto.model';
 import { RequestsService } from '../../../shared/requests.service';
 import { PROGETTO_COMPLETO_HEADERS } from '../progetto-completo.headers';
 import { AppButton } from '../../../shared/button/button';
+import { Progetti } from '../../progetti';
 
 @Component({
   selector: 'app-visualizza',
@@ -65,6 +66,11 @@ export class Visualizza {
     if (Array.isArray(progettoValue)) return progettoValue.join(', ');
     if (typeof progettoValue === 'object') return JSON.stringify(progettoValue);
     return String(progettoValue);
+  }
+
+  gestisciSalvataggio(progettoAggiornato: Progetto) {
+    console.log("Ricevuto progetto aggiornato dall'output:", progettoAggiornato);
+    this.progetto.set(progettoAggiornato);
   }
 
   indietro() {

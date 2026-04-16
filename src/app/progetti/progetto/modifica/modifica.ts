@@ -5,6 +5,7 @@ import { Progetto } from '../../../progetti/progetto/progetto.model';
 import { TextInputComponent } from "../../../shared/text-input/text-input";
 import { PROGETTO_COMPLETO_HEADERS } from '../../progetto/progetto-completo.headers';
 import { RequestsService } from '../../../shared/requests.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-modifica-progetto',
@@ -22,6 +23,8 @@ export class ModificaComponent implements OnInit {
   listaClienti = signal<any[]>([]);
   listaStatiProgetto = signal<any[]>([]);
   listaEmployee = signal<any[]>([]);
+  listaJobRoles = signal<any[]>([]);
+  listaJobRoleLevels = signal<any[]>([]);
 
   // Riceviamo il progetto da modificare
   progettoDaModificare = input.required<Progetto>();
@@ -39,11 +42,10 @@ export class ModificaComponent implements OnInit {
 
   formData: any = {};
 
-  // Headers dinamici basati su PROGETTO_COMPLETO_HEADERS, escludendo campi non editabili
+  // Headers dinamici PROGETTO_COMPLETO_HEADERS, escludendo campi non editabili
   readonly headers = (Object.entries(PROGETTO_COMPLETO_HEADERS) as [keyof Progetto, string][])
     .filter(([key]) => key !== 'id' && key !== 'projectEmployees' && key !== 'projectJobRoles')
     .map(([key, label]) => {
-      // Trasformiamo le chiavi 'visuali' in chiavi 'tecniche' per le tendine
       let finalKey = key as string;
       if (['company', 'customer', 'pm', 'projectStatus'].includes(finalKey)) {
         finalKey += 'Id';
@@ -62,15 +64,13 @@ ngOnInit() {
   const p = this.progettoDaModificare();
   this.formData = JSON.parse(JSON.stringify(p)); // Creiamo formData SUBITO
 
-  // Carichiamo le aziende e cerchiamo l'ID
-  this.requests.CaricaAziende().subscribe(data => {
+  this.requests.caricaAziendeDisponibili().subscribe(data => {
     this.listaAziende.set(data);
     if (!this.formData.companyId && this.formData.company) {
       this.formData.companyId = data.find(a => a.name === this.formData.company)?.id;
     }
   });
 
-  // Carichiamo i clienti e cerchiamo l'ID
   this.requests.caricaClientiDisponibili().subscribe(data => {
     this.listaClienti.set(data);
     if (!this.formData.customerId && this.formData.customer) {
@@ -78,25 +78,26 @@ ngOnInit() {
     }
   });
 
-  // Carichiamo gli stati e cerchiamo l'ID
-  this.requests.CaricaProjectStatus().subscribe(data => {
+  this.requests.caricaStatiProgettoDisponibili().subscribe(data => {
     this.listaStatiProgetto.set(data);
     if (!this.formData.projectStatusId && this.formData.projectStatus) {
       this.formData.projectStatusId = data.find(s => s.name === this.formData.projectStatus)?.id;
     }
   });
 
-  // CARICAMENTO EMPLOYEE + FIX PM
-  this.requests.caricaEmployees().subscribe(data => {
+  this.requests.caricaEmployeesDisponibili().subscribe(data => {
     this.listaEmployee.set(data);
     // Se pmId è undefined, cerchiamolo usando il nome che abbiamo in formData.pm
     if (!this.formData.pmId && this.formData.pm) {
       const trovato = data.find(e => `${e.name} ${e.surname}` === this.formData.pm);
       if (trovato) {
-        this.formData.pmId = trovato.id; // Assegniamo l'ID così la tendina si popola!
+        this.formData.pmId = trovato.id; // Assegniamo l'ID
       }
     }
   });
+
+  this.requests.caricaJobRolesDisponibili().subscribe(data => this.listaJobRoles.set(data));
+  this.requests.caricaJobRoleLevelsDisponibili().subscribe(data => this.listaJobRoleLevels.set(data));
 
   if (this.formData.startDate) this.formData.startDate = this.formData.startDate.split('T')[0];
   if (this.formData.endDate) this.formData.endDate = this.formData.endDate.split('T')[0];
@@ -133,39 +134,69 @@ ngOnInit() {
     this.noChangesMessage = false;
   }
 
+  private isTempId(id: string): boolean {
+  // Se l'ID non è presente nei ruoli originali del progetto, lo consideriamo nuovo
+    return !this.progettoDaModificare().projectJobRoles?.some(r => r.id === id);
+  }
+
   submit(form: NgForm) {
     if (form.invalid || !this.hasValidRoles() || !this.isChanged()) return;
 
-
     const p = this.formData;
-    // Cerchiamo i nomi corrispondenti agli ID selezionati per la tabella
+    const projectId = this.progettoDaModificare().id;
+    const chiamate: any[] = [];
+
     const selectedCompany = this.listaAziende().find(a => a.id === p.companyId)?.name;
     const selectedCustomer = this.listaClienti().find(c => c.id === p.customerId)?.name;
     const selectedStatus = this.listaStatiProgetto().find(s => s.id === p.projectStatusId)?.name;
     const selectedPm = this.listaEmployee().find(e => e.id === p.pmId);
 
-    const payloadCompleto: any = {
+    const payloadProgetto: any = {
       ...p,
-      id: this.progettoDaModificare().id,
+      id: projectId,
       company: selectedCompany,
       customer: selectedCustomer,
       projectStatus: selectedStatus,
       pm: selectedPm ? `${selectedPm.name} ${selectedPm.surname}` : p.pm,
-      // Numeri formattati per la tabella
-      winProbability: Number(p.winProbability), 
+      winProbability: Number(p.winProbability),
       totalDays: Number(p.totalDays),
+      totalBudget: this.parseBudgetNumber(p.totalBudget)
     };
 
-    console.log("Payload finale inviato:", payloadCompleto);
+    // Rimuoviamo lista ruoli dal payload del progetto per evitare conflitti lato backend
+    delete payloadProgetto.projectJobRoles;
 
-    this.requests.aggiornaProgetto(payloadCompleto).subscribe({
+    chiamate.push(this.requests.aggiornaProgetto(payloadProgetto));
+
+    p.projectJobRoles.forEach((role: any) => {
+      const nomeRuolo = this.listaJobRoles().find(j => j.id === role.jobRole)?.name || '';
+      
+      const roleData = {
+        jobRoleId: role.jobRole, 
+        jobRoleLevelId: role.jobRoleLevel, 
+        
+        // Campi numerici
+        dailyCost: this.parseBudgetNumber(role.dailyCost),
+        daysSpent: Number(role.daysSpent),
+        winProbability: this.parseDecimal(role.winProbability)
+      };
+
+      if (this.isTempId(role.id)) {
+        chiamate.push(this.requests.aggiungiProjectJobRole(projectId, [roleData]));
+      } else {
+        chiamate.push(this.requests.aggiornaProjectJobRole(projectId, role.id, roleData));
+      }
+    });
+
+    forkJoin(chiamate).subscribe({
       next: () => {
-        this.saved.emit(payloadCompleto);
-        this.showNotification('Progetto modificato con successo!', 'success');
+        this.showNotification('Progetto e ruoli aggiornati con successo!', 'success');
+        this.saved.emit(this.formData);
+        this.dataOriginale = JSON.stringify(this.formData); // Reset stato modifiche
       },
       error: (error) => {
-        console.error("Errore server:", error);
-        this.showNotification('Errore durante il salvataggio.', 'error');
+        console.error("Errore durante il salvataggio massivo:", error);
+        this.showNotification('Errore durante l\'aggiornamento di alcuni dati.', 'error');
       }
     });
   }
@@ -235,7 +266,6 @@ ngOnInit() {
     const totalDays = Number(this.formData.totalDays);
 
     if (!start || !Number.isFinite(totalDays) || totalDays <= 0) {
-      // Giorni non validi: evitiamo di aggiornare la data fine
       this.formData.endDate = '';
       return;
     }
@@ -248,7 +278,7 @@ ngOnInit() {
 
   private parseIsoDate(value: string | undefined): Date | null {
     if (!value) return null;
-    // Parsing semplice e stabile per input date, senza sorprese di fuso orario
+    // Parsing semplice e stabile per input date (formato YYYY-MM-DD)
     const [y, m, d] = value.split('-').map((v) => Number(v));
     if (!y || !m || !d) return null;
     return new Date(Date.UTC(y, m - 1, d));
@@ -292,13 +322,12 @@ ngOnInit() {
       this.formData.projectJobRoles = [];
     }
 
-    // Creiamo un nuovo oggetto ruolo vuoto (con ID temporaneo se necessario)
     this.formData.projectJobRoles.push({
-      id: crypto.randomUUID(), // Genera un ID univoco per il trackBy
-      jobRole: '',
-      jobRoleLevel: 'Junior',
-      dailyCost: 0,
-      daysSpent: 0,
+      id: crypto.randomUUID(),
+      jobRole: '',      // Legato a r-role-i nell'HTML
+      jobRoleLevel: '', // Legato a r-lvl-i nell'HTML
+      dailyCost: '',
+      daysSpent: '',
       winProbability: 0
     });
   }
@@ -314,13 +343,19 @@ ngOnInit() {
   }
 
   private isRoleComplete(role: any): boolean {
-    const hasRole = typeof role?.jobRole === 'string' && role.jobRole.trim().length > 0;
-    const hasLevel = typeof role?.jobRoleLevel === 'string' && role.jobRoleLevel.trim().length > 0;
-    const hasDailyCost = role?.dailyCost !== null && role?.dailyCost !== undefined && role?.dailyCost !== '';
-    const hasDaysSpent = role?.daysSpent !== null && role?.daysSpent !== undefined && role?.daysSpent !== '';
+    const hasRole = role?.jobRole && String(role.jobRole).trim() !== '';
+    const hasLevel = role?.jobRoleLevel && String(role.jobRoleLevel).trim() !== '';
+    
+    const cost = this.parseBudgetNumber(role?.dailyCost);
+    const hasDailyCost = !isNaN(cost) && cost > 0;
+
+    const days = Number(role?.daysSpent);
+    const hasDaysSpent = !isNaN(days) && days > 0;
+    
     const roleWin = this.parseDecimal(role?.winProbability);
-    const hasWinProbability = Number.isFinite(roleWin) && roleWin >= 0.1 && roleWin <= 1;
-    return hasRole && hasLevel && hasDailyCost && hasDaysSpent && hasWinProbability;
+    const hasWinProbability = !isNaN(roleWin) && roleWin >= 0.1 && roleWin <= 1;
+
+    return !!(hasRole && hasLevel && hasDailyCost && hasDaysSpent && hasWinProbability);
   }
 
   private parseDecimal(value: unknown): number {

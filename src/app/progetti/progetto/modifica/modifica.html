@@ -67,7 +67,7 @@
 
       <div class="np-roles-section">
         <div class="roles-header">
-          <h3 class="np-title-sm">Ruoli e Risorse</h3>
+          <h3 class="np-title-sm">Ruoli</h3>
           <button type="button" class="btn-add-role" (click)="aggiungiRuolo()">+ Aggiungi Ruolo</button>
         </div>
         @if (formData.projectJobRoles?.length > 0) {
@@ -77,14 +77,31 @@
           @for (role of formData.projectJobRoles; track role.id; let i = $index) {
             <div class="role-grid-row">
               <div class="np-role-field">
-                <input type="text" class="np-input-direct" [(ngModel)]="role.jobRole" [name]="'r-name-'+i" required #rName="ngModel" (ngModelChange)="onFieldChange()" />
-                @if (rName.invalid && (rName.dirty || f.submitted || attemptedSubmit)) {
+                <select 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.jobRole" 
+                  [name]="'r-role-' + i" 
+                  required 
+                  #rRole="ngModel">
+                  @for (opt of listaJobRoles(); track opt.id) {
+                    <option [value]="opt.id">{{ opt.name }}</option>
+                  }
+                </select>
+
+                @if (rRole.invalid && (rRole.dirty || f.submitted || attemptedSubmit)) {
                   <span class="error">*campo obbligatorio</span>
                 }
               </div>
               <div class="np-role-field">
-                <select class="np-input-direct" [(ngModel)]="role.jobRoleLevel" [name]="'r-lvl-'+i" required #rLvl="ngModel" (ngModelChange)="onFieldChange()">
-                  <option value="Junior">Junior</option><option value="Middle">Middle</option><option value="Senior">Senior</option>
+                <select 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.jobRoleLevel" 
+                  [name]="'r-lvl-'+i" 
+                  required 
+                  #rLvl="ngModel">
+                  @for (opt of listaJobRoleLevels(); track opt.id) {
+                    <option [value]="opt.id">{{ opt.name }}</option>
+                  }
                 </select>
                 @if (rLvl.invalid && (rLvl.dirty || f.submitted || attemptedSubmit)) {
                   <span class="error">*campo obbligatorio</span>
@@ -139,4 +156,5 @@
   </div>
 }
 
-
+<pre>Form valido: {{ f.valid }}</pre>
+<pre>Errori: {{ f.errors | json }}</pre>

@@ -20,7 +20,7 @@ export class Grid {
   isGettingCard = false;
   ngOnInit() {
     this.isFetching.set(true);
-    const sub = this.requestService.getCards().subscribe({
+    const sub = this.requestService.caricaCardsDisponibili().subscribe({
       next: (cards: CardModel[]) => {
         this.Cards.set(cards);
         console.log('Cards caricate: ', cards);

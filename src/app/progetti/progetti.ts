@@ -12,6 +12,7 @@ import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { ModificaComponent } from "./progetto/modifica/modifica";
 import { effect } from '@angular/core';
+import { Visualizza } from './progetto/visualizza/visualizza';
 
 
 @Component({
@@ -123,10 +124,13 @@ export class Progetti {
   }
 
   salvaModifica(progettoAggiornato: Progetto) {
-    // La logica di aggiornamento è già gestita dentro il componente Modifica tramite il Service, qui dobbiamo solo chiudere il pannello.
-    this.chiudiModifica();
-    this.showNotification('Modifiche salvate correttamente!', 'success');
     this.progettoInModifica.set(null);
+    // Qui potresti chiamare un metodo del service per salvare le modifiche sul backend, ad esempio:
+    this.requestsService.caricaProgettiDisponibili().subscribe({
+      next: () => {
+        this.showNotification('Dati aggiornati dal database', 'success');
+      }
+    });
   }
 
   showNotification(text: string, type: 'success' | 'error') {

@@ -212,7 +212,7 @@ button[type="submit"]:disabled {
   box-shadow: none;
   opacity: 0.8;
 }
-/* --- SEZIONE RUOLI (Uniformata) --- */
+/* --- SEZIONE RUOLI --- */
 .np-roles-section {
   grid-column: 1 / -1;
   margin-top: 1.5rem;
@@ -249,6 +249,50 @@ button[type="submit"]:disabled {
 }
 
 .role-grid-header span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5e5866; /* Grigio come le tue label */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- SEZIONE RISORSE --- */
+.np-resources-section {
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid #eee;
+}
+
+.resources-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Griglia condivisa per Titoli e Righe */
+.resources-grid-header, .resources-grid-row {
+  display: grid;
+  /* Usiamo percentuali o fr per precisione: Ruolo(35%), Livello(20%), Costo(20%), Giorni(15%), X(40px) */
+  grid-template-columns: 2fr 1.2fr 1.2fr 1fr 1fr 40px; 
+  gap: 12px;
+  align-items: center;
+}
+
+.np-resource-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resources-grid-header {
+  margin-bottom: 8px;
+  padding: 0 5px;
+}
+
+.resources-grid-header span {
   font-size: 0.75rem;
   font-weight: 700;
   color: #5e5866; /* Grigio come le tue label */
