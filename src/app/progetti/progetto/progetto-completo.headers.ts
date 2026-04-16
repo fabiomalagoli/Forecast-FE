@@ -3,10 +3,10 @@ import { Progetto } from './progetto.model';
 
 export const PROGETTO_COMPLETO_HEADERS: Partial<Record<keyof Progetto, string>> = {
   company: 'Azienda',
-  pm: 'PM',
   customer: 'Cliente',
+  pm: 'PM',
   head: 'Referente',
-  activity: 'Attività',
+  name: 'Nome',
   description: 'Descrizione',
   totalBudget: 'Budget Totale',
   projectStatus: 'Stato',

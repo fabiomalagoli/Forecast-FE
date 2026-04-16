@@ -1,9 +1,9 @@
 export const PROGETTO_HEADERS = {
   company: 'Azienda',
-  pm: 'PM',
   customer: 'Cliente',
+  pm: 'PM',
   head: 'Referente',
-  activity: 'Attività',
+  name: 'Nome',
   description: 'Descrizione',
   projectStatus: 'Stato',
   totalDays: 'Giorni',

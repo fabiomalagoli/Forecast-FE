@@ -12,7 +12,7 @@
 } @else {
   @for (p of progetti(); track p.id) {
     <section class="card">
-      <h3>{{ p.activity }}</h3>
+      <h3>{{ p.name }}</h3>
       @for (h of headersArray; track h.key) {
         <div class="row">
           <span class="label">{{ h.label }}</span>

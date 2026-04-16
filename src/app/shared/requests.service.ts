@@ -201,7 +201,7 @@ export class RequestsService {
       map((projects) =>
         projects.map((project) => ({
           id: project.id,
-          activity: project.activity,
+          name: project.name,
           description: project.description,
           head: project.head,
           company: project.company || 'N/A',
@@ -235,7 +235,7 @@ export class RequestsService {
       tap((resData) => console.log('Risposta dal backend (byId):', resData)),
       map((project) => ({
         id: project.id,
-        activity: project.activity,
+        name: project.name,
         description: project.description,
         head: project.head,
         company: project.company || 'N/A',
@@ -324,7 +324,7 @@ export class RequestsService {
       map((projects) =>
         projects.map((project) => ({
           id: project.id,
-          activity: project.activity,
+          name: project.name,
           description: project.description,
           head: project.head,
           company: project.company || 'N/A',
@@ -611,7 +611,7 @@ export class RequestsService {
   private toProjectPayload(progetto: Progetto) {
     // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
     return {
-      activity: progetto.activity,
+      name: progetto.name,
       description: progetto.description,
       projectStatusId: progetto.projectStatusId,
       customerId: progetto.customerId,
