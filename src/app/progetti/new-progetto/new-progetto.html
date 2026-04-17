@@ -2,31 +2,50 @@
 
 <dialog open>
   <div class="np-panel">
-    <h2 class="np-title">Nuovo progetto</h2>
-    
+    <h2 class="np-title">{{ formData.id ? 'Modifica' : 'Nuovo' }} progetto</h2>
+
     <form (ngSubmit)="submit(f)" #f="ngForm" class="np-form--grid">
       @for (h of headers; track h.key) {
         <div class="np-field--grid">
           <app-text-input>
             <label [for]="h.key">{{ h.label }}</label>
-            @if (h.key === 'projectStatus') {
+            @if (h.key === 'projectStatusId' || h.key === 'companyId' || h.key === 'customerId') {
               <select
                 [id]="h.key"
                 [name]="h.key"
                 [(ngModel)]="formData[h.key]"
+                (ngModelChange)="onFieldChange()"
                 required>
-                @for (opt of statusOptions; track opt) {
-                  <option [value]="opt">{{ opt }}</option>
+                @for (opt of getOptions(h.key); track (opt.id)) {
+                  <option [value]="opt.id">{{ opt.name || opt.nome || opt }}</option>
                 }
               </select>
-            } @else {
-              <input 
-                [id]="h.key" 
-                [name]="h.key" 
-                [(ngModel)]="formData[h.key]" 
-                (ngModelChange)="h.key === 'startDate' || h.key === 'endDate' ? onDateChange() : h.key === 'totalDays' ? onTotalDaysChange() : null"
-                required 
+            }
+            @else if (h.key === 'pmId') {
+              <select
+                [id]="h.key"
+                [name]="h.key"
+                [(ngModel)]="formData[h.key]"
+                (ngModelChange)="onFieldChange()"
+                required>
+                <option [ngValue]="null">Nessun PM</option>
+                @for (opt of getOptions(h.key); track (opt.id || opt.Id || opt)) {
+                  <option [value]="opt.id || opt.Id || opt">
+                    {{ (opt.name || opt.Name) }} {{ (opt.surname || opt.Surname || '') }}
+                  </option>
+                }
+              </select>
+            }
+            @else {
+              <input
+                [id]="h.key"
+                [name]="h.key"
+                [(ngModel)]="formData[h.key]"
+                (ngModelChange)="onFieldChange(); h.key === 'startDate' || h.key === 'endDate' ? onDateChange() : h.key === 'totalDays' ? onTotalDaysChange() : null"
+                [required]="h.key !== 'totalBudget'"
+                [readonly]="h.key === 'totalBudget'"
                 [pattern]="getPattern(h.key)"
+                [class.field-changed]="isFieldChanged(h.key)"
                 [attr.min]="h.key === 'winProbability' ? 1 : (h.key === 'totalDays' ? 0 : (h.key === 'endDate' ? formData.startDate : null))"
                 [attr.max]="h.key === 'winProbability' ? 100 : null"
                 [attr.inputmode]="h.key === 'winProbability' ? 'numeric' : null"
@@ -39,7 +58,7 @@
               @if (f.controls[h.key]?.errors?.['required']) { *campo obbligatorio }
               @if (h.key === 'winProbability' && (f.controls[h.key]?.errors?.['min'] || f.controls[h.key]?.errors?.['max'] || f.controls[h.key]?.errors?.['pattern'])) { *sono validi solo numeri da 1 a 100 }
               @if (h.key === 'totalDays' && (f.controls[h.key]?.errors?.['pattern'] || f.controls[h.key]?.errors?.['min'])) { *sono accettati solo numeri positivi o nulli }
-              @if (h.key !== 'winProbability' && h.key !== 'totalDays' && f.controls[h.key]?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
+              @if (h.key !== 'winProbability' && h.key !== 'totalDays' && h.key !== 'totalBudget' && f.controls[h.key]?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
             </span>
           }
           @if (h.key === 'endDate' && dateRangeError) {
@@ -50,8 +69,7 @@
 
       <div class="np-roles-section">
         <div class="roles-header">
-          <h3 class="np-title-sm">Ruoli e Risorse</h3>
-          <button type="button" class="btn-add-role" (click)="aggiungiRuolo()">+ Aggiungi Ruolo</button>
+          <h3 class="np-title-sm">Ruoli</h3>
           <button type="button" class="btn-add-role" (click)="aggiungiRuolo()">+ Aggiungi Ruolo</button>
         </div>
         @if (formData.projectJobRoles?.length > 0) {
@@ -61,35 +79,77 @@
           @for (role of formData.projectJobRoles; track role.id; let i = $index) {
             <div class="role-grid-row">
               <div class="np-role-field">
-                <input type="text" class="np-input-direct" [(ngModel)]="role.jobRole" [name]="'r-name-'+i" required #rName="ngModel" />
-                @if (rName.invalid && (rName.dirty || f.submitted || attemptedSubmit)) {
+                <select 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.jobRole" 
+                  [name]="'r-role-' + i" 
+                  required 
+                  #rRole="ngModel">
+                  <option [ngValue]="null" disabled selected>Scegli un ruolo...</option>
+                  @for (opt of listaJobRoles(); track opt.id) {
+                    <option [value]="opt.id">{{ opt.name }}</option>
+                  }
+                </select>
+
+                @if (rRole.invalid && (rRole.dirty || f.submitted || attemptedSubmit)) {
                   <span class="error">*campo obbligatorio</span>
                 }
               </div>
               <div class="np-role-field">
-                <select class="np-input-direct" [(ngModel)]="role.jobRoleLevel" [name]="'r-lvl-'+i" required #rLvl="ngModel">
-                  <option value="Junior">Junior</option><option value="Middle">Middle</option><option value="Senior">Senior</option>
+                <select 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.jobRoleLevel" 
+                  [name]="'r-lvl-'+i" 
+                  required 
+                  #rLvl="ngModel">
+                  <option [ngValue]="null" disabled selected>Scegli un livello...</option>
+                  @for (opt of listaJobRoleLevels(); track opt.id) {
+                    <option [value]="opt.id">{{ opt.name }}</option>
+                  }
                 </select>
                 @if (rLvl.invalid && (rLvl.dirty || f.submitted || attemptedSubmit)) {
                   <span class="error">*campo obbligatorio</span>
                 }
               </div>
               <div class="np-role-field">
-                <input type="number" class="np-input-direct np-input--currency" [(ngModel)]="role.dailyCost" [name]="'r-cost-'+i" required #rCost="ngModel" #rCostEl min="0" />
+                <input 
+                  type="number" 
+                  class="np-input-direct np-input--currency" 
+                  [(ngModel)]="role.dailyCost" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'r-cost-'+i" 
+                  required #rCost="ngModel" 
+                  #rCostEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
                 @if (rCost.invalid && (rCost.dirty || f.submitted || attemptedSubmit)) {
                   @if (rCostEl.value === '') { <span class="error">*campo obbligatorio</span> }
                   @if (rCostEl.value !== '' && (rCost.errors?.['min'] || rCost.errors?.['number'] || rCost.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
                 }
               </div>
               <div class="np-role-field">
-                <input type="number" class="np-input-direct" [(ngModel)]="role.daysSpent" [name]="'r-days-'+i" required #rDays="ngModel" #rDaysEl min="0" />
+                <input
+                  type="number" 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.daysSpent" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'r-days-'+i" 
+                  required #rDays="ngModel" 
+                  #rDaysEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
                 @if (rDays.invalid && (rDays.dirty || f.submitted || attemptedSubmit)) {
                   @if (rDaysEl.value === '') { <span class="error">*campo obbligatorio</span> }
                   @if (rDaysEl.value !== '' && (rDays.errors?.['min'] || rDays.errors?.['number'] || rDays.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
                 }
               </div>
               <div class="np-role-field">
-                <input type="text" inputmode="decimal" class="np-input-direct" [(ngModel)]="role.winProbability" [name]="'r-win-'+i" required #rWin="ngModel" />
+                <input 
+                  type="text" 
+                  inputmode="decimal" 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.winProbability" 
+                  [name]="'r-win-'+i" 
+                  required #rWin="ngModel" 
+                  (ngModelChange)="onFieldChange()" />
                 @if ((rWin.dirty || f.submitted || attemptedSubmit) && getRoleWinError(role)) {
                   @if (getRoleWinError(role) === 'required') { <span class="error">*campo obbligatorio</span> }
                   @if (getRoleWinError(role) === 'range') { <span class="error">*valori validi da 0,1 a 1</span> }
@@ -101,16 +161,97 @@
         }
       </div>
 
+      <div class="np-resources-section">
+        <div class="resources-header">
+          <h3 class="np-title-sm">Risorse</h3>
+          <button type="button" class="btn-add-resource" (click)="aggiungiRisorsa()">+ Aggiungi Risorsa</button>
+        </div>
+        @if (formData.projectEmployees?.length > 0) {
+          <div class="resource-grid-header">
+            <span>Risorsa</span><span>Costo G.</span><span>Giorni</span><span>Win %</span><span></span>
+          </div>
+          @for (employee of formData.projectEmployees; track employee.id; let i = $index) {
+            <div class="resource-grid-row">
+              <div class="np-resource-field">
+                <select 
+                  class="np-input-direct" 
+                  [(ngModel)]="employee.employeeId" 
+                  [name]="'e-role-' + i" 
+                  required 
+                  #eRole="ngModel">
+                  <option [ngValue]="null" disabled selected>Scegli una risorsa...</option>
+                  @for (opt of listaEmployees(); track opt.id) {
+                    <option [value]="opt.id">{{ opt.name }}</option>
+                  }
+                </select>
+
+                @if (eRole.invalid && (eRole.dirty || f.submitted || attemptedSubmit)) {
+                  <span class="error">*campo obbligatorio</span>
+                }
+              </div>              
+              <div class="np-resource-field">
+                <input 
+                  type="number" 
+                  class="np-input-direct np-input--currency" 
+                  [(ngModel)]="employee.dailyCost" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'e-cost-'+i" 
+                  required #eCost="ngModel" 
+                  #eCostEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
+                @if (eCost.invalid && (eCost.dirty || f.submitted || attemptedSubmit)) {
+                  @if (eCostEl.value === '') { <span class="error">*campo obbligatorio</span> }
+                  @if (eCostEl.value !== '' && (eCost.errors?.['min'] || eCost.errors?.['number'] || eCost.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
+                }
+              </div>
+              <div class="np-resource-field">
+                <input
+                  type="number" 
+                  class="np-input-direct" 
+                  [(ngModel)]="employee.daysSpent" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'e-days-'+i" 
+                  required #eDays="ngModel" 
+                  #eDaysEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
+                @if (eDays.invalid && (eDays.dirty || f.submitted || attemptedSubmit)) {
+                  @if (eDaysEl.value === '') { <span class="error">*campo obbligatorio</span> }
+                  @if (eDaysEl.value !== '' && (eDays.errors?.['min'] || eDays.errors?.['number'] || eDays.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
+                }
+              </div>
+              <div class="np-resource-field">
+                <input 
+                  type="text" 
+                  inputmode="decimal" 
+                  class="np-input-direct" 
+                  [(ngModel)]="employee.winProbability" 
+                  [name]="'e-win-'+i" 
+                  required #eWin="ngModel" 
+                  (ngModelChange)="onFieldChange()" />
+                @if ((eWin.dirty || f.submitted || attemptedSubmit) && getRoleWinError(employee)) {
+                  @if (getRoleWinError(employee) === 'required') { <span class="error">*campo obbligatorio</span> }
+                  @if (getRoleWinError(employee) === 'range') { <span class="error">*valori validi da 0,1 a 1</span> }
+                }
+              </div>
+              <button type="button" class="btn-remove" (click)="rimuoviRisorsa(i)">×</button>
+            </div>
+          }
+        }
+      </div>
+
       <div class="actions">
         <button
           type="submit"
           [attr.aria-disabled]="isSubmitDisabled(f)"
           [class.btn--disabled]="isSubmitDisabled(f)"
           (click)="onSubmitClick(f, $event)">
-          Crea progetto
+          Crea Progetto
         </button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
+      @if (noChangesMessage) {
+        <div class="no-changes-msg">Nessuna modifica rilevata: inserisci i nuovi dati.</div>
+      }
     </form>
   </div>
 </dialog>
@@ -120,5 +261,5 @@
   </div>
 }
 
-
-
+<pre>Form valido: {{ f.valid }}</pre>
+<pre>Errori: {{ f.errors | json }}</pre>
