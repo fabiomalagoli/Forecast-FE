@@ -28,7 +28,7 @@
                 [(ngModel)]="formData[h.key]"
                 (ngModelChange)="onFieldChange()"
                 required>
-                <option [value]="null" disabled>Seleziona un'opzione</option>
+                <option [ngValue]="null">Nessun PM</option>
                 @for (opt of getOptions(h.key); track (opt.id || opt.Id || opt)) {
                   <option [value]="opt.id || opt.Id || opt">
                     {{ (opt.name || opt.Name) }} {{ (opt.surname || opt.Surname || '') }}
@@ -42,8 +42,10 @@
                 [name]="h.key"
                 [(ngModel)]="formData[h.key]"
                 (ngModelChange)="onFieldChange(); h.key === 'startDate' || h.key === 'endDate' ? onDateChange() : h.key === 'totalDays' ? onTotalDaysChange() : null"
-                required
+                [required]="h.key !== 'totalBudget'"
+                [readonly]="h.key === 'totalBudget'"
                 [pattern]="getPattern(h.key)"
+                [class.field-changed]="isFieldChanged(h.key)"
                 [attr.min]="h.key === 'winProbability' ? 1 : (h.key === 'totalDays' ? 0 : (h.key === 'endDate' ? formData.startDate : null))"
                 [attr.max]="h.key === 'winProbability' ? 100 : null"
                 [attr.inputmode]="h.key === 'winProbability' ? 'numeric' : null"
@@ -56,7 +58,7 @@
               @if (f.controls[h.key]?.errors?.['required']) { *campo obbligatorio }
               @if (h.key === 'winProbability' && (f.controls[h.key]?.errors?.['min'] || f.controls[h.key]?.errors?.['max'] || f.controls[h.key]?.errors?.['pattern'])) { *sono validi solo numeri da 1 a 100 }
               @if (h.key === 'totalDays' && (f.controls[h.key]?.errors?.['pattern'] || f.controls[h.key]?.errors?.['min'])) { *sono accettati solo numeri positivi o nulli }
-              @if (h.key !== 'winProbability' && h.key !== 'totalDays' && f.controls[h.key]?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
+              @if (h.key !== 'winProbability' && h.key !== 'totalDays' && h.key !== 'totalBudget' && f.controls[h.key]?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
             </span>
           }
           @if (h.key === 'endDate' && dateRangeError) {
@@ -83,6 +85,7 @@
                   [name]="'r-role-' + i" 
                   required 
                   #rRole="ngModel">
+                  <option [ngValue]="null" disabled selected>Scegli un ruolo...</option>
                   @for (opt of listaJobRoles(); track opt.id) {
                     <option [value]="opt.id">{{ opt.name }}</option>
                   }
@@ -99,6 +102,7 @@
                   [name]="'r-lvl-'+i" 
                   required 
                   #rLvl="ngModel">
+                  <option [ngValue]="null" disabled selected>Scegli un livello...</option>
                   @for (opt of listaJobRoleLevels(); track opt.id) {
                     <option [value]="opt.id">{{ opt.name }}</option>
                   }
@@ -108,21 +112,44 @@
                 }
               </div>
               <div class="np-role-field">
-                <input type="number" class="np-input-direct np-input--currency" [(ngModel)]="role.dailyCost" [name]="'r-cost-'+i" required #rCost="ngModel" #rCostEl (ngModelChange)="onFieldChange()" min="0" />
+                <input 
+                  type="number" 
+                  class="np-input-direct np-input--currency" 
+                  [(ngModel)]="role.dailyCost" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'r-cost-'+i" 
+                  required #rCost="ngModel" 
+                  #rCostEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
                 @if (rCost.invalid && (rCost.dirty || f.submitted || attemptedSubmit)) {
                   @if (rCostEl.value === '') { <span class="error">*campo obbligatorio</span> }
                   @if (rCostEl.value !== '' && (rCost.errors?.['min'] || rCost.errors?.['number'] || rCost.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
                 }
               </div>
               <div class="np-role-field">
-                <input type="number" class="np-input-direct" [(ngModel)]="role.daysSpent" [name]="'r-days-'+i" required #rDays="ngModel" #rDaysEl (ngModelChange)="onFieldChange()" min="0" />
+                <input
+                  type="number" 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.daysSpent" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'r-days-'+i" 
+                  required #rDays="ngModel" 
+                  #rDaysEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
                 @if (rDays.invalid && (rDays.dirty || f.submitted || attemptedSubmit)) {
                   @if (rDaysEl.value === '') { <span class="error">*campo obbligatorio</span> }
                   @if (rDaysEl.value !== '' && (rDays.errors?.['min'] || rDays.errors?.['number'] || rDays.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
                 }
               </div>
               <div class="np-role-field">
-                <input type="text" inputmode="decimal" class="np-input-direct" [(ngModel)]="role.winProbability" [name]="'r-win-'+i" required #rWin="ngModel" (ngModelChange)="onFieldChange()" />
+                <input 
+                  type="text" 
+                  inputmode="decimal" 
+                  class="np-input-direct" 
+                  [(ngModel)]="role.winProbability" 
+                  [name]="'r-win-'+i" 
+                  required #rWin="ngModel" 
+                  (ngModelChange)="onFieldChange()" />
                 @if ((rWin.dirty || f.submitted || attemptedSubmit) && getRoleWinError(role)) {
                   @if (getRoleWinError(role) === 'required') { <span class="error">*campo obbligatorio</span> }
                   @if (getRoleWinError(role) === 'range') { <span class="error">*valori validi da 0,1 a 1</span> }
@@ -134,6 +161,11 @@
         }
       </div>
 
+      @if (f.valid && hasValidRoles() && !isChanged()) {
+        <div class="info-message">
+          <p>ℹ️ Il progetto è identico alla versione originale. Modifica un campo per salvare.</p>
+        </div>
+      }
       <div class="actions">
         <button
           type="submit"

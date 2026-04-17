@@ -774,8 +774,8 @@ export class RequestsService {
       tap(() => {
         this.ProjectJobRoles.update(prev =>
           prev.map(r => r.id === Id
-            ? {...r, ...data }
-            : r
+            ? {...r, ...data } // Aggiorna solo i campi modificati, mantenendo quelli non presenti in data invariati
+            : r // Mantiene inalterati i ruoli non interessati dall'update
           )
         );
       }),
@@ -827,6 +827,25 @@ export class RequestsService {
       }),
     );
   }
+
+  private DeleteProjectJobRole(projectId: string, roleId: string) {
+    return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles/${encodeURIComponent(roleId)}`).pipe(
+      tap(() => {
+        this.ProjectJobRoles.update(prev =>
+          prev.filter(r => r.id !== roleId)
+        );
+      }), // Aggiorna lo stato locale rimuovendo il ruolo eliminato
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'eliminazione del ruolo di progetto.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  EliminaProjectJobRole(projectId: string, roleId: string) {
+    return this.DeleteProjectJobRole(projectId, roleId);
+  }
+
 
   //TODO: aggiungere metodo per eliminazione cliente (DELETE) e chiedere se è necessario un metodo per eliminazione progetto (DELETE)
 

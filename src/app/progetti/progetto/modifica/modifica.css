@@ -1,0 +1,20 @@
+/* Stile per l'input modificato */
+.field-changed {
+  border-left: 4px solid #ffa500 !important; /* Un bordo arancione a sinistra */
+  background-color: #fff9f0; /* Un leggero sfondo giallino */
+  transition: all 0.3s ease;
+}
+
+/* Messaggio di "Nessuna modifica" */
+.info-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background-color: #e3f2fd;
+  border-left: 5px solid #2196f3;
+  color: #0d47a1;
+  margin: 15px 0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}

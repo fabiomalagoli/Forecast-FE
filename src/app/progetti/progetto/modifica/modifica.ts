@@ -12,7 +12,7 @@ import { forkJoin } from 'rxjs';
   standalone: true,
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './modifica.html',
-  styleUrls: ['../../new-progetto/new-progetto.css', '../../../shared/progetto-form.css'],
+  styleUrls: ['../../new-progetto/new-progetto.css', '../../../shared/progetto-form.css', './modifica.css'],
 })
 export class ModificaComponent implements OnInit {
   private requests = inject(RequestsService);
@@ -35,6 +35,7 @@ export class ModificaComponent implements OnInit {
 
   // Variabili per gestione stato del form e messaggi
   private dataOriginale: string = '';
+  private initialDataObj: any = null; // Ci serve per il CSS (vedi sotto)
   attemptedSubmit = false;
   noChangesMessage = false;
   statusMessage: { text: string; type: 'success' | 'error' } | null = null;
@@ -60,54 +61,98 @@ export class ModificaComponent implements OnInit {
     'Closing',
   ];
 
-ngOnInit() {
-  const p = this.progettoDaModificare();
-  this.formData = JSON.parse(JSON.stringify(p)); // Creiamo formData SUBITO
+  ngOnInit() {
+    const p = this.progettoDaModificare();
+    this.formData = JSON.parse(JSON.stringify(p));
 
-  this.requests.caricaAziendeDisponibili().subscribe(data => {
-    this.listaAziende.set(data);
-    if (!this.formData.companyId && this.formData.company) {
-      this.formData.companyId = data.find(a => a.name === this.formData.company)?.id;
-    }
-  });
+    // Definiamo tutte le chiamate necessarie
+    const caricamenti = {
+      aziende: this.requests.caricaAziendeDisponibili(),
+      clienti: this.requests.caricaClientiDisponibili(),
+      stati: this.requests.caricaStatiProgettoDisponibili(),
+      employees: this.requests.caricaEmployeesDisponibili(),
+      roles: this.requests.caricaJobRolesDisponibili(),
+      levels: this.requests.caricaJobRoleLevelsDisponibili()
+    };
 
-  this.requests.caricaClientiDisponibili().subscribe(data => {
-    this.listaClienti.set(data);
-    if (!this.formData.customerId && this.formData.customer) {
-      this.formData.customerId = data.find(c => c.name === this.formData.customer)?.id;
-    }
-  });
+    forkJoin(caricamenti).subscribe(risultati => {
+      this.listaAziende.set(risultati.aziende);
+      this.listaClienti.set(risultati.clienti);
+      this.listaStatiProgetto.set(risultati.stati);
+      this.listaEmployee.set(risultati.employees);
+      this.listaJobRoles.set(risultati.roles);
+      this.listaJobRoleLevels.set(risultati.levels);
 
-  this.requests.caricaStatiProgettoDisponibili().subscribe(data => {
-    this.listaStatiProgetto.set(data);
-    if (!this.formData.projectStatusId && this.formData.projectStatus) {
-      this.formData.projectStatusId = data.find(s => s.name === this.formData.projectStatus)?.id;
-    }
-  });
+      // Mappatura ID principali
+      this.formData.companyId = risultati.aziende.find(a => a.name === this.formData.company)?.id || null;
+      this.formData.customerId = risultati.clienti.find(c => c.name === this.formData.customer)?.id || null;
+      this.formData.projectStatusId = risultati.stati.find(s => s.name === this.formData.projectStatus)?.id || null;
 
-  this.requests.caricaEmployeesDisponibili().subscribe(data => {
-    this.listaEmployee.set(data);
-    // Se pmId è undefined, cerchiamolo usando il nome che abbiamo in formData.pm
-    if (!this.formData.pmId && this.formData.pm) {
-      const trovato = data.find(e => `${e.name} ${e.surname}` === this.formData.pm);
-      if (trovato) {
-        this.formData.pmId = trovato.id; // Assegniamo l'ID
+      if (this.formData.pm) {
+        const pmCercato = this.formData.pm.trim().toLowerCase();
+        
+        const pmTrovato = risultati.employees.find(e => {
+          const nomeCompleto = `${e.name} ${e.surname}`.trim().toLowerCase();
+          const nomeInvertito = `${e.surname} ${e.name}`.trim().toLowerCase();
+          // Controlliamo entrambi i casi (Nome Cognome o Cognome Nome)
+          return nomeCompleto === pmCercato || nomeInvertito === pmCercato;
+        });
+
+        this.formData.pmId = pmTrovato?.id || null;
+      } else {
+        this.formData.pmId = null;
       }
-    }
-  });
 
-  this.requests.caricaJobRolesDisponibili().subscribe(data => this.listaJobRoles.set(data));
-  this.requests.caricaJobRoleLevelsDisponibili().subscribe(data => this.listaJobRoleLevels.set(data));
+      // Mappatura Ruoli: Se non trovi l'ID, metti null o mantieni l'ID esistente
+      if (this.formData.projectJobRoles) {
+        this.formData.projectJobRoles = this.formData.projectJobRoles.map((role: any) => {
+          // Se role.jobRole è già un UUID, viene usato. 
+          // Altrimenti cercalo nella lista tramite il nome.
+          const isUuid = /^[0-9a-fA-F-]{36}$/.test(role.jobRole);
+          const jobRoleId = isUuid ? role.jobRole : risultati.roles.find((r: any) => r.name === role.jobRole)?.id;
+          
+          const isLvlUuid = /^[0-9a-fA-F-]{36}$/.test(role.jobRoleLevel);
+          const jobRoleLevelId = isLvlUuid ? role.jobRoleLevel : risultati.levels.find((l: any) => l.name === role.jobRoleLevel)?.id;
 
-  if (this.formData.startDate) this.formData.startDate = this.formData.startDate.split('T')[0];
-  if (this.formData.endDate) this.formData.endDate = this.formData.endDate.split('T')[0];
+          return {
+            ...role,
+            jobRole: jobRoleId || null,
+            jobRoleLevel: jobRoleLevelId || null,
+            dailyCost: role.dailyCost || 0,
+            daysSpent: Number(role.daysSpent || 0),
+            winProbability: role.winProbability || 0
+          };
+        });
+      }
 
-  this.dataOriginale = JSON.stringify(this.formData);
-}
+      // Normalizzazione finale
+      this.formData.startDate = this.formData.startDate?.split('T')[0] || '';
+      this.formData.endDate = this.formData.endDate?.split('T')[0] || '';
+      this.formData.winProbability = Number(this.formData.winProbability || 0);
+      this.formData.totalDays = Number(this.formData.totalDays || 0);
+
+      this.dataOriginale = JSON.stringify(this.formData);
+      this.initialDataObj = JSON.parse(this.dataOriginale);
+    });
+  }
 
   isChanged(): boolean {
     // Se la stringa attuale è diversa da quella iniziale, l'utente ha toccato qualcosa
+    console.log("Comparing current form data with original:");
+    console.log("Current:", this.formData);
+    console.log("Original:", this.initialDataObj);
     return JSON.stringify(this.formData) !== this.dataOriginale;
+  }
+
+  isFieldChanged(key: string): boolean {
+  if (!this.initialDataObj) return false;
+  return JSON.stringify(this.formData[key]) !== JSON.stringify(this.initialDataObj[key]);
+  }
+
+  isRoleFieldChanged(index: number, field: string): boolean {
+    const originalRole = this.initialDataObj.projectJobRoles?.[index];
+    if (!originalRole) return true; // È un nuovo ruolo
+    return JSON.stringify(this.formData.projectJobRoles[index][field]) !== JSON.stringify(originalRole[field]);
   }
 
   isSubmitDisabled(form: NgForm): boolean {
@@ -139,6 +184,19 @@ ngOnInit() {
     return !this.progettoDaModificare().projectJobRoles?.some(r => r.id === id);
   }
 
+  ricalcolaTotali() {
+    const ruoli = this.formData.projectJobRoles || [];
+    const totaleGiorni = ruoli.reduce((acc: number, r: any) => acc + Number(r.daysSpent || 0), 0);
+    const totaleBudget = ruoli.reduce((acc: number, r: any) => {
+      const costo = this.parseBudgetNumber(r.dailyCost) || 0;
+      const giorni = Number(r.daysSpent || 0);
+      return acc + (costo * giorni);
+    }, 0);
+
+    this.formData.totalDays = totaleGiorni;
+    this.formData.totalBudget = totaleBudget;
+  }
+
   submit(form: NgForm) {
     if (form.invalid || !this.hasValidRoles() || !this.isChanged()) return;
 
@@ -150,6 +208,14 @@ ngOnInit() {
     const selectedCustomer = this.listaClienti().find(c => c.id === p.customerId)?.name;
     const selectedStatus = this.listaStatiProgetto().find(s => s.id === p.projectStatusId)?.name;
     const selectedPm = this.listaEmployee().find(e => e.id === p.pmId);
+
+    const ruoliOriginali = this.progettoDaModificare().projectJobRoles || [];
+    const ruoliDaRimuovere = ruoliOriginali.filter((r: any) => !p.projectJobRoles?.some((nr: any) => nr.id === r.id));
+
+    // Aggiungiamo le chiamate per rimuovere i ruoli eliminati
+    ruoliDaRimuovere.forEach((r: any) => {
+      chiamate.push(this.requests.EliminaProjectJobRole(projectId, r.id));
+    });
 
     const payloadProgetto: any = {
       ...p,
@@ -188,7 +254,7 @@ ngOnInit() {
       }
     });
 
-    forkJoin(chiamate).subscribe({
+    forkJoin(chiamate).subscribe({ // TO-DO : pass an array of sources instead of an object
       next: () => {
         this.showNotification('Progetto e ruoli aggiornati con successo!', 'success');
         this.saved.emit(this.formData);
@@ -206,16 +272,22 @@ ngOnInit() {
   }
 
   isNumericField(key: string): boolean {
-    return key === 'winProbability' || key === 'totalDays' || key === 'totalBudget';
+    return key === 'winProbability' || key === 'totalDays';
   }
 
   getPattern(key: string): string {
     if (key === 'winProbability') {
       return '^(100|[1-9][0-9]?)$';
     }
-    if (key === 'totalBudget') {
-      return '^\\s*(?:\\u20AC\\s*)?(?:\\d{1,3}(?:[.,]\\d{3})*|\\d+)(?:[.,]\\d{1,2})?\\s*(?:\\u20AC\\s*)?$';
-    }
+    // if (key === 'totalBudget'
+    //   && this.formData.totalBudget !== ''
+    //   && this.formData.totalBudget !== null
+    //   && this.formData.totalBudget !== undefined
+    //   && this.formData.totalBudget !== 'Not yet calculated.'
+    //   && this.formData.totalBudget !== 'Non ancora calcolato.'
+    //   && this.formData.totalBudget !== 0) {
+    //   return '^\\s*(?:\\u20AC\\s*)?(?:\\d{1,3}(?:[.,]\\d{3})*|\\d+)(?:[.,]\\d{1,2})?\\s*(?:\\u20AC\\s*)?$';
+    // }
     if (this.isNumericField(key)) {
       return '^[0-9]+$';
     }
@@ -320,31 +392,33 @@ ngOnInit() {
   aggiungiRuolo() {
     if (!this.formData.projectJobRoles) {
       this.formData.projectJobRoles = [];
+      this.ricalcolaTotali(); // Per aggiornare totalDays e totalBudget se prima non c'erano ruoli
     }
 
     this.formData.projectJobRoles.push({
       id: crypto.randomUUID(),
-      jobRole: '',      // Legato a r-role-i nell'HTML
-      jobRoleLevel: '', // Legato a r-lvl-i nell'HTML
-      dailyCost: '',
-      daysSpent: '',
-      winProbability: 0
+      jobRole: null,      // Legato a r-role-i nell'HTML
+      jobRoleLevel: null, // Legato a r-lvl-i nell'HTML
+      dailyCost: null,
+      daysSpent: null,
+      winProbability: null
     });
   }
 
   rimuoviRuolo(index: number) {
     this.formData.projectJobRoles.splice(index, 1);
+    this.ricalcolaTotali(); // Ricalcoliamo totali dopo la rimozione di un ruolo
   }
 
-  private hasValidRoles(): boolean {
+  hasValidRoles(): boolean {
     const roles = this.formData.projectJobRoles;
     if (!roles || roles.length === 0) return true;
     return roles.every((role: any) => this.isRoleComplete(role));
   }
 
   private isRoleComplete(role: any): boolean {
-    const hasRole = role?.jobRole && String(role.jobRole).trim() !== '';
-    const hasLevel = role?.jobRoleLevel && String(role.jobRoleLevel).trim() !== '';
+    const hasRole = !!role?.jobRole && String(role.jobRole).trim() !== '';
+    const hasLevel = !!role?.jobRoleLevel && String(role.jobRoleLevel).trim() !== '';
     
     const cost = this.parseBudgetNumber(role?.dailyCost);
     const hasDailyCost = !isNaN(cost) && cost > 0;
