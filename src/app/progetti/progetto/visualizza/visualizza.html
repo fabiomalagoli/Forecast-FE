@@ -24,7 +24,7 @@
   </section>
 
   @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
-    <h3 style="margin-top: 2rem; margin-left: 1rem;">Ruoli e Risorse</h3>
+    <h3 style="margin-top: 2rem; margin-left: 1rem;">Ruoli</h3>
     <section class="card">
       <table class="roles-table">
         <thead>
@@ -44,6 +44,36 @@
               <td>€{{ role.dailyCost }}</td>
               <td>{{ role.daysSpent }}</td>
               <td>{{ role.winProbability }}%</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+
+    @if (p.projectEmployees && p.projectEmployees.length > 0) {
+    <h3 style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>
+    <section class="card">
+      <table class="roles-table">
+        <thead>
+          <tr>
+            <th>Risorsa</th>
+            <th>Ruolo</th>
+            <th>Livello</th>
+            <th>Costo Giornaliero</th>
+            <th>Giorni Spesi</th>
+            <th>Win %</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (employee of p.projectEmployees; track employee.id) {
+            <tr>
+              <td><strong>{{ employee.employee }}</strong></td>
+              <td>{{ employee.jobRole }}</td>
+              <td>{{ employee.jobRoleLevel }}</td>
+              <td>€{{ employee.dailyCost }}</td>
+              <td>{{ employee.daysSpent }}</td>
+              <td>{{ employee.winProbability }}</td>
             </tr>
           }
         </tbody>

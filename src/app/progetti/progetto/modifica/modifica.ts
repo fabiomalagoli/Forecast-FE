@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, input, output, OnInit, inject, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Progetto } from '../../../progetti/progetto/progetto.model';
+import { ProjectEmployee } from '../../../progetti/progetto/progetto-employee.model';
 import { TextInputComponent } from "../../../shared/text-input/text-input";
 import { PROGETTO_COMPLETO_HEADERS } from '../../progetto/progetto-completo.headers';
 import { RequestsService } from '../../../shared/requests.service';
@@ -22,7 +23,7 @@ export class ModificaComponent implements OnInit {
   listaPM = signal<any[]>([]);
   listaClienti = signal<any[]>([]);
   listaStatiProgetto = signal<any[]>([]);
-  listaEmployee = signal<any[]>([]);
+  listaEmployees = signal<any[]>([]);
   listaJobRoles = signal<any[]>([]);
   listaJobRoleLevels = signal<any[]>([]);
 
@@ -79,7 +80,7 @@ export class ModificaComponent implements OnInit {
       this.listaAziende.set(risultati.aziende);
       this.listaClienti.set(risultati.clienti);
       this.listaStatiProgetto.set(risultati.stati);
-      this.listaEmployee.set(risultati.employees);
+      this.listaEmployees.set(risultati.employees);
       this.listaJobRoles.set(risultati.roles);
       this.listaJobRoleLevels.set(risultati.levels);
 
@@ -125,11 +126,41 @@ export class ModificaComponent implements OnInit {
         });
       }
 
+      //Mappatura Employees: Se non trovi l'ID, metti null o mantieni l'ID esistente
+      if (this.formData.projectEmployees) {
+        this.formData.projectEmployees = this.formData.projectEmployees.map((emp: any) => {
+          // Se abbiamo già un ID valido (UUID), usiamolo direttamente
+          const isUuid = /^[0-9a-fA-F-]{36}$/.test(emp.employeeId);
+          if (isUuid) return { ...emp, daysSpent: Number(emp.daysSpent || 0) };
+
+          // Altrimenti, cerchiamo l'ID nella lista delle risorse (come fatto per il PM)
+          const nomeDaCercare = emp.employee?.trim().toLowerCase();
+          
+          const risorsaTrovata = risultati.employees.find(e => {
+            const nomeCompleto = `${e.name} ${e.surname}`.trim().toLowerCase();
+            const nomeInvertito = `${e.surname} ${e.name}`.trim().toLowerCase();
+            // Controlliamo entrambi gli ordini: "Nome Cognome" e "Cognome Nome"
+            return nomeCompleto === nomeDaCercare || nomeInvertito === nomeDaCercare;
+          });
+
+          return {
+            ...emp,
+            employeeId: risorsaTrovata?.id || null, // Assegniamo l'ID trovato
+            dailyCost: emp.dailyCost || 0,
+            daysSpent: Number(emp.daysSpent || 0),
+            winProbability: emp.winProbability || 0
+          };
+        });
+      }
+
+
       // Normalizzazione finale
       this.formData.startDate = this.formData.startDate?.split('T')[0] || '';
       this.formData.endDate = this.formData.endDate?.split('T')[0] || '';
       this.formData.winProbability = Number(this.formData.winProbability || 0);
       this.formData.totalDays = Number(this.formData.totalDays || 0);
+      const budgetNumerico = this.parseBudgetNumber(this.formData.totalBudget);
+      this.formData.totalBudget = this.formattaValuta(budgetNumerico);
 
       this.dataOriginale = JSON.stringify(this.formData);
       this.initialDataObj = JSON.parse(this.dataOriginale);
@@ -157,7 +188,7 @@ export class ModificaComponent implements OnInit {
 
   isSubmitDisabled(form: NgForm): boolean {
     // Disabilitiamo il submit se il form è invalido, se non ci sono cambiamenti o se i ruoli non sono completi
-    return form.invalid || !this.hasValidRoles() || !this.isChanged();
+    return form.invalid || !this.hasValidRoles() || !this.hasValidResources() || !this.isChanged();
   }
 
   onSubmitClick(form: NgForm, event: Event) {
@@ -179,22 +210,30 @@ export class ModificaComponent implements OnInit {
     this.noChangesMessage = false;
   }
 
-  private isTempId(id: string): boolean {
+  private isTempIdRoles(id: string): boolean {
   // Se l'ID non è presente nei ruoli originali del progetto, lo consideriamo nuovo
     return !this.progettoDaModificare().projectJobRoles?.some(r => r.id === id);
   }
 
+  private isTempIdResources(id: string): boolean {
+    // Se l'ID non è presente nelle risorse originali del progetto, lo consideriamo nuovo
+    return !this.progettoDaModificare().projectEmployees?.some((employee: ProjectEmployee) => employee.id === id);
+  }
+
   ricalcolaTotali() {
     const ruoli = this.formData.projectJobRoles || [];
-    const totaleGiorni = ruoli.reduce((acc: number, r: any) => acc + Number(r.daysSpent || 0), 0);
-    const totaleBudget = ruoli.reduce((acc: number, r: any) => {
-      const costo = this.parseBudgetNumber(r.dailyCost) || 0;
-      const giorni = Number(r.daysSpent || 0);
-      return acc + (costo * giorni);
+    const risorse = this.formData.projectEmployees || [];
+    const tutteLeVoci = [...ruoli, ...risorse];
+
+    const totaleGiorni = tutteLeVoci.reduce((sum: number, item: any) => sum + Number(item.daysSpent || 0), 0);
+    const totaleBudget = tutteLeVoci.reduce((sum: number, item: any) => {
+      const dailyCost = this.parseBudgetNumber(item.dailyCost);
+      const days = Number(item.daysSpent || 0);
+      return sum + (dailyCost * days);
     }, 0);
 
     this.formData.totalDays = totaleGiorni;
-    this.formData.totalBudget = totaleBudget;
+    this.formData.totalBudget = this.formattaValuta(totaleBudget); // Formattiamo il budget come stringa con simbolo €
   }
 
   submit(form: NgForm) {
@@ -207,14 +246,23 @@ export class ModificaComponent implements OnInit {
     const selectedCompany = this.listaAziende().find(a => a.id === p.companyId)?.name;
     const selectedCustomer = this.listaClienti().find(c => c.id === p.customerId)?.name;
     const selectedStatus = this.listaStatiProgetto().find(s => s.id === p.projectStatusId)?.name;
-    const selectedPm = this.listaEmployee().find(e => e.id === p.pmId);
+    const selectedPm = this.listaEmployees().find(e => e.id === p.pmId);
 
     const ruoliOriginali = this.progettoDaModificare().projectJobRoles || [];
     const ruoliDaRimuovere = ruoliOriginali.filter((r: any) => !p.projectJobRoles?.some((nr: any) => nr.id === r.id));
 
+    const risorseOriginali = this.progettoDaModificare().projectEmployees || [];
+    const risorseDaRimuovere = risorseOriginali.filter((originale: ProjectEmployee) => 
+      !p.projectEmployees?.some((attuale: any) => attuale.id === originale.id)
+);
     // Aggiungiamo le chiamate per rimuovere i ruoli eliminati
     ruoliDaRimuovere.forEach((r: any) => {
       chiamate.push(this.requests.EliminaProjectJobRole(projectId, r.id));
+    });
+
+    // Aggiungiamo le chiamate per rimuovere le risorse eliminate
+    risorseDaRimuovere.forEach((employee: ProjectEmployee) => {
+      chiamate.push(this.requests.EliminaProjectEmployee(projectId, employee.id));
     });
 
     const payloadProgetto: any = {
@@ -232,6 +280,9 @@ export class ModificaComponent implements OnInit {
     // Rimuoviamo lista ruoli dal payload del progetto per evitare conflitti lato backend
     delete payloadProgetto.projectJobRoles;
 
+    // Rimuoviamo lista risorse dal payload del progetto per evitare conflitti lato backend
+    delete payloadProgetto.projectEmployees;
+
     chiamate.push(this.requests.aggiornaProgetto(payloadProgetto));
 
     p.projectJobRoles.forEach((role: any) => {
@@ -247,12 +298,33 @@ export class ModificaComponent implements OnInit {
         winProbability: this.parseDecimal(role.winProbability)
       };
 
-      if (this.isTempId(role.id)) {
+      if (this.isTempIdRoles(role.id)) {
         chiamate.push(this.requests.aggiungiProjectJobRole(projectId, [roleData]));
       } else {
         chiamate.push(this.requests.aggiornaProjectJobRole(projectId, role.id, roleData));
       }
     });
+
+    p.projectEmployees.forEach((employee: any) => {
+      const nomeRisorsa = this.listaEmployees().find(e => e.id === employee.employeeId)?.name || '';
+      
+      const employeeData = {
+        EmployeeId: employee.employeeId,
+        dailyCost: this.parseBudgetNumber(employee.dailyCost),
+        daysSpent: Number(employee.daysSpent),
+        winProbability: this.parseDecimal(employee.winProbability)
+      };
+
+      console.log("Dati risorsa inviati:", employeeData);
+
+      if (this.isTempIdResources(employee.id)) {
+        chiamate.push(this.requests.aggiungiProjectEmployee(projectId, [employeeData]));
+      } else {
+        chiamate.push(this.requests.aggiornaProjectEmployee(projectId, employee.id, employeeData));
+      }
+    });
+
+
 
     forkJoin(chiamate).subscribe({ // TO-DO : pass an array of sources instead of an object
       next: () => {
@@ -299,7 +371,7 @@ export class ModificaComponent implements OnInit {
     case 'projectStatusId': return this.listaStatiProgetto();
     case 'companyId': return this.listaAziende();
     case 'customerId': return this.listaClienti();
-    case 'pmId': return this.listaEmployee();
+    case 'pmId': return this.listaEmployees();
     default: return [];
     }
   }
@@ -405,15 +477,44 @@ export class ModificaComponent implements OnInit {
     });
   }
 
+  aggiungiRisorsa() {
+    if (!this.formData.projectEmployees) {
+      this.formData.projectEmployees = [];
+    }
+
+    this.formData.projectEmployees.push({
+      id: crypto.randomUUID(),
+      employeeId: null, // Legato a e-role-i nell'HTML
+      dailyCost: null, // Legato a e-cost-i nell'HTML
+      daysSpent: null, // Legato a e-days-i nell'HTML
+      winProbability: null // Legato a e-win-i nell'HTML
+    }); // Aggiungiamo un placeholder null per la nuova risorsa
+  }
+
   rimuoviRuolo(index: number) {
     this.formData.projectJobRoles.splice(index, 1);
     this.ricalcolaTotali(); // Ricalcoliamo totali dopo la rimozione di un ruolo
+  }
+
+  rimuoviRisorsa(index: number) {
+    this.formData.projectEmployees.splice(index, 1);
+    this.ricalcolaTotali(); // Ricalcoliamo totali dopo la rimozione di una risorsa
   }
 
   hasValidRoles(): boolean {
     const roles = this.formData.projectJobRoles;
     if (!roles || roles.length === 0) return true;
     return roles.every((role: any) => this.isRoleComplete(role));
+  }
+
+  hasValidResources(): boolean {
+    const risorse = this.formData.projectEmployees;
+    if (!risorse || risorse.length === 0) return true;
+    return risorse.every((r: any) => 
+      !!r.employeeId && 
+      this.parseBudgetNumber(r.dailyCost) > 0 && 
+      Number(r.daysSpent) > 0
+    );
   }
 
   private isRoleComplete(role: any): boolean {
@@ -464,5 +565,15 @@ export class ModificaComponent implements OnInit {
     }
     if (error?.message) return error.message;
     return fallback;
+  }
+
+  private formattaValuta(valore: number): string {
+    if (isNaN(valore)) return '0,00 €';
+  
+    return new Intl.NumberFormat('it-IT', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2
+    }).format(valore);
   }
 }

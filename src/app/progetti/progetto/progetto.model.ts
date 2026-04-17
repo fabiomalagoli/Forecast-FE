@@ -1,3 +1,4 @@
+import { ProjectEmployee } from "./progetto-employee.model";
 import { ProjectRole } from "./project-role.model";
 
 export interface Progetto {
@@ -11,7 +12,7 @@ export interface Progetto {
   endDate: string;
   totalDays: number;
   winProbability: number;
-  projectEmployees: string[]; // array di ID (vuoto nel JSON)
+  projectEmployees: ProjectEmployee[]; // array di ID (vuoto nel JSON)
   projectJobRoles: ProjectRole[];
   name: string;
   projectStatus:

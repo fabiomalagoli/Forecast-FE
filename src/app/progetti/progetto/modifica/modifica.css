@@ -18,3 +18,46 @@
   border-radius: 4px;
   font-size: 0.9rem;
 }
+
+/* Stili per la sezione risorse */
+.np-resources-section {
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid #eee;
+}
+
+.resources-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.resource-grid-header,
+.resource-grid-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1fr 1fr 40px;
+  gap: 12px;
+  align-items: center;
+}
+
+.np-resource-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resource-grid-header {
+  margin-bottom: 8px;
+  padding: 0 5px;
+}
+
+.resource-grid-header span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5e5866;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

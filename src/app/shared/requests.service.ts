@@ -33,7 +33,11 @@ export class RequestsService {
 
   private ProjectJobRoles = signal<{ id: string; project: string; jobRole: string; jobRoleLevel: string; dailyCost: number; daysSpent: number; effort: number; winProbability: number }[]>([]);
 
+  private ProjectEmployees = signal<{ id: string; project: string; isActive: boolean; employee: string; jobRole: string; jobRoleLevel: string; dailyCost: number; daysSpent: number; effort: number; winProbability: number }[]>([]);
+
   projectJobRolesCaricati = this.ProjectJobRoles.asReadonly();
+
+  projectEmployeesCaricati = this.ProjectEmployees.asReadonly();
 
   progettiCaricati = this.Progetti.asReadonly();
 
@@ -656,6 +660,59 @@ export class RequestsService {
     );
   }
 
+  private updateEmployee(employee: any) {
+    return this.httpClient.put(`${environment.apiUrl}/employees/${encodeURIComponent(employee.id)}`, employee).pipe(
+      tap(() => {
+        this.Employees.update(prev =>
+          prev.map(e => e.id === employee.id
+            ? {...e, ...employee }
+            : e
+          )
+        );
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiornamento.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  private CreateEmployee(employee: any) {
+    return this.httpClient.post(`${environment.apiUrl}/employees`, employee).pipe(
+      tap((created: any) => {
+        if (created?.id) {
+          this.Employees.update(prev =>
+            [...prev, {
+              id: created.id,
+              name: created.name,
+              surname: created.surname,
+              jobRole: this.jobRolesCaricati().find(r => r.name === created.jobRole)?.name || 'N/A',
+              jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === created.jobRoleLevel)?.name || 'N/A',
+              company: this.aziendeCaricate().find(c => c.name === created.company)?.name || 'N/A',
+              isActive: created.isActive,
+            }]
+          );
+        }
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante la creazione del dipendente.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  private DeleteEmployee(employeeId: string) {
+    return this.httpClient.delete(`${environment.apiUrl}/employees/${encodeURIComponent(employeeId)}`).pipe(
+      tap(() => {
+        this.Employees.update(prev => prev.filter(e => e.id !== employeeId));
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'eliminazione del dipendente.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
   private fetchEmployees() {
 
     this.caricaAziendeDisponibili().subscribe({
@@ -845,6 +902,112 @@ export class RequestsService {
   EliminaProjectJobRole(projectId: string, roleId: string) {
     return this.DeleteProjectJobRole(projectId, roleId);
   }
+
+  private fetchProjectEmployees(projectId: string) {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees`).pipe(
+      tap((resData) => {
+        console.log('Risposta dal backend (project employees):', resData);
+      }),
+      map((employees) => employees.map(
+        (employee) => ({
+          id: employee.id,
+          project: this.Progetti().find(p => p.id === projectId)?.name || 'N/A',
+          employee: `${employee.name} ${employee.surname}`,
+          isActive: employee.isActive,
+          jobRole: this.jobRolesCaricati().find(r => r.name === employee.jobRole)?.name || 'N/A',
+          jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === employee.jobRoleLevel)?.name || 'N/A',
+          dailyCost: employee.dailyCost || 0,
+          daysSpent: employee.daysSpent || 0,
+          effort: employee.effort || 0,
+          winProbability: employee.winProbability ? employee.winProbability : 0,
+        })
+      )),
+      catchError((error) => {
+        console.log(error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaProjectEmployees(projectId: string) {
+    return this.fetchProjectEmployees(projectId).pipe(
+      tap({
+        next: (employees) => this.ProjectEmployees.set(employees),
+      }),
+    );
+  }
+
+  private updateProjectEmployee(projectId: string, employeeId: string, data: any) {
+    return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(employeeId)}`, data).pipe(
+      tap(() => {
+        this.ProjectEmployees.update(prev =>
+          prev.map(e => e.id === employeeId
+            ? {...e, ...data } // Aggiorna solo i campi modificati, mantenendo quelli non presenti in data invariati
+            : e // Mantiene inalterati i dipendenti non interessati dall'update
+          )
+        );
+      }
+    ),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiornamento del dipendente di progetto.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  aggiornaProjectEmployee(projectId: string, employeeId: string, data: any) {
+    return this.updateProjectEmployee(projectId, employeeId, data);
+  }
+
+  private createProjectEmployee(projectId: string, data: any) {
+    return this.httpClient.post(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees`, data).pipe(
+      tap((created: any) => {
+        if (created?.id) {
+          this.ProjectEmployees.update(prev =>
+            [...prev, {
+              id: created.id,
+              project: this.Progetti().find(p => p.id === projectId)?.name || 'N/A',
+              employee: `${created.name} ${created.surname}`,
+              isActive: created.isActive,
+              jobRole: this.jobRolesCaricati().find(r => r.name === created.jobRole)?.name || 'N/A',
+              jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === created.jobRoleLevel)?.name || 'N/A',
+              dailyCost: created.dailyCost || 0,
+              daysSpent: created.daysSpent || 0,
+              effort: created.effort || 0,
+              winProbability: created.winProbability ? created.winProbability : 0,
+            }]
+          );
+        }
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'aggiunta del dipendente al progetto.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  aggiungiProjectEmployee(projectId: string, data: any) {
+    return this.createProjectEmployee(projectId, data);
+  }
+
+  private deleteProjectEmployee(projectId: string, employeeId: string) {
+    return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(employeeId)}`).pipe(
+      tap(() => {
+        this.ProjectEmployees.update(prev =>
+          prev.filter(e => e.id !== employeeId)
+        );
+      }), // Aggiorna lo stato locale rimuovendo il dipendente eliminato
+      catchError((error) => {
+        this.errorService.showError('Errore durante la rimozione del dipendente dal progetto.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  EliminaProjectEmployee(projectId: string, employeeId: string) {
+    return this.deleteProjectEmployee(projectId, employeeId);
+  }
+
 
 
   //TODO: aggiungere metodo per eliminazione cliente (DELETE) e chiedere se è necessario un metodo per eliminazione progetto (DELETE)

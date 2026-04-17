@@ -161,9 +161,87 @@
         }
       </div>
 
+      <div class="np-resources-section">
+        <div class="resources-header">
+          <h3 class="np-title-sm">Risorse</h3>
+          <button type="button" class="btn-add-resource" (click)="aggiungiRisorsa()">+ Aggiungi Risorsa</button>
+        </div>
+        @if (formData.projectEmployees?.length > 0) {
+          <div class="resource-grid-header">
+            <span>Risorsa</span><span>Costo G.</span><span>Giorni</span><span>Win %</span><span></span>
+          </div>
+          @for (employee of formData.projectEmployees; track employee.id; let i = $index) {
+            <div class="resource-grid-row">
+              <div class="np-resource-field">
+                <select 
+                  class="np-input-direct" 
+                  [(ngModel)]="employee.employeeId" 
+                  [name]="'e-role-' + i" 
+                  required 
+                  #eRole="ngModel">
+                  <option [ngValue]="null" disabled selected>Scegli una risorsa...</option>
+                  @for (opt of listaEmployees(); track opt.id) {
+                    <option [value]="opt.id">{{ opt.name }}</option>
+                  }
+                </select>
+
+                @if (eRole.invalid && (eRole.dirty || f.submitted || attemptedSubmit)) {
+                  <span class="error">*campo obbligatorio</span>
+                }
+              </div>              
+              <div class="np-resource-field">
+                <input 
+                  type="number" 
+                  class="np-input-direct np-input--currency" 
+                  [(ngModel)]="employee.dailyCost" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'e-cost-'+i" 
+                  required #eCost="ngModel" 
+                  #eCostEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
+                @if (eCost.invalid && (eCost.dirty || f.submitted || attemptedSubmit)) {
+                  @if (eCostEl.value === '') { <span class="error">*campo obbligatorio</span> }
+                  @if (eCostEl.value !== '' && (eCost.errors?.['min'] || eCost.errors?.['number'] || eCost.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
+                }
+              </div>
+              <div class="np-resource-field">
+                <input
+                  type="number" 
+                  class="np-input-direct" 
+                  [(ngModel)]="employee.daysSpent" 
+                  (ngModelChange)="onFieldChange(); ricalcolaTotali()"
+                  [name]="'e-days-'+i" 
+                  required #eDays="ngModel" 
+                  #eDaysEl (ngModelChange)="onFieldChange()" 
+                  min="0" />
+                @if (eDays.invalid && (eDays.dirty || f.submitted || attemptedSubmit)) {
+                  @if (eDaysEl.value === '') { <span class="error">*campo obbligatorio</span> }
+                  @if (eDaysEl.value !== '' && (eDays.errors?.['min'] || eDays.errors?.['number'] || eDays.invalid)) { <span class="error">*sono accettati solo numeri positivi o nulli</span> }
+                }
+              </div>
+              <div class="np-resource-field">
+                <input 
+                  type="text" 
+                  inputmode="decimal" 
+                  class="np-input-direct" 
+                  [(ngModel)]="employee.winProbability" 
+                  [name]="'e-win-'+i" 
+                  required #eWin="ngModel" 
+                  (ngModelChange)="onFieldChange()" />
+                @if ((eWin.dirty || f.submitted || attemptedSubmit) && getRoleWinError(employee)) {
+                  @if (getRoleWinError(employee) === 'required') { <span class="error">*campo obbligatorio</span> }
+                  @if (getRoleWinError(employee) === 'range') { <span class="error">*valori validi da 0,1 a 1</span> }
+                }
+              </div>
+              <button type="button" class="btn-remove" (click)="rimuoviRisorsa(i)">×</button>
+            </div>
+          }
+        }
+      </div>
+
       @if (f.valid && hasValidRoles() && !isChanged()) {
         <div class="info-message">
-          <p>ℹ️ Il progetto è identico alla versione originale. Modifica un campo per salvare.</p>
+          <p>ℹ️ Il progetto è identico a prima. Modifica un campo per salvare.</p>
         </div>
       }
       <div class="actions">
