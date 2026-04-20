@@ -11,16 +11,79 @@
   <p>Nessun progetto trovato.</p>
 } @else {
   @for (p of progetti(); track p.id) {
-    <section class="card">
-      <h3>{{ p.name }}</h3>
-      @for (h of headersArray; track h.key) {
-        <div class="row">
-          <span class="label">{{ h.label }}</span>
-          <div class="value-container">
-            <strong class="value">{{ getValue(p, h.key) }}</strong>
+    <article class="project-container">
+      <section class="card">
+        <h3>{{ p.name }}</h3>
+        @for (h of headersArray; track h.key) {
+          @if(h.label !== 'Risorse' && h.label !== 'Ruoli'){
+          <div class="row">
+            <span class="label">{{ h.label }}</span>
+            <div class="value-container">
+              <strong class="value">{{ getValue(p, h.key) }}</strong>
+            </div>
           </div>
-        </div>
+          }
+        }
+      </section>
+    
+
+      @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
+      <h3 class="section-title" style="margin-top: 2rem; margin-left: 1rem;">Ruoli</h3>
+      <section class="card">
+        <table class="roles-table">
+          <thead>
+            <tr>
+              <th>Ruolo</th>
+              <th>Livello</th>
+              <th>Costo Giornaliero</th>
+              <th>Giorni Spesi</th>
+              <th>Win %</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (role of p.projectJobRoles; track role.id) {
+              <tr>
+                <td><strong>{{ role.jobRole }}</strong></td>
+                <td>{{ role.jobRoleLevel }}</td>
+                <td>€{{ role.dailyCost }}</td>
+                <td>{{ role.daysSpent }}</td>
+                <td>{{ role.winProbability }}%</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
       }
-    </section>
-  }
+
+      @if (p.projectEmployees && p.projectEmployees.length > 0) {
+      <h3 class="section-title" style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>
+      <section class="card">
+        <table class="roles-table">
+          <thead>
+            <tr>
+              <th>Risorsa</th>
+              <th>Ruolo</th>
+              <th>Livello</th>
+              <th>Costo Giornaliero</th>
+              <th>Giorni Spesi</th>
+              <th>Win %</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (employee of p.projectEmployees; track employee.id) {
+              <tr>
+                <td><strong>{{ employee.employee }}</strong></td>
+                <td>{{ employee.jobRole }}</td>
+                <td>{{ employee.jobRoleLevel }}</td>
+                <td>€{{ employee.dailyCost }}</td>
+                <td>{{ employee.daysSpent }}</td>
+                <td>{{ employee.winProbability }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+      }
+    </article>
+  }   
 }

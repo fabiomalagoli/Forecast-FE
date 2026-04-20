@@ -50,28 +50,3 @@
   flex-shrink: 0; /* Impedisce al bottone di restringersi */
   margin-left: auto;
 }
-
-.roles-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.roles-table th {
-  text-align: left;
-  color: #666;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-}
-
-.roles-table td {
-  padding: 12px 8px;
-  border-bottom: 1px solid #fafafa;
-  font-size: 0.95rem;
-}
-
-.roles-table tr:last-child td {
-  border-bottom: none;
-}

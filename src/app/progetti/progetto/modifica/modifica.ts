@@ -13,7 +13,7 @@ import { forkJoin } from 'rxjs';
   standalone: true,
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './modifica.html',
-  styleUrls: ['../../new-progetto/new-progetto.css', '../../../shared/progetto-form.css', './modifica.css'],
+  styleUrls: ['../../new-progetto/new-progetto.css', '../../../shared/progetto-form.css'],
 })
 export class ModificaComponent implements OnInit {
   private requests = inject(RequestsService);

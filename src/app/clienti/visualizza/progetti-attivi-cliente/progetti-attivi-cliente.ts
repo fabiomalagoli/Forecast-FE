@@ -11,7 +11,7 @@ import { AppButton } from '../../../shared/button/button';
   standalone: true,
   imports: [AppButton],
   templateUrl: './progetti-attivi-cliente.html',
-  styleUrls: ['../visualizza.css', '../../../shared/progetto-form.css'],
+  styleUrls: ['progetti-attivi-cliente.css', '../../../shared/progetto-form.css'],
 })
 export class elencoProgettiCliente implements OnInit {
   // Leggiamo l’ID dalla route (es. /progetti/:id)
