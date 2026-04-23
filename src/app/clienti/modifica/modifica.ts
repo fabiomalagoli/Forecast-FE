@@ -10,7 +10,7 @@ import { RequestsService } from '../../shared/requests.service';
   selector: 'app-modifica-cliente',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './modifica.html',
-  styleUrls: ['./modifica.css', '../../shared/cliente-form.css'],
+  styleUrls: ['../../shared/cliente-form.css'],
 })
 export class ModificaCliente implements OnInit {
 
@@ -28,6 +28,7 @@ export class ModificaCliente implements OnInit {
     statusMessage: { text: string; type: 'success' | 'error' } | null = null;
     dateRangeError = false;
     formData: any = {};
+    baseData : any = {};
 
     // Variabile per memorizzare i dati originali del cliente, utile per verificare se ci sono state modifiche
     private OriginalData: string = '';
@@ -40,9 +41,52 @@ export class ModificaCliente implements OnInit {
     ngOnInit() {
         const c = this.clienteDaModificare();
         // Inizializza formData con i dati del cliente da modificare
-        this.formData = JSON.parse(JSON.stringify(c));
+        this.baseData = JSON.parse(JSON.stringify(c));
+
+        const separatedAddress = this.parseIndirizzo(c.fullAddress || '');
+
+        this.formData = {
+            ...this.baseData,
+            ...separatedAddress
+        };
 
         this.OriginalData = JSON.stringify(this.formData);
+    }
+
+    private parseIndirizzo(fullAddress : string){
+        if(!fullAddress) return {};
+
+        const parts = fullAddress.split(',');
+
+        const address = parts[0]?.trim();
+        const province = parts[2]?.trim();
+        const country = parts[3]?.trim();
+
+        let streetNumber = '';
+        let postalCode = '';
+        let city = '';
+
+        if(parts[1]) {
+            const middleParts = parts[1].split('-');
+
+            streetNumber = middleParts[0]?.trim();
+
+            if(middleParts[1]) {
+                const postaCodeAndCity = middleParts[1].trim();
+                postalCode = postaCodeAndCity.substring(0,5);
+                city = postaCodeAndCity.substring(5).trim();
+            }
+        }
+
+        return {
+            address,
+            streetNumber,
+            postalCode,
+            city,
+            province,
+            country,
+        };
+
     }
 
     isChanged(): boolean {

@@ -5,6 +5,7 @@ import { Cliente } from '../cliente/cliente.model';
 import { RequestsService } from '../../shared/requests.service';
 import { CLIENTE_COMPLETO_HEADERS } from '../cliente/cliente-completo.headers';
 import { AppButton } from '../../shared/button/button';
+import { Progetto } from '../../progetti/progetto/progetto.model';
 
 @Component({
   selector: 'app-visualizza',
@@ -21,18 +22,45 @@ export class Visualizza {
   private router = inject(Router);
   private requests = inject(RequestsService);
 
+  MostraProgettiAttivi = signal(false);
   loading = signal(true);
   error = signal<string | null>(null);
   cliente = signal<Cliente | null>(null);
 
+  /*    address?: string,
+    streetNumber?: string,
+    postalCode?: string,
+    city?: string,
+    province?: string,
+    country?: string,*/ 
+
+
   readonly headersClienti: Record<keyof Cliente, string> = CLIENTE_COMPLETO_HEADERS;
   readonly headersArray = Object.entries(this.headersClienti)
-    .filter(([key]) => key !== 'id')
+    .filter(([key]) => key !== 'id'
+                    && key !== 'address'
+                    && key !== 'streetNumber'
+                    && key !== 'postalCode'
+                    && key !== 'city'
+                    && key !== 'province'
+                    && key !== 'country')
     .map(([key, label]) => ({
       key: key as keyof Cliente,
       label,
     }));
 
+    readonly headersProgetti = {
+      name: 'Nome Progetto',
+      company: 'Azienda',
+      totalBudget: 'Budget Totale',
+      projectStatus: 'Stato',
+    };
+    readonly headersProgettiArray = Object.entries(this.headersProgetti)
+    .filter(([key]) => key !== 'description') // Escludi campi non necessari
+    .map(([key, label]) => ({
+      key: key as keyof Progetto,
+      label,
+    }));
   ngOnInit() {
     console.log("Componente Visualizza Inizializzato");
     const id = this.route.snapshot.paramMap.get('id');
@@ -68,8 +96,20 @@ export class Visualizza {
     return String(clienteValue);
   }
 
+  getProgettoValue(p: Progetto, key: keyof Progetto): string {
+    const progettoValue = p[key];
+    if (progettoValue == null) return '';
+    if (Array.isArray(progettoValue)) return progettoValue.join(', ');
+    if (typeof progettoValue === 'object') return JSON.stringify(progettoValue);
+    return String(progettoValue);
+  }
+
   indietro() {
     this.location.back();
+  }
+
+  mostraProgettiAttivi() {
+    this.MostraProgettiAttivi.set(true);
   }
 
   vaiAiProgetti() {

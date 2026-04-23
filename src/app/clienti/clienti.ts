@@ -1,4 +1,6 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { TableRowComponent } from '../shared/table-row/table-row';
 import { CLIENTE_HEADERS } from './cliente/cliente.headers';
 import { Cliente } from './cliente/cliente.model';
@@ -9,20 +11,25 @@ import { AppButton } from '../shared/button/button';
 import { RequestsService } from '../shared/requests.service';
 import { ModificaCliente } from './modifica/modifica';
 import { v4 as uuidv4 } from 'uuid';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
 
 @Component({
   selector: 'app-clienti',
-  imports: [AppButton, TableRowComponent, NewCliente, ClienteComponent, ModificaCliente],
+  imports: [CommonModule, ReactiveFormsModule, AppButton, NewCliente, ModificaCliente],
   templateUrl: './clienti.html',
   styleUrl: './clienti.css',
 })
 export class Clienti {
   //dummyClienti = CLIENTI_DUMMY;
   Clienti = signal<Cliente[] | undefined>(undefined);
+  clientiFiltrati = signal<Cliente[]>([]);
+  filtroNomeValue = signal<string>('');
   isFetching = signal(false);
   error = signal('');
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   private requestsService = inject(RequestsService);
+  private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   isClienteInAggiunta = false;
   clienteInModifica = signal<Cliente | null>(null);
@@ -44,6 +51,31 @@ export class Clienti {
     },
   ];
 
+  filtroNome = new FormControl('');
+
+  constructor() {
+    // Effect per aggiornare i clienti filtrati quando cambiano i dati o il filtro
+    effect(() => {
+      const clientiData = this.Clienti();
+      const filtro = this.filtroNomeValue().toLowerCase();
+      
+      if (!clientiData) {
+        this.clientiFiltrati.set([]);
+        return;
+      }
+
+      if (!filtro) {
+        this.clientiFiltrati.set(clientiData);
+        return;
+      }
+
+      const filtered = clientiData.filter(c => 
+        c.name.toLowerCase().includes(filtro)
+      );
+      this.clientiFiltrati.set(filtered);
+    });
+  }
+
   ngOnInit() {
     this.isFetching.set(true);
     const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
@@ -62,6 +94,12 @@ export class Clienti {
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();
     });
+
+    this.filtroNome.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => this.filtroNomeValue.set(value?.toLowerCase() || ''))
+    ).subscribe();
   }
 
   aggiornaClienti() {
@@ -128,6 +166,10 @@ export class Clienti {
     this.ricaricaClienti();
     this.isClienteInAggiunta = false;
     this.showNotification('Cliente creato con successo!', 'success');
+  }
+
+  apriVisualizzaCliente(id: string) {
+    this.router.navigate(['/clienti', id]);
   }
 
   apriModifica(c: Cliente) {

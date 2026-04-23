@@ -142,6 +142,45 @@ export class RequestsService {
     return this.updateProgetto(progetto);
   }
 
+  setFiltroAzienda(value: string) {
+    this.caricaProgettiDisponibili().pipe(
+      tap({
+        next: (progetti) => {
+          const filtered = progetti.filter(p => p.company.toLowerCase().includes(value.toLowerCase()));
+          this.Progetti.set(filtered);
+        }
+      })
+    ).subscribe();
+  }
+
+  setFiltroCliente(value: string) {
+    this.caricaProgettiDisponibili().pipe(
+      tap({
+        next: (progetti) => {
+          const filtered = progetti.filter(p => p.customer.toLowerCase().includes(value.toLowerCase()));
+          this.Progetti.set(filtered);
+        }
+      })
+    ).subscribe();
+  }
+
+  setFiltroStato(value: string) {
+    this.caricaProgettiDisponibili().pipe(
+      tap({
+        next: (progetti) => {
+          if (!value) {
+            this.Progetti.set(progetti);
+            return;
+          }
+          const statoSelezionato = this.StatiProgetto().find(s => s.id === value);
+          const statoName = statoSelezionato?.name || '';
+          const filtered = progetti.filter(p => p.projectStatus === statoName);
+          this.Progetti.set(filtered);
+        }
+      })
+    ).subscribe();
+  }
+
   aggiungiNuovoProgetto(progetto: Progetto) {
     const progettiPrecedenti = this.Progetti();
 
@@ -177,11 +216,19 @@ export class RequestsService {
       this.Clienti.set([...clientiPrecedenti, cliente]);
     }
 
+    const payload = this.toCustomerPayload(cliente) as any;
+    delete payload.id;
+
     return this.httpClient
-      .put(`${environment.apiUrl}/customers/${cliente.id}`, {
-        customerId: cliente.id,
-      })
+      .post<Cliente>(`${environment.apiUrl}/customers`, payload)
       .pipe(
+        tap((created) => {
+          if(created?.id) {
+            this.Clienti.update(prev =>
+              prev.map(c => (c.id === cliente.id ? created : c))
+            );
+          }
+        }),
         catchError((error) => {
           this.Clienti.set(clientiPrecedenti);
           this.errorService.showError('Inserimento fallito.');
@@ -292,12 +339,6 @@ export class RequestsService {
           vatNumber: customer.vatNumber,
           name: customer.name,
           fullAddress: customer.fullAddress,
-          address: customer.address ?? customer.fullAddress,
-          streetNumber: customer.streetNumber,
-          postalCode: customer.postalCode,
-          city: customer.city,
-          province: customer.province,
-          country: customer.country,
           projects: customer.projects ? customer.projects.length : 0,
           activeProjects: customer.projects || [],
         })),
@@ -317,12 +358,6 @@ export class RequestsService {
         vatNumber: customer.vatNumber,
         name: customer.name,
         fullAddress: customer.fullAddress,
-        address: customer.address ?? customer.fullAddress,
-        streetNumber: customer.streetNumber,
-        postalCode: customer.postalCode,
-        city: customer.city,
-        province: customer.province,
-        country: customer.country,
         projects: customer.projects ? customer.projects.length : 0,
         activeProjects: customer.projects || [],
       })),
@@ -332,6 +367,28 @@ export class RequestsService {
       }),
     );
   }
+
+  private updateCliente(cliente: Cliente) {
+    const payload = this.toCustomerPayload(cliente);
+    const url = `${environment.apiUrl}/customers/${encodeURIComponent(cliente.id)}`;
+
+    return this.httpClient.put(url, payload).pipe(
+      tap(() => {
+        this.Clienti.update(prev =>
+          prev.map(c => c.id === cliente.id
+            ? { ...c, ...cliente }
+            : c
+          )
+        );
+      }),
+      catchError((error) => {
+        this.errorService.showError("Errore durante l'aggiornamento.");
+        return throwError(() => error);
+      })
+    );
+  }
+
+
 
   //GET PER PROGETTI PER CLIENTE (visualizza progetti attivi cliente)
 
@@ -381,36 +438,20 @@ export class RequestsService {
     );
 
   }
-    
-
-  private updateCliente(cliente: Cliente) {
-    return this.httpClient.put(`${environment.apiUrl}/customers/${cliente.id}`, {
-      vatNumber: cliente.vatNumber,
-      name: cliente.name,
-      address: cliente.address,
-      streetNumber: cliente.streetNumber,
-      postalCode: cliente.postalCode,
-      city: cliente.city,
-      province: cliente.province,
-      country: cliente.country,
-    }).pipe(
-      tap(() => {
-        this.Clienti.update(prev =>
-          prev.map(c => c.id === cliente.id
-            ? {...c, ...cliente }
-            : c
-          )
-        );
-      }),
-      catchError((error) => {
-        this.errorService.showError('Errore durante l\'aggiornamento.');
-        return throwError(() => error);
-      }),
-    );
-  }
 
   aggiornaCliente(cliente: Cliente) {
     return this.updateCliente(cliente);
+  }
+
+  setFiltroNome(value: string) {
+    this.caricaClientiDisponibili().pipe(
+      tap({
+        next: (clienti) => {
+          const filtered = clienti.filter(c => c.name.toLowerCase().includes(value.toLowerCase()));
+          this.Clienti.set(filtered);
+        }
+      })
+    ).subscribe();
   }
 
 
@@ -1045,6 +1086,7 @@ export class RequestsService {
       }),
     );
   }
+
   toProjectPayload(progetto: Progetto) {
     // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
     return {
@@ -1061,6 +1103,21 @@ export class RequestsService {
       winProbability: this.normalizeWinProbability(this.toNumber(progetto.winProbability)),
     };
   }
+
+  toCustomerPayload(cliente: Cliente) {
+    // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
+    return {
+      vatNumber: cliente.vatNumber,
+      name: cliente.name,     
+      address: cliente.address,
+      streetNumber: cliente.streetNumber,
+      postalCode: cliente.postalCode,
+      city: cliente.city,
+      province: cliente.province,
+      country: cliente.country,
+    };
+  }
+
 
   private normalizeWinProbability(value: number): number {
     if (!Number.isFinite(value)) return value;

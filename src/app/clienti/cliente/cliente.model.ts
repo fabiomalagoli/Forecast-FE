@@ -1,3 +1,5 @@
+import { Progetto } from "../../progetti/progetto/progetto.model";
+
 //Dati del cliente.
 export interface Cliente {
     id: string,
@@ -11,5 +13,5 @@ export interface Cliente {
     province?: string,
     country?: string,
     projects: number,
-    activeProjects: string[],
+    activeProjects: Progetto[],
 }

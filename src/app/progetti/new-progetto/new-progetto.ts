@@ -158,7 +158,7 @@ export class NewProgettoComponent implements OnInit{
   }
 
   onCancel() {
-    this.cancel.emit();
+    this.cancel.emit(); // Comunichiamo al genitore che vogliamo chiudere il form
   }
 
   isNumericField(key: string): boolean {

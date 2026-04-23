@@ -13,11 +13,14 @@ import { Router } from '@angular/router';
 import { ModificaComponent } from "./progetto/modifica/modifica";
 import { effect } from '@angular/core';
 import { Visualizza } from './progetto/visualizza/visualizza';
+import { FormControl } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, forkJoin, switchMap, tap } from 'rxjs';
+import { ReactiveFormsModule } from '@angular/forms';
 
 
 @Component({
   selector: 'app-progetti',
-  imports: [TableRowComponent, ProgettoComponent, AppButton, NewProgettoComponent, ModificaComponent],
+  imports: [AppButton, NewProgettoComponent, ModificaComponent, ReactiveFormsModule],
   templateUrl: './progetti.html',
   styleUrl: './progetti.css',
   
@@ -32,9 +35,13 @@ export class Progetti {
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   progetti = this.requestsService.progettiCaricati;
 
-  isProgettoInAggiunta = false;
+  isProgettoInAggiunta = signal<boolean | null>(null);
 
   progettoInModifica = signal<Progetto | null>(null);
+
+  listaAziende = signal<any[]>([]);
+  listaStati = signal<any[]>([]);
+  listaClienti = signal<any[]>([]);
 
   // dummyProgetti = PROGETTI_DUMMY;
 
@@ -47,6 +54,12 @@ export class Progetti {
       console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.progetti());
     });
   }
+
+  filtroAzienda = new FormControl('');
+  filtroCliente = new FormControl('');
+  filtroStato = new FormControl('');
+
+  filterData: any = {};
 
   ngOnInit() {
     this.isFetching.set(true);
@@ -61,9 +74,58 @@ export class Progetti {
         }
       });
 
+      this.destroyRef.onDestroy(() => {
+        subscription.unsubscribe();
+      });
+
+    // Imposta i listener per i filtri
+    this.filtroAzienda.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => this.requestsService.setFiltroAzienda(value || '')) // Aggiorna il filtro nel service
+    ).subscribe();
+
     this.destroyRef.onDestroy(() => {
       subscription.unsubscribe();
     });
+
+    this.filtroCliente.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => this.requestsService.setFiltroCliente(value || '')) // Aggiorna il filtro nel service
+    ).subscribe();
+
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
+
+    this.filtroStato.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => this.requestsService.setFiltroStato(value || '')) // Aggiorna il filtro nel service
+    ).subscribe();
+
+    this.destroyRef.onDestroy(() => {
+      subscription.unsubscribe();
+    });
+
+    const caricamenti = [
+      this.requestsService.caricaAziendeDisponibili(),
+      this.requestsService.caricaStatiProgettoDisponibili(),
+      this.requestsService.caricaClientiDisponibili(),
+    ];
+    // Carica tutte le liste necessarie per i dropdown in parallelo
+    forkJoin(caricamenti).subscribe(risultati => {
+      this.listaAziende.set(risultati[0]);
+      this.listaStati.set(risultati[1]);
+      this.listaClienti.set(risultati[2]);
+      this.filterData.companyId = risultati[0].find(a => a.name === this.filterData.company)?.id || null;
+      this.filterData.customerId = risultati[2].find(c => c.name === this.filterData.customer)?.id || null;
+      this.filterData.projectStatusId = risultati[1].find(s => s.name === this.filterData.projectStatus)?.name || null;
+    });
+
+
+
   }
 
   columns: Column<Progetto>[] =
@@ -80,16 +142,16 @@ export class Progetti {
   }
 
   onAggiuntaProgetto(){
-    this.isProgettoInAggiunta = true;
+    this.isProgettoInAggiunta.set(true);
   }
 
-  aggiungiProgetto(newProgetto: Progetto) {
-    this.isProgettoInAggiunta = false;
+  aggiungiProgetto(newProgetto: any) {
+    this.isProgettoInAggiunta.set(false);
     this.showNotification('Progetto creato con successo!', 'success');
   }
 
   annullaAggiuntaProgetto(){
-    this.isProgettoInAggiunta = false;
+    this.isProgettoInAggiunta.set(false);
   }
 
   aggiornaProgetti(){

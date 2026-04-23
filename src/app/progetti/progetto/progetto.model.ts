@@ -15,12 +15,7 @@ export interface Progetto {
   projectEmployees: ProjectEmployee[]; // array di ID (vuoto nel JSON)
   projectJobRoles: ProjectRole[];
   name: string;
-  projectStatus:
-    | 'Initiation'
-    | 'Planning'
-    | 'Execution'
-    | 'Monitoring'
-    | 'Closing';
+  projectStatus: string;
   customer: string;
   companyId?: string;
   pmId?: string;
