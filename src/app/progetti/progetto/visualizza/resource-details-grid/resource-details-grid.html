@@ -1,0 +1,86 @@
+<section class="resource-details-grid">
+    <div class="container">
+        <h2>{{resource()?.employee}}</h2>
+    </div>
+    <div>
+        <h2>Recap</h2>
+        <div class="recap-grid">
+            <app-text-input>
+                <label>{{resourceDetailsHeaders.BudgetTotale}}</label>
+                <input type="text" [value]="((resource()?.dailyCost ?? 0) * (resource()?.daysSpent ?? 0))" readonly>
+            </app-text-input>
+            <app-text-input>
+                <label>{{resourceDetailsHeaders.TotaleRicavi}}</label>
+                <input type="text" [value]="(0)" readonly>
+            </app-text-input>
+            <app-text-input>
+                <label>{{resourceDetailsHeaders.BudgetWin}}</label>
+                <input type="text" [value]="(0)" readonly>
+            </app-text-input>
+            <app-text-input>
+                <label>{{resourceDetailsHeaders.TotaleConsuntivate}}</label>
+                <input type="text" [value]="(0)" readonly>
+            </app-text-input>
+            <app-text-input>
+                <label>{{resourceDetailsHeaders.Delta}}</label>
+                <input type="text" [value]="(0)" readonly>
+            </app-text-input>
+            <app-text-input>
+                <label>{{resourceDetailsHeaders.CostoGiornaliero}}</label>
+                <input type="text" [value]="((resource()?.dailyCost ?? 0))" readonly>
+            </app-text-input>
+        </div>
+        <h3 class="section-title">Gestione Mensile</h3>
+
+        <div class="gestione-mensile-wrapper">
+        
+            <div class="semester-block">
+                <div class="grid-row header-row">
+                <span>Mese</span>
+                <span class="text-center">Giorni Occupati</span>
+                <span class="text-center">Tariffa</span>
+                <span class="text-center">Conferma</span>
+                </div>
+
+                <div class="grid-row align-center">
+                <strong class="month-label">Gennaio</strong>
+                <app-text-input>
+                    <input type="number" value="10">
+                </app-text-input>
+                <app-text-input>
+                    <input type="text" value="50 €">
+                </app-text-input>
+                <div class="checkbox-container">
+                    <input type="checkbox">
+                </div>
+                </div>
+                </div>
+
+            <div class="vertical-divider"></div>
+
+            <div class="semester-block">
+                <div class="grid-row header-row">
+                <span>Mese</span>
+                <span class="text-center">Giorni Occupati</span>
+                <span class="text-center">Tariffa</span>
+                <span class="text-center">Conferma</span>
+                </div>
+
+                <div class="grid-row align-center">
+                <strong class="month-label">Luglio</strong>
+                <app-text-input>
+                    <input type="number" value="10">
+                </app-text-input>
+                <app-text-input>
+                    <input type="text" value="50 €">
+                </app-text-input>
+                <div class="checkbox-container">
+                    <input type="checkbox">
+                </div>
+                </div>
+                </div>
+
+            </div>
+
+    </div>
+</section>

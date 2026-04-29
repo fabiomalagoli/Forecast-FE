@@ -5,14 +5,17 @@
 
 @if (loading()) {
   <p>Caricamento...</p>
-} @else if (error()) {
+} 
+@else if (error()) {
   <p class="error">{{ error() }}</p>
-} @else if (!progetto()) {
+} 
+@else if (!progetto()) {
   <p>Progetto non trovato.</p>
-} @else {
+} 
+@else {
   @let p = progetto()!;
 
-  <section class="card">
+  <section class="card-progetto">
     @for (h of headersArray; track h.key) {
       @if (h.key !== 'projectJobRoles' && h.key !== 'projectEmployees') {
         <div class="row">
@@ -23,7 +26,7 @@
     }
   </section>
 
-  @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
+  <!-- @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
     <h3 style="margin-top: 2rem; margin-left: 1rem;">Ruoli</h3>
     <section class="card">
       <table class="roles-table">
@@ -49,11 +52,12 @@
         </tbody>
       </table>
     </section>
-  }
+  } -->
+  <!-- IMPORTANT: For the moment, we are going to deactivate roles inside Visualizza. The prospect is to merge them with employees -->
 
-    @if (p.projectEmployees && p.projectEmployees.length > 0) {
+  @if (p.projectEmployees && p.projectEmployees.length > 0) {
     <h3 style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>
-    <section class="card">
+    <section class="card-risorse">
       <table class="roles-table">
         <thead>
           <tr>
@@ -67,7 +71,7 @@
         </thead>
         <tbody>
           @for (employee of p.projectEmployees; track employee.id) {
-            <tr>
+            <tr class="resource-row" (click)="apriDettagliRisorsa(employee)">
               <td><strong>{{ employee.employee }}</strong></td>
               <td>{{ employee.jobRole }}</td>
               <td>{{ employee.jobRoleLevel }}</td>
@@ -79,5 +83,17 @@
         </tbody>
       </table>
     </section>
+  }
+  @if(selectedResource()) {
+    <div class="drawer-overlay" (click)="selectedResource.set(null)"></div>
+
+    <div class="drawer-panel">
+      <button class="drawer-close-btn" (click)="selectedResource.set(null)">×</button>
+      <app-resource-details-grid 
+        [resource]="selectedResource()"
+        (closeDrawer)="selectedResource.set(null)"
+      ></app-resource-details-grid>
+   </div>
+
   }
 }

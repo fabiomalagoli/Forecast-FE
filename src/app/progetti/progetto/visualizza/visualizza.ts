@@ -6,11 +6,13 @@ import { RequestsService } from '../../../shared/requests.service';
 import { PROGETTO_COMPLETO_HEADERS } from '../progetto-completo.headers';
 import { AppButton } from '../../../shared/button/button';
 import { Progetti } from '../../progetti';
+import { ResourceDetailsGridComponent } from './resource-details-grid/resource-details-grid';
+import { ProjectEmployee } from '../progetto-employee.model';
 
 @Component({
   selector: 'app-visualizza',
   standalone: true,
-  imports: [AppButton],
+  imports: [AppButton, ResourceDetailsGridComponent],
   templateUrl: './visualizza.html',
   styleUrls: ['./visualizza.css', '../../../shared/progetto-form.css'],
 })
@@ -24,6 +26,7 @@ export class Visualizza {
   loading = signal(true);
   error = signal<string | null>(null);
   progetto = signal<Progetto | null>(null);
+  selectedResource = signal<ProjectEmployee | null>(null);
 
   readonly headersProgetti: Partial<Record<keyof Progetto, string>> = PROGETTO_COMPLETO_HEADERS;
   readonly headersArray = Object.entries(this.headersProgetti)
@@ -56,6 +59,10 @@ export class Visualizza {
         this.loading.set(false);
       },
     });
+  }
+
+  apriDettagliRisorsa(employee: ProjectEmployee) {
+    this.selectedResource.set(employee);
   }
 
   getValue(p: Progetto, key: keyof Progetto): string {

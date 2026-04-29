@@ -5,13 +5,24 @@
   margin-bottom: 16px;
 }
 
-.card {
+.card-risorse {
   border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 16px;
   background: #fff;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  max-width: 900px;
+  max-width: 800px;
+  max-height: 170px;
+  overflow-y: scroll;
+}
+
+.card-progetto {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  max-width: 800px;
 }
 
 .row {
@@ -53,4 +64,91 @@
 
 .roles-table tr:last-child td {
   border-bottom: none;
+}
+
+.col-risorsa {
+  padding: 12px 8px;
+  border-bottom: 1px solid #fafafa;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.resource-row {
+  padding: 12px 8px;
+  border-bottom: 1px solid #fafafa;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+.resource-row:hover {
+  background-color: #f0f8ff;
+}
+.resource-row:active {
+  background-color: #cce5ff;
+}
+.resource-row.selected {
+  background-color: #99ccff;
+  color: white;
+  font-weight: bold;
+}
+
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 850px;
+  height: 100vh;
+  background-color: #f8fafc;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+  z-index: 1001;
+  box-shadow: -5px 0 25px rgba(0,0,0,0.3);
+  padding: 3rem 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Bottone per chiudere */
+.drawer-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.drawer-close-btn:hover {
+  color: #111827;
+}
+
+/* --- ANIMAZIONI --- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
