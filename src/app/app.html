@@ -1,8 +1,11 @@
-<app-header></app-header>
-<main>
+<!-- <app-header></app-header> -->
+
+<main class="d-flex align-items-stretch" style="min-height: calc(100vh - 60px);"> 
+  
   <app-sidebar (selected)="OnSidebarIdSelected($event)"></app-sidebar>
   
-  <div class="content-container">
+  <div class="content-container flex-grow-1 bg-light p-4">
     <router-outlet />
   </div>
+  
 </main>

@@ -174,11 +174,15 @@ tbody td {
   font-size: 0.9375rem;
 }
 
-/* Actions Cell */
 .actions-cell {
   display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
+  gap: 12px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.actions-header {
+  text-align: left;
 }
 
 /* Empty Message */

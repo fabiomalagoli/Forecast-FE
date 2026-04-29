@@ -1,4 +1,4 @@
-div {
+/* div {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -35,4 +35,36 @@ button:focus {
   background-color: #ff8c00;
   outline: 2px solid #000;
   outline-offset: 2px;
+} */
+
+/* Contenitore della sidebar */
+.sidebar-container {
+  width: 280px;
+  min-height: 100vh; /* La sidebar occupa tutta l'altezza dello schermo */
+}
+
+.sidebar-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+  color: #000;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  background-color: #f07d00 !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+
+/* Effetto hover per le voci non attive */
+.nav-pills .nav-link:not(.active):hover {
+  background-color: rgba(240, 125, 0, 0.15); /* Sfondo arancione al passaggio del mouse */
+  color: #ffa733 !important;
+}
+
+/* Effetto al click */
+.nav-pills .nav-link:active {
+  background-color: #ff8c00;
+  transform: scale(0.98); /* effetto di "pressione" del tasto */
 }

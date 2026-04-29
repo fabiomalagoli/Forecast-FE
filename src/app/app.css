@@ -23,3 +23,22 @@ main {
 
 @media screen and (max-width: 650px) {
 }
+
+/* Resetta i margini di default del browser */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.layout-principale {
+  display: flex;
+  min-height: 100vh; /* Alto quanto tutto lo schermo */
+  background-color: #f8fafc; /* Uno sfondino grigio chiaro per far risaltare le card bianche */
+}
+
+.contenuto-principale {
+  flex: 1; /* Prende tutto lo spazio rimanente a destra della sidebar */
+  padding: 2rem;
+  overflow-y: auto; /* Se le card sono tante, farà scrollare solo la parte destra */
+}

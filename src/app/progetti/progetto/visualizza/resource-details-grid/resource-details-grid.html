@@ -7,27 +7,27 @@
         <div class="recap-grid">
             <app-text-input>
                 <label>{{resourceDetailsHeaders.BudgetTotale}}</label>
-                <input type="text" [value]="((resource()?.dailyCost ?? 0) * (resource()?.daysSpent ?? 0))" readonly>
+                <input type="text" [value]="((resource()?.dailyCost ?? 0) * (resource()?.daysSpent ?? 0))" [readonly] = "!isEditMode()">
             </app-text-input>
             <app-text-input>
                 <label>{{resourceDetailsHeaders.TotaleRicavi}}</label>
-                <input type="text" [value]="(0)" readonly>
+                <input type="text" [value]="(0)" [readonly] = "!isEditMode()">
             </app-text-input>
             <app-text-input>
                 <label>{{resourceDetailsHeaders.BudgetWin}}</label>
-                <input type="text" [value]="(0)" readonly>
+                <input type="text" [value]="(0)" [readonly] = "!isEditMode()">
             </app-text-input>
             <app-text-input>
                 <label>{{resourceDetailsHeaders.TotaleConsuntivate}}</label>
-                <input type="text" [value]="(0)" readonly>
+                <input type="text" [value]="(0)" [readonly] = "!isEditMode()">
             </app-text-input>
             <app-text-input>
                 <label>{{resourceDetailsHeaders.Delta}}</label>
-                <input type="text" [value]="(0)" readonly>
+                <input type="text" [value]="(0)" [readonly] = "!isEditMode()">
             </app-text-input>
             <app-text-input>
                 <label>{{resourceDetailsHeaders.CostoGiornaliero}}</label>
-                <input type="text" [value]="((resource()?.dailyCost ?? 0))" readonly>
+                <input type="text" [value]="((resource()?.dailyCost ?? 0))" [readonly] = "!isEditMode()">
             </app-text-input>
         </div>
         <h3 class="section-title">Gestione Mensile</h3>
@@ -45,13 +45,13 @@
                 <div class="grid-row align-center">
                 <strong class="month-label">Gennaio</strong>
                 <app-text-input>
-                    <input type="number" value="10">
+                    <input type="number" value="10" [readonly] = "!isEditMode()">
                 </app-text-input>
                 <app-text-input>
-                    <input type="text" value="50 €">
+                    <input type="text" value="50 €" [readonly] = "!isEditMode()">
                 </app-text-input>
                 <div class="checkbox-container">
-                    <input type="checkbox">
+                    <input type="checkbox" [disabled] = "!isEditMode()">
                 </div>
                 </div>
                 </div>
@@ -69,18 +69,28 @@
                 <div class="grid-row align-center">
                 <strong class="month-label">Luglio</strong>
                 <app-text-input>
-                    <input type="number" value="10">
+                    <input type="number" value="10" [readonly] = "!isEditMode()">
                 </app-text-input>
                 <app-text-input>
-                    <input type="text" value="50 €">
+                    <input type="text" value="50 €" [readonly] = "!isEditMode()">
                 </app-text-input>
                 <div class="checkbox-container">
-                    <input type="checkbox">
+                    <input type="checkbox" [disabled] = "!isEditMode()">
                 </div>
                 </div>
                 </div>
 
             </div>
-
+            @if(isEditMode()) {
+                <div class="actions">
+                    <button appButton class="btn-small" (click)="salvaDati()">Salva</button>
+                    <button appButton class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>
+                </div>
+            } 
+            @else {
+                <div class="actions">
+                    <button appButton class="btn-small" (click)="toggleEditMode()">Modifica</button>
+                </div>
+            }           
     </div>
 </section>

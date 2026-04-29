@@ -14,21 +14,36 @@ import { RISORSE_DETAILS_RECAP_HEADERS } from './resource-details-recap.headers'
 @Component({
   selector: 'app-resource-details-grid',
   standalone: true,
-  imports: [CommonModule, TextInputComponent],
+  imports: [CommonModule, TextInputComponent, AppButton],
   templateUrl: './resource-details-grid.html',
-  styleUrl: './resource-details-grid.css' // Se usi SCSS, cambia l'estensione qui
+  styleUrl: './resource-details-grid.css'
 })
 export class ResourceDetailsGridComponent {
   
-  // @Input permette a questo componente di ricevere i dati dal componente padre
-  // Sostituisci 'any' con l'interfaccia corretta se ce l'hai (es. Employee)
   resource = input<ProjectEmployee | null>();
   resourceDetailsHeaders = RISORSE_DETAILS_RECAP_HEADERS;
 
-  // @Output permette al drawer di comunicare al padre che deve essere chiuso
+  isEditMode = signal(false);
+
+  toggleEditMode(){
+    if(this.isEditMode()){
+      this.salvaDati();
+    }
+
+    this.isEditMode.update(value => !value);
+  }
+
+  salvaDati(){
+    console.log("Salvataggio dati modificati per la risorsa:", this.resource());
+    this.annullaModifica();
+  }
+
+  annullaModifica(){
+    this.isEditMode.set(false);
+  }
+
   closeDrawer = signal(new EventEmitter<void>());
 
-  // Funzione da collegare alla "X" o al tasto "Chiudi" nel tuo file .html
   chiudi() {
     this.closeDrawer().emit();
   }

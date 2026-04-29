@@ -1,4 +1,4 @@
-<div>
+<!-- <div>
   <button appButton (click)="onBtnClick('Home')">
     <span class="icon">
       <img src="home-icon.svg" alt="Home" />
@@ -17,4 +17,46 @@
     </span>
     Progetti
   </button>
+</div> -->
+
+<div class="d-flex flex-column flex-shrink-0 p-3 bg-white border-end sidebar-container">
+  
+  <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+    <span class="fs-4">ForecastWeb</span>
+  </a>
+  
+  <hr>
+  
+  <ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item">
+        <a class="nav-link text-dark" 
+          [class.active]="activeMenu() === 'Home'" 
+          style="cursor: pointer;" 
+          (click)="onBtnClick('Home')">
+          <img src="home-icon.svg" alt="Home" class="sidebar-icon me-2" />
+          Home
+        </a>
+    </li>
+      
+      <li class="nav-item">
+        <a class="nav-link text-dark" 
+          [class.active]="activeMenu() === 'Clienti'" 
+          style="cursor: pointer;" 
+          (click)="onBtnClick('Clienti')">
+          <img src="customer-icon.svg" alt="Clienti" class="sidebar-icon me-2" />
+          Clienti
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link text-dark" 
+          [class.active]="activeMenu() === 'Progetti'" 
+          style="cursor: pointer;" 
+          (click)="onBtnClick('Progetti')">
+          <img src="project-icon.svg" alt="Progetti" class="sidebar-icon me-2" />
+          Progetti
+        </a>
+      </li>
+  </ul>
 </div>
+

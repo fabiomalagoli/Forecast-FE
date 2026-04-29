@@ -68,7 +68,7 @@ export class Visualizza {
   getValue(p: Progetto, key: keyof Progetto): string {
     const progettoValue = p[key];
 
-    // format base (evita [object Object])
+    // format base (evitando [object Object])
     if (progettoValue == null) return '';
     if (Array.isArray(progettoValue)) return progettoValue.join(', ');
     if (typeof progettoValue === 'object') return JSON.stringify(progettoValue);
