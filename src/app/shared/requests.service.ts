@@ -718,6 +718,10 @@ export class RequestsService {
     );
   }
 
+  aggiornaEmployee(employee: any) {
+    return this.updateEmployee(employee);
+  }
+
   private CreateEmployee(employee: any) {
     return this.httpClient.post(`${environment.apiUrl}/employees`, employee).pipe(
       tap((created: any) => {
