@@ -32,6 +32,7 @@ export class Sidebar {
   private estraiMenuDaUrl(url: string): string {
     if (url.includes('/clienti')) return 'Clienti';
     if (url.includes('/progetti')) return 'Progetti';
+    if (url.includes('/ruoli')) return 'Ruoli';
     return 'Home';
   }
   onBtnClick(id: string) {

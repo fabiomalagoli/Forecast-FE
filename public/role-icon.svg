@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+  <!-- Documento -->
+  <path d="M6 3.5 H13.5 L18 8 V20.5 
+           A2 2 0 0 1 16 22.5 H6 
+           A2 2 0 0 1 4 20.5 V5.5 
+           A2 2 0 0 1 6 3.5 Z"></path>
+
+  <!-- Angolo piegato -->
+  <path d="M13.5 3.5 V8 H18"></path>
+
+  <!-- Righe testo -->
+  <line x1="7.5" y1="12" x2="16.5" y2="12"></line>
+  <line x1="7.5" y1="15" x2="16.5" y2="15"></line>
+  <line x1="7.5" y1="18" x2="13.5" y2="18"></line>
+
+</svg>

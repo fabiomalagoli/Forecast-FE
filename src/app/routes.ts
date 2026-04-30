@@ -5,6 +5,7 @@ import { Visualizza as VisualizzaCliente } from './clienti/visualizza/visualizza
 import { elencoProgettiCliente } from './clienti/visualizza/progetti-attivi-cliente/progetti-attivi-cliente';
 import { Grid } from './grid/grid';
 import { Clienti } from './clienti/clienti';
+import { RolesComponent } from './roles/roles';
 
 export const routes: Routes = [
   { path: 'home', component: Grid },
@@ -13,6 +14,7 @@ export const routes: Routes = [
   { path: 'progetti/:id', component: Visualizza },
   { path: 'clienti/:id', component: VisualizzaCliente },
   { path: 'clienti/:id/progetti-attivi-cliente', component: elencoProgettiCliente },
+  { path: 'ruoli', component: RolesComponent },
 
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },
