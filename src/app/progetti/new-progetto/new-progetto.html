@@ -181,7 +181,7 @@
                   #eRole="ngModel">
                   <option [ngValue]="null" disabled selected>Scegli una risorsa...</option>
                   @for (opt of listaEmployees(); track opt.id) {
-                    <option [value]="opt.id">{{ opt.name }}</option>
+                    <option [value]="opt.id">{{ opt.name }} {{ opt.surname }}</option>
                   }
                 </select>
 

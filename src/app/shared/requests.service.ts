@@ -759,7 +759,6 @@ export class RequestsService {
   }
 
   private fetchEmployees() {
-
     this.caricaAziendeDisponibili().subscribe({
       next: (aziende) => this.Aziende.set(aziende),
       error: (err) => console.log('Errore caricamento aziende:', err),
@@ -782,10 +781,10 @@ export class RequestsService {
           id: employee.Id || employee.id, 
           name: employee.Name || employee.name,
           surname: employee.Surname || employee.surname,
-          jobRole: this.jobRolesCaricati().find(r => r.name === employee.jobRole)?.name || 'N/A',
-          jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === employee.jobRoleLevel)?.name || 'N/A',
-          company: this.aziendeCaricate().find(c => c.name === employee.company)?.name || 'N/A',
-          isActive: employee.isActive,
+          jobRole: employee.JobRole || employee.jobRole || 'N/A',
+          jobRoleLevel: employee.JobRoleLevel || employee.jobRoleLevel || 'N/A',
+          company: employee.Company || employee.company || 'N/A',
+          isActive: employee.IsActive !== undefined ? employee.IsActive : employee.isActive,
         })
       )),
       catchError((error) => {
@@ -802,9 +801,9 @@ export class RequestsService {
         id: employee.Id || employee.id, 
         name: employee.Name || employee.name,
         surname: employee.Surname || employee.surname,
-        jobRole: this.jobRolesCaricati().find(r => r.name === employee.jobRole)?.name || 'N/A',
-        jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === employee.jobRoleLevel)?.name || 'N/A',
-        company: this.aziendeCaricate().find(c => c.name === employee.company)?.name || 'N/A',
+        jobRole: employee.JobRole || employee.jobRole || 'N/A',
+        jobRoleLevel: employee.JobRoleLevel || employee.jobRoleLevel || 'N/A',
+        company: employee.Company || employee.company || 'N/A',
         isActive: employee.isActive,
       })),
       catchError((error) => {

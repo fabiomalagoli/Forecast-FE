@@ -1,3 +1,48 @@
 <div class="page-header">
   <h2>Ruoli</h2>
 </div>
+
+<!-- @if (statusMessage()) {
+  <div class="notification" [class]="statusMessage()?.type">
+    {{ statusMessage()?.text }}
+  </div>
+} -->
+
+@if (isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento ruoli in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button appButton (click)="aggiornaRuoli()">Riprova</button>
+  </div>
+} @else {
+    <div class="roles-layout" [class.panel-open]="selectedRoleId() !== null">
+        
+        <div class="table-container">
+            <table>
+                <tbody>
+                @for (r of roles(); track r.id) {
+                    <tr [class.selected-row]="selectedRoleId() === r.id">
+                        <td>{{ r.name }}</td>
+                        <td class="actions-cell">
+                            <button appButton class="btn-small" (click)="mostraRisorsePerRuolo(r)">
+                                Risorse Associate
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        @if (selectedRoleId() !== null) {
+            <div class="side-panel">
+                <button class="btn-close-panel" (click)="chiudiPannello()">✖ Chiudi</button>
+                
+                <app-role-resources [risorseAssociate]="risorseFiltrateSelezionate()"></app-role-resources>
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,34 @@
+<div class="resources-panel">
+  <div class="panel-header">
+    <h3>Risorse Associate</h3>
+  </div>
+
+  @if (risorseAssociate().length === 0) {
+    <div class="empty-state">
+      <p>Nessuna risorsa trovata per questo ruolo.</p>
+    </div>
+  } @else {
+    <div class="table-container-inner">
+      <table class="inner-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Livello</th>
+            <th>Azienda</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (resource of risorseAssociate(); track resource.id) {
+            <tr>
+              <td class="font-semibold">{{ resource.name }} {{ resource.surname }}</td>
+              <td>
+                <span class="badge">{{ resource.jobRoleLevel || resource.livello || '-' }}</span>
+              </td>
+              <td>{{ resource.company }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
