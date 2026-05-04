@@ -340,14 +340,10 @@ button[type="submit"]:not(.btn--disabled) {
 
 .roles-layout {
   display: grid;
-  grid-template-columns: 1fr; 
+  grid-template-columns: 1fr 1fr; 
   gap: 24px;
   align-items: start;
   transition: all 0.3s ease-in-out;
-}
-
-.roles-layout.panel-open {
-  grid-template-columns: 1fr 1fr; 
 }
 
 tr.selected-row {

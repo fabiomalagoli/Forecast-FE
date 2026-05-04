@@ -1,0 +1,59 @@
+<div class="page-header">
+  <h2>Risorse</h2>
+</div>
+
+@if(isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento risorse in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button appButton (click)="aggiornaRisorse()">Riprova</button>
+  </div>
+} @else {
+    <div class="resources-layout" [class.panel-open]="isRisorsaInAggiunta() || risorsaInModifica() !== null">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Risorsa</th>
+                        <th>Ruolo</th>
+                        <th>Livello</th>
+                        <th>Azienda</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (r of risorse(); track r.id) {
+                    <tr>
+                        <td>{{ r.name }} {{ r.surname }}</td>
+                        <td>{{ r.jobRole }}</td>
+                        <td>{{ r.jobRoleLevel }}</td>
+                        <td>{{ r.company }}</td>
+                        <td class="actions-cell">
+                            <button appButton class="btn-small">
+                                Dettagli
+                            </button>
+                            <button appButton class="btn-small btn-outline" (click)="apriModifica(r)">
+                                Modifica
+                            </button>
+                            <!-- <button appButton class="btn-small" (click)="cancellaRisorsa(r)">
+                                Cancella
+                            </button> -->
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if(risorsaInModifica()) {
+    <app-modifica-risorsa
+        [risorsaDaModificare]="risorsaInModifica()"
+        (cancel)="chiudiModifica()"
+        (modified)="salvaModifica(risorsaInModifica()!)"
+    ></app-modifica-risorsa>
+}

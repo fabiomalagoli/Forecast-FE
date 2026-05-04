@@ -33,6 +33,7 @@ export class Sidebar {
     if (url.includes('/clienti')) return 'Clienti';
     if (url.includes('/progetti')) return 'Progetti';
     if (url.includes('/ruoli')) return 'Ruoli';
+    if (url.includes('/risorse')) return 'Risorse';
     return 'Home';
   }
   onBtnClick(id: string) {

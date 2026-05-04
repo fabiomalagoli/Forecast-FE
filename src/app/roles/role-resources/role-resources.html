@@ -3,6 +3,14 @@
     <h3>Risorse Associate</h3>
   </div>
 
+    @if(risorsaInModifica()) {
+        <app-modifica-risorsa-per-ruolo
+            [risorsaDaModificare]="risorsaInModifica()"
+            (cancel)="chiudiModificaRisorsa()"
+            (modified)="aggiornaRisorsePerRuolo()"
+        ></app-modifica-risorsa-per-ruolo>
+    }
+
   @if (risorseAssociate().length === 0) {
     <div class="empty-state">
       <p>Nessuna risorsa trovata per questo ruolo.</p>
@@ -15,6 +23,7 @@
             <th>Nome</th>
             <th>Livello</th>
             <th>Azienda</th>
+            <th>Azioni</th>
           </tr>
         </thead>
         <tbody>
@@ -25,6 +34,9 @@
                 <span class="badge">{{ resource.jobRoleLevel || resource.livello || '-' }}</span>
               </td>
               <td>{{ resource.company }}</td>
+            <td class="actions-cell">
+              <button appButton class="btn-small btn-outline" (click)="apriModificaRisorsa(resource)">Modifica</button>
+            </td>
             </tr>
           }
         </tbody>

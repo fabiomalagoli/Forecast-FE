@@ -6,6 +6,7 @@ import { elencoProgettiCliente } from './clienti/visualizza/progetti-attivi-clie
 import { Grid } from './grid/grid';
 import { Clienti } from './clienti/clienti';
 import { RolesComponent } from './roles/roles';
+import { RisorseComponent } from './risorse/risorse';
 
 export const routes: Routes = [
   { path: 'home', component: Grid },
@@ -15,6 +16,7 @@ export const routes: Routes = [
   { path: 'clienti/:id', component: VisualizzaCliente },
   { path: 'clienti/:id/progetti-attivi-cliente', component: elencoProgettiCliente },
   { path: 'ruoli', component: RolesComponent },
+  { path: 'risorse', component: RisorseComponent },
 
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },

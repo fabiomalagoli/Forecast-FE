@@ -67,6 +67,17 @@
           Ruoli
         </a>
       </li>
+
+      <li class="nav-item">
+        <a class="nav-link text-dark" 
+          [class.active]="activeMenu() === 'Risorse'" 
+          style="cursor: pointer;" 
+          (click)="onBtnClick('Risorse')">
+          <img src="resource-icon.svg" alt="Risorse" class="sidebar-icon me-2" />
+          Risorse
+        </a>
+      </li>
+
   </ul>
 </div>
 

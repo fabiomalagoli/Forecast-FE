@@ -702,11 +702,29 @@ export class RequestsService {
   }
 
   private updateEmployee(employee: any) {
-    return this.httpClient.put(`${environment.apiUrl}/employees/${encodeURIComponent(employee.id)}`, employee).pipe(
+    // 1. Troviamo i GUID corretti come abbiamo sempre fatto
+    const companyObj = this.Aziende().find(c => c.name === employee.company);
+    const roleObj = this.JobRoles().find(r => r.name === employee.jobRole);
+    const levelObj = this.JobRoleLevels().find(l => l.name === employee.jobRoleLevel);
+
+    // 2. IL PAYLOAD ESATTO DA SWAGGER: camelCase, niente ID, solo i campi richiesti
+    const payload = {
+      name: employee.name,
+      surname: employee.surname,
+      jobRoleId: roleObj ? roleObj.id : null,
+      jobRoleLevelId: levelObj ? levelObj.id : null,
+      companyId: companyObj ? companyObj.id : null,
+      isActive: employee.isActive !== undefined ? employee.isActive : true
+    };
+
+    console.log('👀 PAYLOAD PERFETTO PER SWAGGER:', payload);
+
+    return this.httpClient.put(`${environment.apiUrl}/employees/${encodeURIComponent(employee.id)}`, payload).pipe(
       tap(() => {
+        // Aggiorniamo la UI locale usando l'oggetto "employee" (che contiene le stringhe per visualizzare i nomi corretti in tabella)
         this.Employees.update(prev =>
           prev.map(e => e.id === employee.id
-            ? {...e, ...employee }
+            ? { ...e, ...employee } 
             : e
           )
         );

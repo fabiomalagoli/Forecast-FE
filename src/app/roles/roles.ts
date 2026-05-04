@@ -25,11 +25,25 @@ export class RolesComponent {
     roleInModifica = signal<Role | null>(null);
 
     selectedRoleId = signal<string | null>(null);
+    selectedRuolo = signal<any | null>(null);
     risorseFiltrateSelezionate = signal<any[]>([]);
 
     constructor(private router: Router) {
         effect(() => {
             console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.roles());
+        });
+
+        // Quando gli employees vengono aggiornati nel service, filtra automaticamente
+        effect(() => {
+            const employees = this.requestsService.employeesCaricati();
+            const ruolo = this.selectedRuolo();
+            
+            if (ruolo) {
+                const risorseFiltrate = employees.filter(risorsa => {
+                    return risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name;
+                });
+                this.risorseFiltrateSelezionate.set(risorseFiltrate);
+            }
         });
     }
 
@@ -94,30 +108,32 @@ export class RolesComponent {
         });
     }
 
-mostraRisorsePerRuolo(ruolo: any) {
-    this.selectedRoleId.set(ruolo.id);
-    
-    const tutteLeRisorse = this.requestsService.employeesCaricati();
-    
-    console.log('Ruolo cliccato:', ruolo);
-    console.log('Prima risorsa dell array (per capire la struttura):', tutteLeRisorse[0]);
-    
-    const risorseFiltrate = tutteLeRisorse.filter(risorsa => {
-        return risorsa.jobRole === ruolo.id || 
-            risorsa.jobRole === ruolo.name;
-    });
-    
-    console.log('Risorse trovate dal filtro:', risorseFiltrate);
-    
-    this.risorseFiltrateSelezionate.set(risorseFiltrate);
-    
-    if(risorseFiltrate.length === 0) {
-        this.statusMessage.set({text: 'Nessuna risorsa trovata per questo ruolo', type: 'error'});
+    mostraRisorsePerRuolo(ruolo: any) {
+        this.selectedRoleId.set(ruolo.id);
+        this.selectedRuolo.set(ruolo);
+        
+        const tutteLeRisorse = this.requestsService.employeesCaricati();
+        
+        console.log('Ruolo cliccato:', ruolo);
+        console.log('Prima risorsa dell array (per capire la struttura):', tutteLeRisorse[0]);
+        
+        const risorseFiltrate = tutteLeRisorse.filter(risorsa => {
+            return risorsa.jobRole === ruolo.id || 
+                risorsa.jobRole === ruolo.name;
+        });
+        
+        console.log('Risorse trovate dal filtro:', risorseFiltrate);
+        
+        this.risorseFiltrateSelezionate.set(risorseFiltrate);
+        
+        if(risorseFiltrate.length === 0) {
+            this.statusMessage.set({text: 'Nessuna risorsa trovata per questo ruolo', type: 'error'});
+        }
     }
-}
 
     chiudiPannello() {
         this.selectedRoleId.set(null);
+        this.selectedRuolo.set(null);
         this.risorseFiltrateSelezionate.set([]);
     }
 
