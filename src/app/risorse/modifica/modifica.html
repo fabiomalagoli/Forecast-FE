@@ -42,10 +42,49 @@
         } 
         @else {
         <div class="np-field np-field--grid">
-          <app-text-input>
+          @if (header.key === 'jobRole') {
             <label class="np-label" [attr.for]="toId(header.key, i)">
               {{ header.label }}
             </label>
+            <div class="combo-field">
+              <input
+                class="np-input combo-input"
+                type="text"
+                [attr.id]="toId(header.key, i)"
+                [name]="header.key"
+                [(ngModel)]="formData[header.key]"
+                autocomplete="off"
+                (focus)="onJobRoleFocus()"
+                (input)="onJobRoleInput()"
+                required
+              />
+              <button
+                class="combo-toggle"
+                type="button"
+                aria-label="Apri lista ruoli"
+                (click)="toggleJobRoleDropdown()">
+                ▾
+              </button>
+              @if (jobRoleDropdownOpen()) {
+                <div class="combo-menu">
+                  @for (opt of getFilteredJobRoles(); track (opt.id || opt.Id || opt)) {
+                    <button
+                      class="combo-option"
+                      type="button"
+                      (mousedown)="selectJobRole(opt)">
+                      {{ optionName(opt) }}
+                    </button>
+                  } @empty {
+                    <div class="combo-empty">Nessun ruolo trovato</div>
+                  }
+                </div>
+              }
+            </div>
+            } @else {
+            <app-text-input>
+              <label class="np-label" [attr.for]="toId(header.key, i)">
+                {{ header.label }}
+              </label>
               <select
                 [id]="header.key"
                 [name]="header.key"
@@ -58,7 +97,8 @@
                   </option>
                 }
               </select>
-          </app-text-input>
+            </app-text-input>
+            }
 
           @if (
             f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)

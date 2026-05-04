@@ -50,6 +50,15 @@
     </div>
 }
 
+<mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [showFirstLastButtons]="true"
+    (page) = "onPageChange($event)">
+</mat-paginator>
+
 @if(risorsaInModifica()) {
     <app-modifica-risorsa
         [risorsaDaModificare]="risorsaInModifica()"
@@ -57,3 +66,15 @@
         (modified)="salvaModifica(risorsaInModifica()!)"
     ></app-modifica-risorsa>
 }
+
+@if(isRisorsaInAggiunta()) {
+    <app-new-risorsa
+        [risorsaDaAggiungere]="risorsaInAggiunta()"
+        (cancel)="isRisorsaInAggiunta.set(false)"
+        (added)="aggiungiRisorsa($event)"
+    ></app-new-risorsa>
+}
+
+<div class="bottom-actions">
+    <button appButton class="btn-add" (click)="onAggiuntaRisorsa()">+ Aggiungi Risorsa</button>
+</div>

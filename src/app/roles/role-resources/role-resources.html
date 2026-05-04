@@ -3,13 +3,13 @@
     <h3>Risorse Associate</h3>
   </div>
 
-    @if(risorsaInModifica()) {
-        <app-modifica-risorsa-per-ruolo
-            [risorsaDaModificare]="risorsaInModifica()"
-            (cancel)="chiudiModificaRisorsa()"
-            (modified)="aggiornaRisorsePerRuolo()"
-        ></app-modifica-risorsa-per-ruolo>
-    }
+  @if(risorsaInModifica()) {
+      <app-modifica-risorsa-per-ruolo
+          [risorsaDaModificare]="risorsaInModifica()"
+          (cancel)="chiudiModificaRisorsa()"
+          (modified)="aggiornaRisorsePerRuolo()"
+      ></app-modifica-risorsa-per-ruolo>
+  }
 
   @if (risorseAssociate().length === 0) {
     <div class="empty-state">

@@ -4,12 +4,15 @@ import { RequestsService } from '../../shared/requests.service';
 import { Role } from '../role.model';
 import { Employee } from '../../risorse/risorse.model';
 import { ModificaRisorsaPerRuolo } from '../role-resources/modifica/modifica';
+import { CommonModule } from '@angular/common';
+import { AppButton } from '../../shared/button/button';
+import { NewRisorsa } from '../../risorse/new-risorsa/new-risorsa';
 
 @Component({
   selector: 'app-role-resources',
   templateUrl: './role-resources.html',
   styleUrls: ['./role-resources.css'],
-  imports: [ModificaRisorsaPerRuolo],
+  imports: [ModificaRisorsaPerRuolo, CommonModule, AppButton],
 })
 export class RoleResourcesComponent {
 

@@ -34,6 +34,8 @@ export class ModificaRisorsaPerRuolo {
     listaJobRoles = signal<any[]>([]);
     listaJobRoleLevels = signal<any[]>([]);
     listaAziende = signal<any[]>([]);
+    jobRoleDropdownOpen = signal(false);
+    showAllJobRoles = signal(false);
 
     // Variabile per memorizzare i dati originali del cliente, utile per verificare se ci sono state modifiche
     private OriginalData: string = '';
@@ -45,7 +47,7 @@ export class ModificaRisorsaPerRuolo {
 
     ngOnInit() {
         const caricamenti = [
-            this.requests.caricaJobRolesDisponibili(),
+            this.requests.caricaTuttiJobRolesDisponibili(),
             this.requests.caricaJobRoleLevelsDisponibili(),
             this.requests.caricaAziendeDisponibili()
         ];
@@ -133,6 +135,47 @@ export class ModificaRisorsaPerRuolo {
             case 'company': return this.listaAziende();
             default: return [];
         }
+    }
+
+    optionName(opt: any): string {
+        return opt?.name || opt?.Name || opt || '';
+    }
+
+    getFilteredJobRoles(): any[] {
+        const term = this.showAllJobRoles()
+            ? ''
+            : (this.formData.jobRole || '').toString().trim().toLowerCase();
+
+        if (!term) {
+            return this.listaJobRoles();
+        }
+
+        return this.listaJobRoles().filter((role) =>
+            this.optionName(role).toLowerCase().includes(term)
+        );
+    }
+
+    onJobRoleInput() {
+        this.showAllJobRoles.set(false);
+        this.jobRoleDropdownOpen.set(true);
+        this.onFieldChange();
+    }
+
+    onJobRoleFocus() {
+        this.showAllJobRoles.set(true);
+        this.jobRoleDropdownOpen.set(true);
+    }
+
+    toggleJobRoleDropdown() {
+        this.showAllJobRoles.set(true);
+        this.jobRoleDropdownOpen.update((open) => !open);
+    }
+
+    selectJobRole(role: any) {
+        this.formData.jobRole = this.optionName(role);
+        this.jobRoleDropdownOpen.set(false);
+        this.showAllJobRoles.set(false);
+        this.onFieldChange();
     }
 
     isChanged(): boolean {

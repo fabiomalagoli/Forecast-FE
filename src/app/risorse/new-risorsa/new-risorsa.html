@@ -2,7 +2,7 @@
 
 <dialog open>
   <div class="np-panel">
-    <h2 class="np-title">Modifica Risorsa</h2>
+    <h2 class="np-title">Nuova Risorsa</h2>
 
     @if (statusMessage) {
       <div class="message message--{{ statusMessage.type }}">
@@ -80,7 +80,7 @@
                 </div>
               }
             </div>
-          } @else {
+            } @else {
             <app-text-input>
               <label class="np-label" [attr.for]="toId(header.key, i)">
                 {{ header.label }}
@@ -98,7 +98,7 @@
                 }
               </select>
             </app-text-input>
-          }
+            }
 
           @if (
             f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
@@ -114,7 +114,7 @@
     }
 
       <div class="actions">
-        <button type="submit" [disabled]="isSubmitDisabled(f)">Modifica risorsa</button>
+        <button type="submit" [disabled]="isSubmitDisabled(f)">Crea risorsa</button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
     </form>

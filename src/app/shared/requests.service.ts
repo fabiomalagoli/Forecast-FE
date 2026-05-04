@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
 import { CardModel } from '../grid/card-home/card-home.model';
+import { Employee } from '../risorse/risorse.model';
 
 @Injectable({
   providedIn: 'root',
@@ -22,6 +23,8 @@ export class RequestsService {
   private Aziende = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
 
   private JobRoles = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
+
+  private AllJobRoles = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
 
   private StatiProgetto = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
 
@@ -54,6 +57,28 @@ export class RequestsService {
   employeesCaricati = this.Employees.asReadonly();
 
   cardsCaricate = this.Cards.asReadonly();
+
+  private getJobRolesForLookup() {
+    const rolesById = new Map<string, { id: string; name: string; isDefault: boolean }>();
+
+    for (const role of this.JobRoles()) {
+      rolesById.set(role.id, role);
+    }
+
+    for (const role of this.AllJobRoles()) {
+      rolesById.set(role.id, role);
+    }
+
+    return Array.from(rolesById.values());
+  }
+
+  private JobRolesPagination = signal<any>(null);
+
+  private EmployeesPagination = signal<any>(null);
+
+  employeesPagination = this.EmployeesPagination.asReadonly();
+
+  jobRolesPagination = this.JobRolesPagination.asReadonly();
 
   caricaProgettiDisponibili() {
     return this.fetchProgetti(
@@ -613,16 +638,124 @@ export class RequestsService {
     );
   }
 
-  caricaJobRolesDisponibili() {
-    return this.fetchJobRoles().pipe(
-      tap({
-        next: (roles) => this.JobRoles.set(roles),
+  private createJobRole(role: any) {
+    const payload = {
+      name: role.name
+    };
+
+    console.log('1. Inviando POST a /jobroles con payload:', payload);
+
+    return this.httpClient.post(`${environment.apiUrl}/jobroles`, payload).pipe(
+      tap((created: any) => {
+        console.log('2. POST RISPOSTA dal backend:', created);
+        console.log('   Status della risposta: 200-299 (successo HTTP)');
+        
+        // Il backend restituisce il ruolo creato.
+        // Copriamo sia camelCase che PascalCase
+        const newId = created?.id || created?.Id;
+        const newName = created?.name || created?.Name;
+        const newIsDefault = created?.isDefault || created?.IsDefault || false;
+
+        console.log('   ID estratto:', newId, '| Nome estratto:', newName);
+
+        if (newId) {
+          console.log('3. ID valido! Aggiorno il segnale locale JobRoles');
+          // Aggiorniamo la lista locale
+          this.JobRoles.update(prev => [
+            ...prev, 
+            { id: newId, name: newName, isDefault: newIsDefault }
+          ]);
+          this.AllJobRoles.update(prev => [
+            ...prev,
+            { id: newId, name: newName, isDefault: newIsDefault }
+          ]);
+          console.log('   Segnale aggiornato. Lista locale ora ha', this.JobRoles().length, 'elementi');
+        } else {
+          console.error('   PROBLEMA: Il backend non ha restituito un ID valido!');
+        }
+      }),
+      catchError((error) => {
+        console.error('ERRORE nel POST:', error.status, error.statusText);
+        console.error('   Risposta del server:', error.error);
+        this.errorService.showError('Errore durante la creazione del job role.');
+        return throwError(() => error);
+      }),
+    );
+  }
+
+  aggiungiJobRole(role: any) {
+    return this.createJobRole(role);
+  }
+
+  caricaJobRolesDisponibili(pageNumber: number = 1, pageSize: number = 10) {
+    const url = `${environment.apiUrl}/jobroles?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    console.log('1. GET JobRoles - URL:', url);
+    
+    return this.httpClient.get<any[]>(url, {observe: 'response'}).pipe(
+      tap((response) => {
+        console.log('2. RISPOSTA ricevuta dal backend');
+        console.log('   Status HTTP:', response.status);
+        console.log('   Body:', response.body);
+        
+        const paginationHeader = response.headers.get('X-Pagination');
+        console.log('   Header X-Pagination:', paginationHeader);
+        
+        if (paginationHeader) {
+          const paginationData = JSON.parse(paginationHeader);
+          console.log('   Dati paginazione parsati:', paginationData);
+          
+          // Converto da PascalCase a camelCase
+          const paginationNormalized = {
+            currentPage: paginationData.CurrentPage,
+            totalPages: paginationData.TotalPages,
+            pageSize: paginationData.PageSize,
+            totalCount: paginationData.TotalCount,
+            hasPrevious: paginationData.HasPrevious,
+            hasNext: paginationData.HasNext
+          };
+          
+          console.log('   Dati paginazione normalizzati:', paginationNormalized);
+          this.JobRolesPagination.set(paginationNormalized);
+        }
+
+        const roles = response.body || [];
+        console.log('   Ruoli estratti:', roles.length, 'elementi');
+        console.log('   Contenuto:', roles);
+        this.JobRoles.set(roles);
+        console.log('   Segnale JobRoles aggiornato. Ora contiene:', this.JobRoles().length, 'elementi');
+      }),
+      map((response) => response.body || []),
+      catchError((error) => {
+        console.error('ERRORE nel GET JobRoles:');
+        console.error('  Status:', error.status);
+        console.error('  StatusText:', error.statusText);
+        console.error('  Message:', error.message);
+        console.error('  Error object:', error.error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+  }
+
+  caricaTuttiJobRolesDisponibili() {
+    const url = `${environment.apiUrl}/jobroles?PageNumber=1&PageSize=1000`;
+    console.log('1. GET tutti i JobRoles - URL:', url);
+
+    return this.httpClient.get<any[]>(url, {observe: 'response'}).pipe(
+      tap((response) => {
+        const roles = response.body || [];
+        this.AllJobRoles.set(roles);
+        console.log('   Tutti i JobRoles caricati:', roles.length, 'elementi');
+      }),
+      map((response) => response.body || []),
+      catchError((error) => {
+        console.error('ERRORE nel GET di tutti i JobRoles:', error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
       }),
     );
   }
 
   caricaJobRoleById(id: string) {
-    const cached = this.JobRoles().find(r => r.id === id);
+    const cached = this.getJobRolesForLookup().find(r => r.id === id);
     if (cached) {
       return of(cached);
     }
@@ -701,10 +834,10 @@ export class RequestsService {
     );
   }
 
-  private updateEmployee(employee: any) {
+  private updateEmployee(employee: Employee) {
     // 1. Troviamo i GUID corretti come abbiamo sempre fatto
     const companyObj = this.Aziende().find(c => c.name === employee.company);
-    const roleObj = this.JobRoles().find(r => r.name === employee.jobRole);
+    const roleObj = this.getJobRolesForLookup().find(r => r.name === employee.jobRole);
     const levelObj = this.JobRoleLevels().find(l => l.name === employee.jobRoleLevel);
 
     // 2. IL PAYLOAD ESATTO DA SWAGGER: camelCase, niente ID, solo i campi richiesti
@@ -736,32 +869,43 @@ export class RequestsService {
     );
   }
 
-  aggiornaEmployee(employee: any) {
+  aggiornaEmployee(employee: Employee) {
     return this.updateEmployee(employee);
   }
 
-  private CreateEmployee(employee: any) {
-    return this.httpClient.post(`${environment.apiUrl}/employees`, employee).pipe(
+  private CreateEmployee(employee: Employee) {
+    const companyObj = this.Aziende().find(c => c.name === employee.company);
+    const roleObj = this.getJobRolesForLookup().find(r => r.name === employee.jobRole);
+    const levelObj = this.JobRoleLevels().find(l => l.name === employee.jobRoleLevel);
+    const payload = {
+      id: employee.id,
+      name: employee.name,
+      surname: employee.surname,
+      jobRoleId: roleObj ? roleObj.id : null,
+      jobRoleLevelId: levelObj ? levelObj.id : null,
+      companyId: companyObj ? companyObj.id : null,
+      isActive: employee.isActive !== undefined ? employee.isActive : true
+    };
+    return this.httpClient.post(`${environment.apiUrl}/employees`, payload).pipe(
       tap((created: any) => {
         if (created?.id) {
-          this.Employees.update(prev =>
-            [...prev, {
-              id: created.id,
-              name: created.name,
-              surname: created.surname,
-              jobRole: this.jobRolesCaricati().find(r => r.name === created.jobRole)?.name || 'N/A',
-              jobRoleLevel: this.jobRoleLevelsCaricati().find(l => l.name === created.jobRoleLevel)?.name || 'N/A',
-              company: this.aziendeCaricate().find(c => c.name === created.company)?.name || 'N/A',
-              isActive: created.isActive,
-            }]
-          );
-        }
+        this.Employees.update(prev =>
+          prev.map(e => e.id === employee.id
+            ? { ...e, ...employee } 
+            : e
+          )
+        );
+      }
       }),
       catchError((error) => {
         this.errorService.showError('Errore durante la creazione del dipendente.');
         return throwError(() => error);
       }),
     );
+  }
+
+  aggiungiEmployee(employee: Employee) {
+    return this.CreateEmployee(employee);
   }
 
   private DeleteEmployee(employeeId: string) {
@@ -774,6 +918,18 @@ export class RequestsService {
         return throwError(() => error);
       }),
     );
+  }
+
+  private normalizeEmployee(employee: any): Employee {
+    return {
+      id: employee.Id || employee.id,
+      name: employee.Name || employee.name,
+      surname: employee.Surname || employee.surname,
+      jobRole: employee.JobRole || employee.jobRole || 'N/A',
+      jobRoleLevel: employee.JobRoleLevel || employee.jobRoleLevel || 'N/A',
+      company: employee.Company || employee.company || 'N/A',
+      isActive: employee.IsActive !== undefined ? employee.IsActive : employee.isActive,
+    };
   }
 
   private fetchEmployees() {
@@ -794,17 +950,7 @@ export class RequestsService {
       tap((resData) => {
         console.log('Risposta dal backend (employees):', resData);
       }),
-      map((employees) => employees.map(
-        (employee) => ({
-          id: employee.Id || employee.id, 
-          name: employee.Name || employee.name,
-          surname: employee.Surname || employee.surname,
-          jobRole: employee.JobRole || employee.jobRole || 'N/A',
-          jobRoleLevel: employee.JobRoleLevel || employee.jobRoleLevel || 'N/A',
-          company: employee.Company || employee.company || 'N/A',
-          isActive: employee.IsActive !== undefined ? employee.IsActive : employee.isActive,
-        })
-      )),
+      map((employees) => employees.map((employee) => this.normalizeEmployee(employee))),
       catchError((error) => {
         console.log(error);
         return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
@@ -831,10 +977,76 @@ export class RequestsService {
     );
   }
 
-  caricaEmployeesDisponibili() {
-    return this.fetchEmployees().pipe(
-      tap(emps => this.Employees.set(emps))
+  // caricaEmployeesDisponibili() {
+  //   return this.fetchEmployees().pipe(
+  //     tap(emps => this.Employees.set(emps))
+  //   );
+  // } versione 1 senza impaginazione
+
+  caricaEmployeesDisponibili(pageNumber: number = 1, pageSize: number = 10) {
+    const url = `${environment.apiUrl}/employees?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    console.log('   GET Employees - URL:', url);
+
+    return this.httpClient.get<any[]>(url, {observe: 'response'}).pipe(
+      tap((response) => {
+        console.log('   RISPOSTA ricevuta dal backend');
+        console.log('   Status HTTP:', response.status);
+        console.log('   Body:', response.body);
+        
+        const  paginationHeader = response.headers.get('X-Pagination'); //headers acquisiti per la richiesta GET impaginata
+        console.log('   Header X-Pagination:', paginationHeader);
+
+        if(paginationHeader){
+          const paginationData = JSON.parse(paginationHeader); // prendiamo i dati nel formato JSON dal backend 
+          console.log('   Dati paginazione parsati:', paginationData);
+
+          const paginationNormalized = {
+            currentPage: paginationData.CurrentPage,
+            totalPages: paginationData.TotalPages,
+            pageSize: paginationData.PageSize,
+            totalCount: paginationData.TotalCount,
+            hasPrevious: paginationData.HasPrevious,
+            hasNext: paginationData.HasNext
+          }; // una sorta di payload per avere i dati codificati correttamente per la nostra richiesta di dati impaginati
+
+          console.log('   Dati paginazione normalizzati:', paginationNormalized);
+          this.EmployeesPagination.set(paginationNormalized);
+
+        }
+
+        const employees = (response.body || []).map((employee) => this.normalizeEmployee(employee));
+        this.Employees.set(employees)
+
+      }),
+      map((response) => (response.body || []).map((employee) => this.normalizeEmployee(employee))),
+      catchError((error) => {
+        console.error('ERRORE nel GET Employees:');
+        console.error('  Status:', error.status);
+        console.error('  StatusText:', error.statusText);
+        console.error('  Message:', error.message);
+        console.error('  Error object:', error.error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
     );
+  }
+
+  caricaTuttiEmployeesDisponibili() {
+    const url = `${environment.apiUrl}/employees?PageNumber=1&PageSize=1000`;
+    console.log('  GET tutti i JobRoles - URL:', url);
+
+    return this.httpClient.get<any[]>(url, {observe: 'response'}).pipe(
+      tap((response) => {
+        const employees = (response.body || []).map((employee) => this.normalizeEmployee(employee));
+        this.Employees.set(employees);
+        console.log('   Tutti gli Employees caricati:', employees.length, 'elementi');
+      }),
+      map((response) => (response.body || []).map((employee) => this.normalizeEmployee(employee))),
+      catchError((error) => {
+        console.error('ERRORE nel GET di tutti gli Employees:', error);
+        return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
+      }),
+    );
+
   }
 
   caricaEmployeeById(id: string) {

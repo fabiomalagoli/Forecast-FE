@@ -51,3 +51,24 @@
     </div>
     </div>
 }
+
+<mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [showFirstLastButtons]="true"
+    (page) = "onPageChange($event)">
+</mat-paginator>
+
+@if(isRoleInAggiunta()) {
+    <app-new-role
+        [ruoloDaAggiungere]="roleInAggiunta()"
+        (added)="aggiungiRuolo($event)"
+        (cancel)="isRoleInAggiunta.set(false)"
+    ></app-new-role>
+}
+
+<div class="bottom-actions">
+    <button appButton class="btn-add" (click)="isRoleInAggiunta.set(true)">+ Aggiungi Ruolo</button>
+</div>

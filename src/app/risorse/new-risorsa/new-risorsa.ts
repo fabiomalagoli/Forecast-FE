@@ -9,20 +9,20 @@ import { Employee } from '../risorse.model';
 import { RISORSE_HEADERS } from '../risorse.headers'; 
 
 @Component({
-  selector: 'app-modifica-risorsa',
+  selector: 'app-new-risorsa',
   imports: [FormsModule, CommonModule, TextInputComponent],
-  templateUrl: './modifica.html',
-  styleUrls: ['../../shared/progetto-form.css', './modifica.css'], // Mantenuto il css condiviso e aggiunto quello specifico
+  templateUrl: './new-risorsa.html',
+  styleUrls: ['../../shared/progetto-form.css', './new-risorsa.css'],
 })
-export class ModificaRisorsaComponent implements OnInit {
+export class NewRisorsa implements OnInit {
 
     private requests = inject(RequestsService);
     
     // Input dal componente padre (RisorseComponent)
-    risorsaDaModificare = input.required<Employee | null>();
+    risorsaDaAggiungere = input.required<Employee | null>();
 
     // Output verso il componente padre
-    modified = output<Employee>();
+    added = output<Employee>();
     cancel = output<void>();
 
     // Variabili per gestione stato del form e messaggi
@@ -84,15 +84,15 @@ export class ModificaRisorsaComponent implements OnInit {
         };
     }
 
-    // Reagiamo ai cambiamenti dell'input `risorsaDaModificare`
+    // Reagiamo ai cambiamenti dell'input `risorsaDaAggiungere`
     private syncRisorsa = effect(() => {
-        const r = this.risorsaDaModificare();
+        const r = this.risorsaDaAggiungere();
         if (!r) return;
         
         this.baseData = JSON.parse(JSON.stringify(r));
         const normalized = this.normalizeEmployeeForForm(this.baseData);
         
-        console.log('Modifica Risorsa: dati ricevuti:', r, '-> normalizzati:', normalized);
+        console.log('Nuova Risorsa: dati ricevuti:', r, '-> normalizzati:', normalized);
         
         this.formData = { ...normalized };
         this.OriginalData = JSON.stringify(this.formData);
@@ -166,19 +166,19 @@ export class ModificaRisorsaComponent implements OnInit {
             ...form.value         // Dati aggiornati dal form
         };
 
-        this.requests.aggiornaEmployee(payloadCompleto).subscribe({
+        this.requests.aggiungiEmployee(payloadCompleto).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
-                this.statusMessage = { text: 'Risorsa modificata con successo!', type: 'success' };
-                this.modified.emit(payloadCompleto);
+                this.statusMessage = { text: 'Risorsa aggiunta con successo!', type: 'success' };
+                this.added.emit(payloadCompleto);
                 form.resetForm();
                 this.formData = {};
                 this.cancel.emit();
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;
-                let errorMessage = 'Errore durante la modifica della risorsa';
+                let errorMessage = 'Errore durante l\'aggiunta della risorsa';
                 
                 if (error.status === 400) {
                     errorMessage = 'Dati non validi. Controlla i campi inseriti.';
