@@ -5,7 +5,45 @@
 <div class="filter-bar">
   <div class="filter-group">
     <label>Filtra per Nome</label>
-    <input type="text" [formControl]="filtroNomeCliente" placeholder="Filtra per nome...">
+    <div class="combo-field">
+      <input
+        type="text"
+        [formControl]="filtroNomeCliente"
+        placeholder="Filtra per nome..."
+        autocomplete="off"
+        (focus)="onCustomerFilterFocus()"
+        (input)="onCustomerFilterInput()">
+      @if (filtroNomeValue()){
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro"
+          (click)="clearCustomerFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista clienti"
+        (click)="toggleCustomerFilterDropdown()">
+        ▾
+      </button>
+      @if (customerDropDownOpen()){
+        <div class="combo-menu">
+          @for (c of customerFilterOptions(); track c.id){
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectCustomerFilter(c)">
+              {{ c.name }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun cliente trovato</div>
+          }
+        </div>
+      }
+    </div>
   </div>
 </div>
 

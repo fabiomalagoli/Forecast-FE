@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TableRowComponent } from '../shared/table-row/table-row';
@@ -18,21 +18,28 @@ import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
   selector: 'app-clienti',
   imports: [CommonModule, ReactiveFormsModule, AppButton, NewCliente, ModificaCliente],
   templateUrl: './clienti.html',
-  styleUrl: './clienti.css',
+  styleUrls: ['./clienti.css', '../shared/filter-styles.css'],
 })
 export class Clienti {
-  //dummyClienti = CLIENTI_DUMMY;
-  Clienti = signal<Cliente[] | undefined>(undefined);
-  clientiFiltrati = signal<Cliente[]>([]);
-  filtroNomeValue = signal<string>('');
-  isFetching = signal(false);
-  error = signal('');
-  statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
+
   private requestsService = inject(RequestsService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+
+  //dummyClienti = CLIENTI_DUMMY;
+  Clienti = this.requestsService.clientiCaricati;
+  clientiFiltrati = signal<Cliente[]>([]);
+
+
+  isFetching = signal(false);
+  error = signal('');
+  statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
+
+
   isClienteInAggiunta = false;
   clienteInModifica = signal<Cliente | null>(null);
+
+
   //Record per inserire i titoli (headers) dei dati della tabella Clienti corrispondenti ai parametri del tipo Cliente.
   readonly headersClienti = CLIENTE_HEADERS;
   //Mappatura fra il tipo di colonne e gli headers ed i rispettivi valori del tipo Cliente.
@@ -51,7 +58,28 @@ export class Clienti {
     },
   ];
 
+
+  nomeCliente = signal<string | null>(null);
   filtroNomeCliente = new FormControl('');
+  showAllCustomersOptions = signal(false);
+  customerDropDownOpen = signal(false);
+  filtroNomeValue = signal<string>('');
+
+  customerFilterOptions = computed<Cliente[]>(() => {
+    const term = this.showAllCustomersOptions()
+      ? ''
+      : this.filtroNomeValue().toLowerCase();
+    const customersData = this.Clienti() ?? [];
+
+    if(!term){
+      return customersData;
+    }
+
+    return customersData.filter(c => 
+      this.optionName(c).toLowerCase().includes(term)
+    );
+
+  });
 
   constructor() {
     // Effect per aggiornare i clienti filtrati quando cambiano i dati o il filtro
@@ -79,10 +107,6 @@ export class Clienti {
   ngOnInit() {
     this.isFetching.set(true);
     const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
-      next: (clienti) => {
-        console.log('Clienti caricati:', clienti); // Log per verificare i dati
-        this.Clienti.set(clienti);
-      },
       error: (error: Error) => {
         this.error.set(error.message);
       },
@@ -106,10 +130,6 @@ export class Clienti {
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
       const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
-        next: (clienti) => {
-          console.log('Clienti caricati:', clienti); // Log per verificare i dati
-          this.Clienti.set(clienti);
-        },
         error: (error: Error) => {
           this.error.set(error.message);
         },
@@ -131,10 +151,6 @@ export class Clienti {
   ricaricaClienti() {
     this.isFetching.set(true);
     const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
-      next: (clienti) => {
-        console.log('Clienti ricaricati:', clienti);
-        this.Clienti.set(clienti);
-      },
       error: (error: Error) => {
         this.error.set(error.message);
         this.showNotification('Errore nel caricamento dei clienti', 'error');
@@ -191,6 +207,51 @@ export class Clienti {
     this.statusMessage.set({ text, type });
     setTimeout(() => this.statusMessage.set(null), 3000);
   }
+
+  optionName(option: any): string {
+      return option?.name || option?.Name || option || '';
+  }
+
+  onCustomerFilterFocus() {
+    this.showAllCustomersOptions.set(true);
+    this.customerDropDownOpen.set(true);
+  }
+
+  onCustomerFilterInput() {
+    this.showAllCustomersOptions.set(false);
+    this.customerDropDownOpen.set(true);
+  }
+
+  toggleCustomerFilterDropdown() {
+    this.showAllCustomersOptions.set(true);
+    this.customerDropDownOpen.update(open => !open);
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+    onDocumentMouseDown(event: MouseEvent) {
+        const target = event.target as Element | null;
+
+        if (!target?.closest('.role-filter-combo')) {
+            this.customerDropDownOpen.set(false);
+            this.showAllCustomersOptions.set(false);
+        }
+    }
+
+  selectCustomerFilter(c: Cliente) {
+    const customerName = this.optionName(c);
+    this.filtroNomeCliente.setValue(customerName);
+    this.filtroNomeValue.set(customerName.toLowerCase())
+    this.customerDropDownOpen.set(false);
+    this.showAllCustomersOptions.set(false);
+  }
+
+  clearCustomerFilter() {
+    this.filtroNomeCliente.setValue('');
+    this.filtroNomeValue.set('');
+    this.customerDropDownOpen.set(false);
+    this.showAllCustomersOptions.set(false);
+  }
+
 
   private formatIndirizzo(cliente: Cliente): string {
     const parti: string[] = [];

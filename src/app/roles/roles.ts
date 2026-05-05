@@ -13,7 +13,7 @@ import { ModificaRoleComponent } from './modifica-role/modifica-role';
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.html',
-  styleUrls: ['./roles.css'],
+  styleUrls: ['../shared/filter-styles.css', './roles.css'],
   imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent],
 })
 export class RolesComponent {
@@ -51,6 +51,7 @@ export class RolesComponent {
     roleFilterDropdownOpen = signal(false);
     showAllRoleOptions = signal(false);
     filterData: any = {};
+    
     roleFilterOptions = computed<Role[]>(() => {
         const term = this.showAllRoleOptions()
             ? ''
