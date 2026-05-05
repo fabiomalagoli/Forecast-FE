@@ -8,12 +8,13 @@ import { RoleRowComponent } from './role/role';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
+import { ModificaRoleComponent } from './modifica-role/modifica-role';
 
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.html',
   styleUrls: ['./roles.css'],
-  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule],
+  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent],
 })
 export class RolesComponent {
     isFetching = signal(false);
@@ -284,11 +285,6 @@ export class RolesComponent {
         }
     }
 
-    apriModificaRuolo(ruolo: Role) {
-        this.roleInModifica.set(ruolo);
-        this.statusMessage.set({text: 'Modifica ruolo non ancora disponibile', type: 'error'}); //TO-DO
-    }
-
     optionName(option: any): string {
         return option?.name || option?.Name || option || '';
     }
@@ -347,6 +343,25 @@ export class RolesComponent {
         this.selectedRoleId.set(null);
         this.selectedRuolo.set(null);
         this.risorseFiltrateSelezionate.set([]);
+    }
+
+    apriModifica(r: Role) {
+        this.roleInModifica.set(r);
+    }
+
+    chiudiModifica() {
+        this.roleInModifica.set(null);
+    }
+
+    salvaModifica(roleAggiornato: Role) {
+        this.ricaricaRuoli();
+        this.roleInModifica.set(null);
+        this.showNotification('Ruolo aggiornato con successo!', 'success');
+    }
+
+    showNotification(text: string, type: 'success' | 'error') {
+        this.statusMessage.set({ text, type });
+        setTimeout(() => this.statusMessage.set(null), 3000);
     }
 
 }

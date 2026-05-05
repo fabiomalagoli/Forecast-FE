@@ -204,7 +204,7 @@ export class RisorseComponent implements OnInit {
         setTimeout(() => this.statusMessage.set(null), 3000);
     }
 
-    salvaModifica(risorsaAggiornata: Employee) {
+    salvaModifica() {
         this.ricaricaRisorse(); // Ricarica le risorse dopo la modifica
         this.risorsaInModifica.set(null);
         this.showNotification('Risorsa aggiornata con successo!', 'success');

@@ -7,7 +7,7 @@ import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
 import { CardModel } from '../grid/card-home/card-home.model';
 import { Employee } from '../risorse/risorse.model';
-import { CreateRoleRequest } from '../roles/role.model';
+import { CreateRoleRequest, Role } from '../roles/role.model';
 
 @Injectable({
   providedIn: 'root',
@@ -70,7 +70,7 @@ export class RequestsService {
 
     for (const role of this.AllJobRoles()) {
       rolesById.set(role.id, role);
-    }
+    } // Per guardare i Ruoli in memoria, cosi da evitare richieste Get ripetute inutili
 
     return Array.from(rolesById.values());
   }
@@ -639,6 +639,30 @@ export class RequestsService {
         return throwError(() => new Error('Qualcosa è andato storto. Riprova più tardi.'));
       }),
     );
+  }
+
+  private updateJobRole(role: Role){
+    return this.httpClient.put(`${environment.apiUrl}/jobRoles/${role.id}`, {
+      name: role.name
+    }).pipe(
+      tap(() => {
+        this.JobRoles.update(prev => 
+          prev.map(r => r.id === role.id ? {...r, ...role} : r)
+        );
+        
+        this.AllJobRoles.update(prev =>
+          prev.map(r => r.id === role.id ? {...r, ...role} : r)
+        );
+      }),
+      catchError((err) => {
+        this.errorService.showError('Errore durante l\'aggiornamento del job role.');
+        return throwError(() => err);
+      }),
+    );
+  }
+
+  aggiornaJobRole(role: Role){
+    return this.updateJobRole(role);
   }
 
   private createJobRole(role: CreateRoleRequest) {

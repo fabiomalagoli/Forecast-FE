@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { AppButton } from '../../shared/button/button';
 import { Role } from '../role.model';
+import { ModificaRoleComponent } from '../modifica-role/modifica-role';
 
 @Component({
   selector: 'tr[app-role-row]',

@@ -75,7 +75,7 @@
                       [selected]="selectedRoleId() === r.id"
                       [class.selected-row]="selectedRoleId() === r.id"
                       (showResources)="mostraRisorsePerRuolo($event)"
-                      (editRole)="apriModificaRuolo($event)">
+                      (editRole)="apriModifica($event)">
                     </tr>
                 }
                 </tbody>
@@ -112,6 +112,14 @@
         (added)="aggiungiRuolo($event)"
         (cancel)="isRoleInAggiunta.set(false)"
     ></app-new-role>
+}
+
+@if(roleInModifica()) {
+    <app-modifica-role
+        [ruoloDaModificare]="roleInModifica()!"
+        (cancel)="chiudiModifica()"
+        (modified)="salvaModifica($event)"
+    ></app-modifica-role>
 }
 
 <div class="bottom-actions">
