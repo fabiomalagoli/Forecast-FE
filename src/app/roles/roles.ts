@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { Role } from './role.model';
 import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
@@ -300,6 +300,16 @@ export class RolesComponent {
     toggleRoleFilterDropdown() {
         this.showAllRoleOptions.set(true);
         this.roleFilterDropdownOpen.update(open => !open);
+    }
+
+    @HostListener('document:mousedown', ['$event'])
+    onDocumentMouseDown(event: MouseEvent) {
+        const target = event.target as Element | null;
+
+        if (!target?.closest('.role-filter-combo')) {
+            this.roleFilterDropdownOpen.set(false);
+            this.showAllRoleOptions.set(false);
+        }
     }
 
     selectRoleFilter(role: Role) {

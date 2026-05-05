@@ -38,9 +38,19 @@ button:focus {
 } */
 
 /* Contenitore della sidebar */
+:host {
+  display: block;
+  flex: 0 0 clamp(220px, 15vw, 280px);
+  align-self: stretch;
+}
+
 .sidebar-container {
-  width: 280px;
-  min-height: 100vh; /* La sidebar occupa tutta l'altezza dello schermo */
+  width: clamp(220px, 15vw, 280px);
+  min-height: 100dvh; /* La sidebar occupa tutta l'altezza visibile del browser */
+  height: 100%;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .sidebar-icon {
@@ -67,4 +77,29 @@ button:focus {
 .nav-pills .nav-link:active {
   background-color: #ff8c00;
   transform: scale(0.98); /* effetto di "pressione" del tasto */
+}
+
+@media (max-width: 768px) {
+  :host {
+    flex-basis: 88px;
+  }
+
+  .sidebar-container {
+    width: 88px;
+    padding-inline: 0.75rem !important;
+  }
+
+  .sidebar-container .fs-4,
+  .nav-link {
+    font-size: 0;
+  }
+
+  .sidebar-icon {
+    margin-right: 0 !important;
+  }
+
+  .nav-link {
+    display: flex;
+    justify-content: center;
+  }
 }
