@@ -33,6 +33,8 @@ export class RequestsService {
 
   private Employees = signal<{ id: string; name: string; surname: string; jobRole: string; jobRoleLevel: string; company: string; isActive: boolean }[]>([]);
 
+  private AllEmployees = signal<{ id: string; name: string; surname: string; jobRole: string; jobRoleLevel: string; company: string; isActive: boolean }[]>([]);
+
   private Cards = signal<CardModel[]>([]);
 
   private ProjectJobRoles = signal<{ id: string; project: string; jobRole: string; jobRoleLevel: string; dailyCost: number; daysSpent: number; effort: number; winProbability: number }[]>([]);
@@ -58,6 +60,8 @@ export class RequestsService {
   jobRoleLevelsCaricati = this.JobRoleLevels.asReadonly();
 
   employeesCaricati = this.Employees.asReadonly();
+
+  allEmployeesCaricati = this.AllEmployees.asReadonly();
 
   cardsCaricate = this.Cards.asReadonly();
 
@@ -1072,12 +1076,12 @@ export class RequestsService {
 
   caricaTuttiEmployeesDisponibili() {
     const url = `${environment.apiUrl}/employees?PageNumber=1&PageSize=1000`;
-    console.log('  GET tutti i JobRoles - URL:', url);
+    console.log('  GET tutti gli Employees - URL:', url);
 
     return this.httpClient.get<any[]>(url, {observe: 'response'}).pipe(
       tap((response) => {
         const employees = (response.body || []).map((employee) => this.normalizeEmployee(employee));
-        this.Employees.set(employees);
+        this.AllEmployees.set(employees);
         console.log('   Tutti gli Employees caricati:', employees.length, 'elementi');
       }),
       map((response) => (response.body || []).map((employee) => this.normalizeEmployee(employee))),

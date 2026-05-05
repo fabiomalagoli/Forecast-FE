@@ -24,19 +24,19 @@ export class RolesComponent {
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
     listaAllJobRoles = this.requestsService.allJobRolesCaricati;
-
     roles = this.requestsService.jobRolesCaricati;
+
     rolesFiltrati = computed<Role[]>(() => {
         const rolesData = this.roles() ?? [];
         const AllRolesData = this.listaAllJobRoles() ?? [];
         const filtro = this.filtroNomeValue().toLowerCase();
 
         if (!filtro) {
-            return rolesData;
+            return rolesData; // Mi dai solo quelli impaginati
         }
 
         return AllRolesData.filter(r => 
-            r.name.toLowerCase().includes(filtro)
+            r.name.toLowerCase().includes(filtro) // Questo perchè mi devi fare il filtro su tutto quanto
         );
     }); // Invece di metterlo nel constructor, lo rendiamo computed per tener traccia dei cambiamenti
         // A seconda dei valori di rolesData, AllRolesData e filtro
@@ -51,7 +51,7 @@ export class RolesComponent {
     roleFilterDropdownOpen = signal(false);
     showAllRoleOptions = signal(false);
     filterData: any = {};
-    
+
     roleFilterOptions = computed<Role[]>(() => {
         const term = this.showAllRoleOptions()
             ? ''
