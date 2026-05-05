@@ -51,7 +51,7 @@ export class Clienti {
     },
   ];
 
-  filtroNome = new FormControl('');
+  filtroNomeCliente = new FormControl('');
 
   constructor() {
     // Effect per aggiornare i clienti filtrati quando cambiano i dati o il filtro
@@ -95,7 +95,7 @@ export class Clienti {
       subscription.unsubscribe();
     });
 
-    this.filtroNome.valueChanges.pipe(
+    this.filtroNomeCliente.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       tap(value => this.filtroNomeValue.set(value?.toLowerCase() || ''))

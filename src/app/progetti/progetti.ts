@@ -92,7 +92,7 @@ export class Progetti {
     this.filtroCliente.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      tap(value => this.requestsService.setFiltroCliente(value || '')) // Aggiorna il filtro nel service
+      tap(value => this.requestsService.setFiltroClienteInProgetti(value || '')) // Aggiorna il filtro nel service
     ).subscribe();
 
     this.destroyRef.onDestroy(() => {

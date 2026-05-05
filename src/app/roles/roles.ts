@@ -1,16 +1,18 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { Role } from './role.model';
 import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { RoleResourcesComponent } from './role-resources/role-resources';
 import { NewRoleComponent } from "./new-role/new-role";
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
 
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.html',
   styleUrls: ['./roles.css'],
-  imports: [RoleResourcesComponent, NewRoleComponent, MatPaginatorModule],
+  imports: [RoleResourcesComponent, NewRoleComponent, MatPaginatorModule, ReactiveFormsModule],
 })
 export class RolesComponent {
     isFetching = signal(false);
@@ -18,22 +20,67 @@ export class RolesComponent {
     private requestsService = inject(RequestsService);
     private destroyRef = inject(DestroyRef);
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
+
+    listaAllJobRoles = this.requestsService.allJobRolesCaricati;
+
     roles = this.requestsService.jobRolesCaricati;
+    rolesFiltrati = computed<Role[]>(() => {
+        const rolesData = this.roles() ?? [];
+        const AllRolesData = this.listaAllJobRoles() ?? [];
+        const filtro = this.filtroNomeValue().toLowerCase();
+
+        if (!filtro) {
+            return rolesData;
+        }
+
+        return AllRolesData.filter(r => 
+            r.name.toLowerCase().includes(filtro)
+        );
+    }); // Invece di metterlo nel constructor, lo rendiamo computed per tener traccia dei cambiamenti
+        // A seconda dei valori di rolesData, AllRolesData e filtro
+
 
     listaRisorse = signal<any[]>([]);
 
+
+    nomeRuolo = signal<string | null>(null);
+    filtroNomeValue = signal<string>('');
+    filtroNomeRuolo = new FormControl('');
+    roleFilterDropdownOpen = signal(false);
+    showAllRoleOptions = signal(false);
+    filterData: any = {};
+    roleFilterOptions = computed<Role[]>(() => {
+        const term = this.showAllRoleOptions()
+            ? ''
+            : this.filtroNomeValue().toLowerCase();
+        const rolesData = this.listaAllJobRoles() ?? [];
+
+        if (!term) {
+            return rolesData;
+        }
+
+        return rolesData.filter(role =>
+            this.optionName(role).toLowerCase().includes(term)
+        );
+    });
+
+
     isRoleInAggiunta = signal<boolean | null>(null);
+
 
     roleInModifica = signal<Role | null>(null);
     roleInAggiunta = signal<Role | null>(null);
+
 
     selectedRoleId = signal<string | null>(null);
     selectedRuolo = signal<any | null>(null);
     risorseFiltrateSelezionate = signal<any[]>([]);
 
+
     currentPage = signal(1);
     pageSize = 10;
-    pagination = this.requestsService.jobRolesPagination;
+    pagination = this.requestsService.jobRolesPagination; // Variabili per l'impaginazione
+
 
     constructor(private router: Router) {
         effect(() => {
@@ -140,6 +187,34 @@ export class RolesComponent {
             risorseSubscription.unsubscribe();
         });
 
+        //Imnplementiamo la funzione di filtro ed i listeners
+
+        this.filtroNomeRuolo.valueChanges.pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            tap(value => {
+                this.filtroNomeValue.set(value?.toLowerCase() || '');
+                this.showAllRoleOptions.set(false);
+                this.chiudiPannello();
+            })
+        ).subscribe();
+
+        this.destroyRef.onDestroy(() => {
+            subscription.unsubscribe();
+        });
+
+        //carichiamo tutti i JobRoles, volendo applicare il filtro per tutti quelli presenti e non solo quelli impaginati
+        //solo sottoscrivendoci (avendo già allJobRoles nel file request.service.ts) alla chiamata API relativa
+
+        const allJobRolesSuibscription = this.requestsService.caricaTuttiJobRolesDisponibili().subscribe({
+            error: (err) => {
+                this.error.set('Errore durante il caricamento di tutti i ruoli: ' + err.message);
+            }
+        });
+
+        this.destroyRef.onDestroy(() => {
+            allJobRolesSuibscription.unsubscribe()
+        });
 
     }
 
@@ -206,6 +281,42 @@ export class RolesComponent {
         if(risorseFiltrate.length === 0) {
             this.statusMessage.set({text: 'Nessuna risorsa trovata per questo ruolo', type: 'error'});
         }
+    }
+
+    optionName(option: any): string {
+        return option?.name || option?.Name || option || '';
+    }
+
+    onRoleFilterFocus() {
+        this.showAllRoleOptions.set(true);
+        this.roleFilterDropdownOpen.set(true);
+    } //
+
+    onRoleFilterInput() {
+        this.showAllRoleOptions.set(false);
+        this.roleFilterDropdownOpen.set(true);
+    }
+
+    toggleRoleFilterDropdown() {
+        this.showAllRoleOptions.set(true);
+        this.roleFilterDropdownOpen.update(open => !open);
+    }
+
+    selectRoleFilter(role: Role) {
+        const roleName = this.optionName(role);
+        this.filtroNomeRuolo.setValue(roleName);
+        this.filtroNomeValue.set(roleName.toLowerCase());
+        this.roleFilterDropdownOpen.set(false);
+        this.showAllRoleOptions.set(false);
+        this.chiudiPannello();
+    }
+
+    clearRoleFilter() {
+        this.filtroNomeRuolo.setValue('');
+        this.filtroNomeValue.set('');
+        this.roleFilterDropdownOpen.set(false);
+        this.showAllRoleOptions.set(false);
+        this.chiudiPannello();
     }
 
     aggiungiRuolo(newRole: any) {

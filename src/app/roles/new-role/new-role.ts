@@ -4,7 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { RequestsService } from '../../shared/requests.service';
-import { Role } from '../role.model';
+import { CreateRoleRequest, Role } from '../role.model';
 
 @Component({
   selector: 'app-new-role',
@@ -20,7 +20,7 @@ export class NewRoleComponent implements OnInit {
     ruoloDaAggiungere = input.required<Role | null>();
 
     // Output verso il componente padre
-    added = output<Role>();
+    added = output<void>();
     cancel = output<void>();
 
     // Variabili per gestione stato del form e messaggi
@@ -105,7 +105,7 @@ export class NewRoleComponent implements OnInit {
             return;
         }
 
-        const payloadCompleto = {
+        const payloadCompleto: CreateRoleRequest = {
             name: this.formData.name || form.value.name
         };
 
@@ -116,7 +116,7 @@ export class NewRoleComponent implements OnInit {
                 console.log("3. SUCCESSO! Il server ha risposto:", response);
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
-                this.added.emit(payloadCompleto);
+                this.added.emit();
                 form.resetForm();
                 this.formData = {};
                 this.cancel.emit();

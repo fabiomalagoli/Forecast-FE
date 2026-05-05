@@ -7,6 +7,7 @@ import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
 import { CardModel } from '../grid/card-home/card-home.model';
 import { Employee } from '../risorse/risorse.model';
+import { CreateRoleRequest } from '../roles/role.model';
 
 @Injectable({
   providedIn: 'root',
@@ -49,6 +50,8 @@ export class RequestsService {
   aziendeCaricate = this.Aziende.asReadonly();
 
   jobRolesCaricati = this.JobRoles.asReadonly();
+
+  allJobRolesCaricati = this.AllJobRoles.asReadonly();
 
   statiProgettoCaricati = this.StatiProgetto.asReadonly();
 
@@ -178,7 +181,7 @@ export class RequestsService {
     ).subscribe();
   }
 
-  setFiltroCliente(value: string) {
+  setFiltroClienteInProgetti(value: string) {
     this.caricaProgettiDisponibili().pipe(
       tap({
         next: (progetti) => {
@@ -468,7 +471,7 @@ export class RequestsService {
     return this.updateCliente(cliente);
   }
 
-  setFiltroNome(value: string) {
+  setFiltroNomeCliente(value: string) {
     this.caricaClientiDisponibili().pipe(
       tap({
         next: (clienti) => {
@@ -638,14 +641,16 @@ export class RequestsService {
     );
   }
 
-  private createJobRole(role: any) {
+  private createJobRole(role: CreateRoleRequest) {
     const payload = {
       name: role.name
     };
 
     console.log('1. Inviando POST a /jobroles con payload:', payload);
 
-    return this.httpClient.post(`${environment.apiUrl}/jobroles`, payload).pipe(
+    return this.httpClient.post(`${environment.apiUrl}/jobroles`, payload, {
+      headers: { 'Content-Type': 'application/json-patch+json' },
+    }).pipe(
       tap((created: any) => {
         console.log('2. POST RISPOSTA dal backend:', created);
         console.log('   Status della risposta: 200-299 (successo HTTP)');
@@ -683,7 +688,7 @@ export class RequestsService {
     );
   }
 
-  aggiungiJobRole(role: any) {
+  aggiungiJobRole(role: CreateRoleRequest) {
     return this.createJobRole(role);
   }
 
@@ -771,6 +776,17 @@ export class RequestsService {
         },
       }),
     );
+  }
+
+  setFiltroNomeJobRole(value: string){
+    this.caricaTuttiJobRolesDisponibili().pipe(
+      tap({
+        next: (roles) => {
+          const filtered = roles.filter(r => r.name.toLowerCase().includes(value.toLowerCase()));
+          this.AllJobRoles.set(filtered);
+        }
+      })
+    ).subscribe();
   }
 
   private fetchJobRoleLevels() {

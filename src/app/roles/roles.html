@@ -2,6 +2,51 @@
   <h2>Ruoli</h2>
 </div>
 
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Filtra per Nome</label>
+    <div class="combo-field">
+      <input
+        type="text"
+        [formControl]="filtroNomeRuolo"
+        placeholder="Filtra per nome..."
+        autocomplete="off"
+        (focus)="onRoleFilterFocus()"
+        (input)="onRoleFilterInput()">
+      @if (filtroNomeValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro"
+          (click)="clearRoleFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista ruoli"
+        (click)="toggleRoleFilterDropdown()">
+        ▾
+      </button>
+      @if (roleFilterDropdownOpen()) {
+        <div class="combo-menu">
+          @for (role of roleFilterOptions(); track role.id) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectRoleFilter(role)">
+              {{ role.name }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun ruolo trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
 <!-- @if (statusMessage()) {
   <div class="notification" [class]="statusMessage()?.type">
     {{ statusMessage()?.text }}
@@ -23,7 +68,7 @@
         <div class="table-container">
             <table>
                 <tbody>
-                @for (r of roles(); track r.id) {
+                @for (r of rolesFiltrati(); track r.id) { 
                     <tr [class.selected-row]="selectedRoleId() === r.id">
                         <td>{{ r.name }}</td>
                         <td class="actions-cell">
