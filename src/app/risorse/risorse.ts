@@ -7,12 +7,13 @@ import { AppButton } from '../shared/button/button';
 import { ModificaRisorsaComponent } from './modifica/modifica';
 import { NewRisorsa } from './new-risorsa/new-risorsa';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { RisorsaRowComponent } from './risorsa/risorsa';
 
 @Component({
   selector: 'app-risorse',
   templateUrl: './risorse.html',
   styleUrls: ['./risorse.css'],
-  imports: [CommonModule, AppButton, ModificaRisorsaComponent, NewRisorsa, MatPaginatorModule],
+  imports: [CommonModule, AppButton, ModificaRisorsaComponent, NewRisorsa, RisorsaRowComponent, MatPaginatorModule],
   standalone: true 
 })
 export class RisorseComponent implements OnInit {

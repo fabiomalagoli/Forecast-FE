@@ -4,6 +4,7 @@ import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { RoleResourcesComponent } from './role-resources/role-resources';
 import { NewRoleComponent } from "./new-role/new-role";
+import { RoleRowComponent } from './role/role';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
@@ -12,7 +13,7 @@ import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
   selector: 'app-roles',
   templateUrl: './roles.html',
   styleUrls: ['./roles.css'],
-  imports: [RoleResourcesComponent, NewRoleComponent, MatPaginatorModule, ReactiveFormsModule],
+  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule],
 })
 export class RolesComponent {
     isFetching = signal(false);
@@ -281,6 +282,11 @@ export class RolesComponent {
         if(risorseFiltrate.length === 0) {
             this.statusMessage.set({text: 'Nessuna risorsa trovata per questo ruolo', type: 'error'});
         }
+    }
+
+    apriModificaRuolo(ruolo: Role) {
+        this.roleInModifica.set(ruolo);
+        this.statusMessage.set({text: 'Modifica ruolo non ancora disponibile', type: 'error'}); //TO-DO
     }
 
     optionName(option: any): string {

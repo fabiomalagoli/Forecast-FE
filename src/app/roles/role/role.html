@@ -1,0 +1,9 @@
+<td>{{ role().name }}</td>
+<td class="actions-cell">
+  <button appButton class="btn-small" type="button" (click)="showResources.emit(role())">
+    Risorse Associate
+  </button>
+  <button appButton class="btn-small btn-outline" type="button" (click)="editRole.emit(role())">
+    Modifica
+  </button>
+</td>

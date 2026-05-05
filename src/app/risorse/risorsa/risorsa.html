@@ -1,0 +1,12 @@
+<td>{{ risorsa().name }} {{ risorsa().surname }}</td>
+<td>{{ risorsa().jobRole }}</td>
+<td>{{ risorsa().jobRoleLevel }}</td>
+<td>{{ risorsa().company }}</td>
+<td class="actions-cell">
+  <button appButton class="btn-small" type="button">
+    Dettagli
+  </button>
+  <button appButton class="btn-small btn-outline" type="button" (click)="editRisorsa.emit(risorsa())">
+    Modifica
+  </button>
+</td>

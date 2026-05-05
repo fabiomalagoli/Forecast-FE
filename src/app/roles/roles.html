@@ -69,13 +69,13 @@
             <table>
                 <tbody>
                 @for (r of rolesFiltrati(); track r.id) { 
-                    <tr [class.selected-row]="selectedRoleId() === r.id">
-                        <td>{{ r.name }}</td>
-                        <td class="actions-cell">
-                            <button appButton class="btn-small" (click)="mostraRisorsePerRuolo(r)">
-                                Risorse Associate
-                            </button>
-                        </td>
+                    <tr
+                      app-role-row
+                      [role]="r"
+                      [selected]="selectedRoleId() === r.id"
+                      [class.selected-row]="selectedRoleId() === r.id"
+                      (showResources)="mostraRisorsePerRuolo($event)"
+                      (editRole)="apriModificaRuolo($event)">
                     </tr>
                 }
                 </tbody>

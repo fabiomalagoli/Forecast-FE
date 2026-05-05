@@ -26,22 +26,10 @@
                 </thead>
                 <tbody>
                 @for (r of risorse(); track r.id) {
-                    <tr>
-                        <td>{{ r.name }} {{ r.surname }}</td>
-                        <td>{{ r.jobRole }}</td>
-                        <td>{{ r.jobRoleLevel }}</td>
-                        <td>{{ r.company }}</td>
-                        <td class="actions-cell">
-                            <button appButton class="btn-small">
-                                Dettagli
-                            </button>
-                            <button appButton class="btn-small btn-outline" (click)="apriModifica(r)">
-                                Modifica
-                            </button>
-                            <!-- <button appButton class="btn-small" (click)="cancellaRisorsa(r)">
-                                Cancella
-                            </button> -->
-                        </td>
+                    <tr
+                      app-risorsa-row
+                      [risorsa]="r"
+                      (editRisorsa)="apriModifica($event)">
                     </tr>
                 }
                 </tbody>
