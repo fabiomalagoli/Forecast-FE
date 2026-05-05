@@ -146,6 +146,14 @@ tbody td {
   font-style: italic;
 }
 
+.right-column {
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+}
+
 .count-footer {
   margin: 0;
   padding: 1rem 0.875rem;
@@ -320,6 +328,10 @@ tr.selected-row {
   
   /* Animazione in entrata */
   animation: slideInRight 0.3s ease-out;
+}
+
+.placeholder-panel {
+  position: relative;
 }
 
 .btn-close-panel {

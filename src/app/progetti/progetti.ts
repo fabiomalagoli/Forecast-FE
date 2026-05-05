@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { TableRowComponent } from '../shared/table-row/table-row';
 import { Progetto } from './progetto/progetto.model';
 import { Column } from '../shared/table-row/table.types';
@@ -22,7 +22,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   selector: 'app-progetti',
   imports: [AppButton, NewProgettoComponent, ModificaComponent, ReactiveFormsModule],
   templateUrl: './progetti.html',
-  styleUrl: './progetti.css',
+  styleUrls: ['../shared/filter-styles.css', './progetti.css'],
   
 })
 
@@ -58,6 +58,60 @@ export class Progetti {
   filtroAzienda = new FormControl('');
   filtroCliente = new FormControl('');
   filtroStato = new FormControl('');
+  filtroAziendaValue = signal<string>('');
+  filtroClienteValue = signal<string>('');
+  filtroStatoValue = signal<string>('');
+  companyDropdownOpen = signal(false);
+  customerDropdownOpen = signal(false);
+  statusDropdownOpen = signal(false);
+  showAllCompanyOptions = signal(false);
+  showAllCustomerOptions = signal(false);
+  showAllStatusOptions = signal(false);
+
+  companyFilterOptions = computed<any[]>(() => {
+    const term = this.showAllCompanyOptions()
+      ? ''
+      : this.filtroAziendaValue().toLowerCase();
+    const companies = this.listaAziende();
+
+    if (!term) {
+      return companies;
+    }
+
+    return companies.filter(company =>
+      this.optionName(company).toLowerCase().includes(term)
+    );
+  });
+
+  customerFilterOptions = computed<any[]>(() => {
+    const term = this.showAllCustomerOptions()
+      ? ''
+      : this.filtroClienteValue().toLowerCase();
+    const customers = this.listaClienti();
+
+    if (!term) {
+      return customers;
+    }
+
+    return customers.filter(customer =>
+      this.optionName(customer).toLowerCase().includes(term)
+    );
+  });
+
+  statusFilterOptions = computed<any[]>(() => {
+    const term = this.showAllStatusOptions()
+      ? ''
+      : this.filtroStatoValue().toLowerCase();
+    const statuses = this.listaStati();
+
+    if (!term) {
+      return statuses;
+    }
+
+    return statuses.filter(status =>
+      this.optionName(status).toLowerCase().includes(term)
+    );
+  });
 
   filterData: any = {};
 
@@ -82,7 +136,12 @@ export class Progetti {
     this.filtroAzienda.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      tap(value => this.requestsService.setFiltroAzienda(value || '')) // Aggiorna il filtro nel service
+      tap(value => {
+        const filterValue = value || '';
+        this.filtroAziendaValue.set(filterValue.toLowerCase());
+        this.showAllCompanyOptions.set(false);
+        this.requestsService.setFiltroAzienda(filterValue);
+      })
     ).subscribe();
 
     this.destroyRef.onDestroy(() => {
@@ -92,7 +151,12 @@ export class Progetti {
     this.filtroCliente.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      tap(value => this.requestsService.setFiltroClienteInProgetti(value || '')) // Aggiorna il filtro nel service
+      tap(value => {
+        const filterValue = value || '';
+        this.filtroClienteValue.set(filterValue.toLowerCase());
+        this.showAllCustomerOptions.set(false);
+        this.requestsService.setFiltroClienteInProgetti(filterValue);
+      })
     ).subscribe();
 
     this.destroyRef.onDestroy(() => {
@@ -102,7 +166,10 @@ export class Progetti {
     this.filtroStato.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      tap(value => this.requestsService.setFiltroStato(value || '')) // Aggiorna il filtro nel service
+      tap(value => {
+        this.filtroStatoValue.set((value || '').toLowerCase());
+        this.showAllStatusOptions.set(false);
+      })
     ).subscribe();
 
     this.destroyRef.onDestroy(() => {
@@ -198,6 +265,123 @@ export class Progetti {
   showNotification(text: string, type: 'success' | 'error') {
     this.statusMessage.set({ text, type });
     setTimeout(() => this.statusMessage.set(null), 3000);
+  }
+
+  optionName(option: any): string {
+    return option?.name || option?.Name || option || '';
+  }
+
+  onCompanyFilterFocus() {
+    this.showAllCompanyOptions.set(true);
+    this.companyDropdownOpen.set(true);
+  }
+
+  onCompanyFilterInput() {
+    this.showAllCompanyOptions.set(false);
+    this.companyDropdownOpen.set(true);
+  }
+
+  toggleCompanyFilterDropdown() {
+    this.showAllCompanyOptions.set(true);
+    this.companyDropdownOpen.update(open => !open);
+  }
+
+  selectCompanyFilter(company: any) {
+    const companyName = this.optionName(company);
+    this.filtroAzienda.setValue(companyName);
+    this.filtroAziendaValue.set(companyName.toLowerCase());
+    this.companyDropdownOpen.set(false);
+    this.showAllCompanyOptions.set(false);
+  }
+
+  clearCompanyFilter() {
+    this.filtroAzienda.setValue('');
+    this.filtroAziendaValue.set('');
+    this.companyDropdownOpen.set(false);
+    this.showAllCompanyOptions.set(false);
+  }
+
+  onCustomerFilterFocus() {
+    this.showAllCustomerOptions.set(true);
+    this.customerDropdownOpen.set(true);
+  }
+
+  onCustomerFilterInput() {
+    this.showAllCustomerOptions.set(false);
+    this.customerDropdownOpen.set(true);
+  }
+
+  toggleCustomerFilterDropdown() {
+    this.showAllCustomerOptions.set(true);
+    this.customerDropdownOpen.update(open => !open);
+  }
+
+  selectCustomerFilter(customer: any) {
+    const customerName = this.optionName(customer);
+    this.filtroCliente.setValue(customerName);
+    this.filtroClienteValue.set(customerName.toLowerCase());
+    this.customerDropdownOpen.set(false);
+    this.showAllCustomerOptions.set(false);
+  }
+
+  clearCustomerFilter() {
+    this.filtroCliente.setValue('');
+    this.filtroClienteValue.set('');
+    this.customerDropdownOpen.set(false);
+    this.showAllCustomerOptions.set(false);
+  }
+
+  onStatusFilterFocus() {
+    this.showAllStatusOptions.set(true);
+    this.statusDropdownOpen.set(true);
+  }
+
+  onStatusFilterInput() {
+    this.showAllStatusOptions.set(false);
+    this.statusDropdownOpen.set(true);
+  }
+
+  toggleStatusFilterDropdown() {
+    this.showAllStatusOptions.set(true);
+    this.statusDropdownOpen.update(open => !open);
+  }
+
+  selectStatusFilter(status: any) {
+    const statusName = this.optionName(status);
+    const statusId = status?.id || status?.Id || '';
+    this.filtroStato.setValue(statusName);
+    this.filtroStatoValue.set(statusName.toLowerCase());
+    this.requestsService.setFiltroStato(statusId);
+    this.statusDropdownOpen.set(false);
+    this.showAllStatusOptions.set(false);
+  }
+
+  clearStatusFilter() {
+    this.filtroStato.setValue('');
+    this.filtroStatoValue.set('');
+    this.requestsService.setFiltroStato('');
+    this.statusDropdownOpen.set(false);
+    this.showAllStatusOptions.set(false);
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+  onDocumentMouseDown(event: MouseEvent) {
+    const target = event.target as Element | null;
+
+    if (!target?.closest('.company-filter-combo')) {
+      this.companyDropdownOpen.set(false);
+      this.showAllCompanyOptions.set(false);
+    }
+
+    if (!target?.closest('.customer-filter-combo')) {
+      this.customerDropdownOpen.set(false);
+      this.showAllCustomerOptions.set(false);
+    }
+
+    if (!target?.closest('.status-filter-combo')) {
+      this.statusDropdownOpen.set(false);
+      this.showAllStatusOptions.set(false);
+    }
   }
 
   apriPaginaVisualizza(id: string){

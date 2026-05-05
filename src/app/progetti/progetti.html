@@ -5,22 +5,131 @@
 <div class="filter-bar">
   <div class="filter-group">
     <label>Azienda</label>
-    <input type="text" [formControl]="filtroAzienda" placeholder="Filtra per azienda...">
+    <div class="combo-field company-filter-combo">
+      <input
+        type="text"
+        [formControl]="filtroAzienda"
+        placeholder="Filtra per azienda..."
+        autocomplete="off"
+        (focus)="onCompanyFilterFocus()"
+        (input)="onCompanyFilterInput()">
+      @if (filtroAziendaValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro azienda"
+          (click)="clearCompanyFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista aziende"
+        (click)="toggleCompanyFilterDropdown()">
+        ▾
+      </button>
+      @if (companyDropdownOpen()) {
+        <div class="combo-menu">
+          @for (azienda of companyFilterOptions(); track (azienda.id || azienda.Id || azienda)) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectCompanyFilter(azienda)">
+              {{ optionName(azienda) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuna azienda trovata</div>
+          }
+        </div>
+      }
+    </div>
   </div>
 
   <div class="filter-group">
     <label>Cliente</label>
-    <input type="text" [formControl]="filtroCliente" placeholder="Filtra per cliente...">
+    <div class="combo-field customer-filter-combo">
+      <input
+        type="text"
+        [formControl]="filtroCliente"
+        placeholder="Filtra per cliente..."
+        autocomplete="off"
+        (focus)="onCustomerFilterFocus()"
+        (input)="onCustomerFilterInput()">
+      @if (filtroClienteValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro cliente"
+          (click)="clearCustomerFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista clienti"
+        (click)="toggleCustomerFilterDropdown()">
+        ▾
+      </button>
+      @if (customerDropdownOpen()) {
+        <div class="combo-menu">
+          @for (cliente of customerFilterOptions(); track (cliente.id || cliente.Id || cliente)) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectCustomerFilter(cliente)">
+              {{ optionName(cliente) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun cliente trovato</div>
+          }
+        </div>
+      }
+    </div>
   </div>
 
   <div class="filter-group">
     <label>Stato</label>
-    <select [formControl]="filtroStato">
-      <option value="">Filtra per stato...</option>
-      @for(stato of listaStati(); track stato.id) {
-        <option [value]="stato.id">{{ stato.name }}</option>
+    <div class="combo-field status-filter-combo">
+      <input
+        type="text"
+        [formControl]="filtroStato"
+        placeholder="Filtra per stato..."
+        autocomplete="off"
+        (focus)="onStatusFilterFocus()"
+        (input)="onStatusFilterInput()">
+      @if (filtroStatoValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro stato"
+          (click)="clearStatusFilter()">
+          ×
+        </button>
       }
-    </select>
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista stati"
+        (click)="toggleStatusFilterDropdown()">
+        ▾
+      </button>
+      @if (statusDropdownOpen()) {
+        <div class="combo-menu">
+          @for (stato of statusFilterOptions(); track (stato.id || stato.Id || stato)) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectStatusFilter(stato)">
+              {{ optionName(stato) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuno stato trovato</div>
+          }
+        </div>
+      }
+    </div>
   </div>
 </div>
 
