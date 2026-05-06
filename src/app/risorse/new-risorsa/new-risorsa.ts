@@ -14,7 +14,7 @@ import { RISORSE_HEADERS } from '../risorse.headers';
   templateUrl: './new-risorsa.html',
   styleUrls: ['../../shared/progetto-form.css', './new-risorsa.css'],
 })
-export class NewRisorsa implements OnInit {
+export class NewRisorsaComponent implements OnInit {
 
     private requests = inject(RequestsService);
     

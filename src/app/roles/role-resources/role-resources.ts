@@ -3,16 +3,17 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RequestsService } from '../../shared/requests.service';
 import { Role } from '../role.model';
 import { Employee } from '../../risorse/risorse.model';
-import { ModificaRisorsaPerRuolo } from '../role-resources/modifica/modifica';
+import { ModificaRisorsaPerRuoloComponent } from '../role-resources/modifica/modifica';
 import { CommonModule } from '@angular/common';
-import { AppButton } from '../../shared/button/button';
-import { NewRisorsa } from '../../risorse/new-risorsa/new-risorsa';
+import { AppButtonComponent } from '../../shared/button/button';
+import { NewRisorsaComponent } from '../../risorse/new-risorsa/new-risorsa';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-role-resources',
   templateUrl: './role-resources.html',
   styleUrls: ['./role-resources.css'],
-  imports: [ModificaRisorsaPerRuolo, CommonModule, AppButton],
+  imports: [ModificaRisorsaPerRuoloComponent, CommonModule, AppButtonComponent],
 })
 export class RoleResourcesComponent {
 
@@ -35,16 +36,16 @@ export class RoleResourcesComponent {
 
     aggiornaRisorsePerRuolo() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaEmployeesDisponibili().subscribe({
+        const subscription = this.requestsService.caricaEmployeesDisponibili().pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
             next: () => {
                 this.risorsaInModifica.set(null);
                 this.statusMessage.set({text: 'Risorsa modificata con successo!', type: 'success'});
-                this.isFetching.set(false);
             },
             error: (err) => {
                 this.error.set('Errore durante il ricaricamento delle risorse: ' + err.message);
                 this.statusMessage.set({text: 'Risorsa modificata ma errore nel ricaricamento', type: 'error'});
-                this.isFetching.set(false);
             }
         });
 

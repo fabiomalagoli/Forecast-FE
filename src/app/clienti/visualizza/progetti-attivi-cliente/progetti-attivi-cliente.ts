@@ -4,16 +4,17 @@ import { Location } from '@angular/common';
 import { Progetto } from '../../../progetti/progetto/progetto.model';
 import { RequestsService } from '../../../shared/requests.service';
 import { PROGETTO_COMPLETO_HEADERS } from '../../../progetti/progetto/progetto-completo.headers';
-import { AppButton } from '../../../shared/button/button';
+import { AppButtonComponent } from '../../../shared/button/button';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-visualizza',
   standalone: true,
-  imports: [AppButton],
+  imports: [AppButtonComponent],
   templateUrl: './progetti-attivi-cliente.html',
   styleUrls: ['progetti-attivi-cliente.css', '../../../shared/progetto-form.css'],
 })
-export class elencoProgettiCliente implements OnInit {
+export class ElencoProgettiClienteComponent implements OnInit {
   // Leggiamo l’ID dalla route (es. /progetti/:id)
   private route = inject(ActivatedRoute);
   // Usiamo la history del browser per tornare indietro
@@ -43,16 +44,16 @@ export class elencoProgettiCliente implements OnInit {
       return;
     }
 
-    this.requests.caricaProgettiAttiviCliente(id).subscribe({
+    this.requests.caricaProgettiAttiviCliente(id).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
       next: (p) => {
         console.log('Progetti caricati:', p);
         this.progetti.set(p);
-        this.loading.set(false);
       },
       error: (err) => {
         console.error('Errore API:', err);
         this.error.set('Errore nel caricamento dei progetti.');
-        this.loading.set(false);
       },
     });
   }

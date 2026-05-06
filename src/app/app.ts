@@ -1,19 +1,19 @@
 import { Component, inject, input, Input, signal } from '@angular/core';
-import { Header } from './header/header'
-import { Grid } from './grid/grid';
-import { Progetti } from './progetti/progetti';
-import { Clienti } from './clienti/clienti';
-import { Sidebar } from './header/sidebar/sidebar';
+import { HeaderComponent } from './header/header'
+import { GridComponent } from './grid/grid';
+import { ProgettiComponent } from './progetti/progetti';
+import { ClientiComponent } from './clienti/clienti';
+import { SidebarComponent } from './header/sidebar/sidebar';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [Sidebar, CommonModule, RouterOutlet],
+  imports: [SidebarComponent, CommonModule, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
+export class AppComponent {
   protected readonly title = signal('Forecast-FE');
   // Router usato per navigare programmaticamente (es. dopo azioni utente)
   private router = inject(Router);

@@ -3,19 +3,19 @@ import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { Employee } from './risorse.model';
 import { CommonModule } from '@angular/common';
-import { AppButton } from '../shared/button/button';
+import { AppButtonComponent } from '../shared/button/button';
 import { ModificaRisorsaComponent } from './modifica/modifica';
-import { NewRisorsa } from './new-risorsa/new-risorsa';
+import { NewRisorsaComponent } from './new-risorsa/new-risorsa';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { RisorsaRowComponent } from './risorsa/risorsa';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, forkJoin, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap } from 'rxjs';
 
 @Component({
   selector: 'app-risorse',
   templateUrl: './risorse.html',
   styleUrls: ['../shared/filter-styles.css', './risorse.css'],
-  imports: [CommonModule, ReactiveFormsModule, AppButton, ModificaRisorsaComponent, NewRisorsa, RisorsaRowComponent, MatPaginatorModule],
+  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, ModificaRisorsaComponent, NewRisorsaComponent, RisorsaRowComponent, MatPaginatorModule],
   standalone: true 
 })
 export class RisorseComponent implements OnInit {
@@ -154,7 +154,9 @@ export class RisorseComponent implements OnInit {
         this.currentPage.set(page);
         this.chiudiPannello();
 
-        this.requestsService.caricaEmployeesDisponibili(page, this.pageSize).subscribe({
+        this.requestsService.caricaEmployeesDisponibili(page, this.pageSize).pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
             next: () => {
                 const meta = this.pagination();
                 if(meta) {
@@ -166,9 +168,6 @@ export class RisorseComponent implements OnInit {
             error: (err) => {
                 this.error.set('Errore durante il caricamento delle risorse: ' + err.message);
                 this.statusMessage.set({text: 'Errore durante il caricamento delle risorse', type: 'error'});
-            },
-            complete: () => {
-                this.isFetching.set(false);
             },
         });
     }
@@ -191,23 +190,20 @@ export class RisorseComponent implements OnInit {
         this.isFetching.set(true);
         
         // Caricamento principale delle risorse
-        const subscription = this.requestsService.caricaEmployeesDisponibili(this.currentPage(), this.pageSize).subscribe({
+        const subscription = this.requestsService.caricaEmployeesDisponibili(this.currentPage(), this.pageSize).pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
             next: (data) => {
                 const meta = this.pagination();
                 if (meta) {
                     this.currentPage.set(meta.currentPage);
                     this.pageSize = meta.pageSize;
                 }
-                this.isFetching.set(false);
                 this.statusMessage.set({text: 'Risorse caricate con successo!', type: 'success'});
             },
             error: (err) => {
-                this.isFetching.set(false);
                 this.error.set('Errore durante il caricamento delle risorse: ' + err.message);
                 this.statusMessage.set({text: 'Errore durante il caricamento delle risorse', type: 'error'});
-            },
-            complete: () => {
-                this.isFetching.set(false);
             },
         });
 
@@ -282,7 +278,9 @@ export class RisorseComponent implements OnInit {
 
     ricaricaRisorse() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaEmployeesDisponibili().subscribe({
+        const subscription = this.requestsService.caricaEmployeesDisponibili().pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
             next: (data) => {
                 console.log('Risorse ricaricate:', data);
                 const meta = this.pagination();
@@ -292,12 +290,8 @@ export class RisorseComponent implements OnInit {
                 }
             },
             error: (err) => {
-                this.isFetching.set(false);
                 this.error.set('Errore durante il ricaricamento delle risorse: ' + err.message);
                 this.statusMessage.set({text: 'Errore durante il ricaricamento delle risorse', type: 'error'});
-            },
-            complete: () => {
-                this.isFetching.set(false);
             },
         });
 
@@ -309,19 +303,16 @@ export class RisorseComponent implements OnInit {
     aggiornaRisorse(){
         this.isFetching.set(true);
         const timeoutId = setTimeout(() => {
-            const subscription = this.requestsService.caricaEmployeesDisponibili()
+            const subscription = this.requestsService.caricaEmployeesDisponibili().pipe(
+                finalize(() => this.isFetching.set(false))
+            )
             .subscribe({
                 next: (data) => {
-                    this.isFetching.set(false);
                     this.statusMessage.set({text: 'Risorse aggiornate con successo!', type: 'success'});
                 },
                 error: (err) => {
-                    this.isFetching.set(false);
                     this.error.set('Errore durante l\'aggiornamento delle risorse: ' + err.message);
                     this.statusMessage.set({text: 'Errore durante l\'aggiornamento delle risorse', type: 'error'});
-                },
-                complete: () => {
-                    this.isFetching.set(false);
                 },
             });
 
@@ -368,6 +359,11 @@ export class RisorseComponent implements OnInit {
         this.ricaricaRisorse(); // Ricarica le risorse dopo la modifica
         this.risorsaInModifica.set(null);
         this.showNotification('Risorsa aggiornata con successo!', 'success');
+    }
+
+    apriDettagli(r: Employee){
+        this.selectedRisorsa.set(r);
+        this.router.navigate(['/risorse', r.id]);
     }
 
     chiudiPannello() {

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Sidebar } from './sidebar/sidebar';
+import { SidebarComponent } from './sidebar/sidebar';
 
 @Component({
   selector: 'app-header',
@@ -7,6 +7,6 @@ import { Sidebar } from './sidebar/sidebar';
   templateUrl: './header.html',
   styleUrl: './header.css',
 })
-export class Header {
+export class HeaderComponent {
   
 }

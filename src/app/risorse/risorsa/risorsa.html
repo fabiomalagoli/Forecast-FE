@@ -3,7 +3,7 @@
 <td>{{ risorsa().jobRoleLevel }}</td>
 <td>{{ risorsa().company }}</td>
 <td class="actions-cell">
-  <button appButton class="btn-small" type="button">
+  <button appButton class="btn-small" type="button" (click)="viewRisorsa.emit(risorsa())">
     Dettagli
   </button>
   <button appButton class="btn-small btn-outline" type="button" (click)="editRisorsa.emit(risorsa())">

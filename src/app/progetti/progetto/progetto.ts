@@ -2,13 +2,13 @@ import { Component, inject, input, Input, output, signal } from '@angular/core';
 import { Progetto } from './progetto.model';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
-import { AppButton } from '../../shared/button/button';
+import { AppButtonComponent } from '../../shared/button/button';
 import { Router, RouterModule } from '@angular/router';
 
 
 @Component({
   selector: 'app-progetto',
-  imports: [TableRowComponent, AppButton, RouterModule],
+  imports: [TableRowComponent, AppButtonComponent, RouterModule],
   templateUrl: './progetto.html',
   styleUrl: './progetto.css',
   host: {

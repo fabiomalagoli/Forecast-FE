@@ -1,0 +1,36 @@
+<h2>Progetti Assegnati</h2>
+
+@if (isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento progetti...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+  </div>
+} @else if (ProgettiFiltrati().length === 0) {
+  <div class="empty-state">
+    <p>Nessun progetto associato a questa risorsa.</p>
+  </div>
+} @else {
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          @for (h of headersArray; track h.key) {
+            <th>{{ h.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of ProgettiFiltrati(); track p.id) {
+          <tr>
+            @for (h of headersArray; track h.key) {
+              <td>{{ getValue(p, h.key) }}</td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

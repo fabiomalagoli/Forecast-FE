@@ -1,15 +1,16 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { CardHome } from './card-home/card-home';
+import { CardHomeComponent } from './card-home/card-home';
 import { RequestsService } from '../shared/requests.service';
 import { CardModel } from './card-home/card-home.model';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-grid',
-  imports: [CardHome],
+  imports: [CardHomeComponent],
   templateUrl: './grid.html',
   styleUrl: './grid.css',
 })
-export class Grid {
+export class GridComponent {
   Cards = signal<CardModel[] | undefined>(undefined);
   isFetching = signal(false);
   error = signal('');
@@ -20,16 +21,15 @@ export class Grid {
   isGettingCard = false;
   ngOnInit() {
     this.isFetching.set(true);
-    const sub = this.requestService.caricaCardsDisponibili().subscribe({
+    const sub = this.requestService.caricaCardsDisponibili().pipe(
+      finalize(() => this.isFetching.set(false))
+    ).subscribe({
       next: (cards: CardModel[]) => {
         this.Cards.set(cards);
         console.log('Cards caricate: ', cards);
       },
       error: (error: Error) => {
         this.error.set(error.message);
-      },
-      complete: () => {
-        this.isFetching.set(false);
       },
     });
     this.destroy.onDestroy(() => {

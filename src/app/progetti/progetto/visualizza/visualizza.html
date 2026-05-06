@@ -1,5 +1,5 @@
 <header class="detail-header">
-  <button appButton type="button" (click)="indietro()">← Indietro</button>
+  <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
 </header>
 <h2>Dettaglio progetto</h2>
 
@@ -53,7 +53,7 @@
       </table>
     </section>
   } -->
-  <!-- IMPORTANT: For the moment, we are going to deactivate roles inside Visualizza. The prospect is to merge them with employees -->
+  <!-- IMPORTANT: Per il momento, disattiviamo i ruoli in Visualizza. L'idea sarà di unirli con i dipendenti -->
 
   @if (p.projectEmployees && p.projectEmployees.length > 0) {
     <h3 style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>

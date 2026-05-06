@@ -4,7 +4,7 @@ import { Progetto } from './progetto/progetto.model';
 import { Column } from '../shared/table-row/table.types';
 // import { PROGETTI_DUMMY } from './progetti-dummy';
 import { ProgettoComponent } from "./progetto/progetto";
-import { AppButton } from "../shared/button/button";
+import { AppButtonComponent } from "../shared/button/button";
 import { PROGETTO_HEADERS } from './progetto/progetto.headers';
 import { PROGETTO_COMPLETO_HEADERS } from './progetto/progetto-completo.headers';
 import { NewProgettoComponent } from "./new-progetto/new-progetto";
@@ -12,21 +12,21 @@ import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { ModificaComponent } from "./progetto/modifica/modifica";
 import { effect } from '@angular/core';
-import { Visualizza } from './progetto/visualizza/visualizza';
+import { VisualizzaProgettoComponent } from './progetto/visualizza/visualizza';
 import { FormControl } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, forkJoin, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, forkJoin, switchMap, tap } from 'rxjs';
 import { ReactiveFormsModule } from '@angular/forms';
 
 
 @Component({
   selector: 'app-progetti',
-  imports: [AppButton, NewProgettoComponent, ModificaComponent, ReactiveFormsModule],
+  imports: [AppButtonComponent, NewProgettoComponent, ModificaComponent, ReactiveFormsModule],
   templateUrl: './progetti.html',
   styleUrls: ['../shared/filter-styles.css', './progetti.css'],
   
 })
 
-export class Progetti {
+export class ProgettiComponent {
 
   isFetching = signal(false);
   error = signal('');
@@ -117,15 +117,14 @@ export class Progetti {
 
   ngOnInit() {
     this.isFetching.set(true);
-    const subscription = this.requestsService.caricaProgettiDisponibili()
+    const subscription = this.requestsService.caricaProgettiDisponibili().pipe(
+        finalize(() => this.isFetching.set(false))
+      )
       .subscribe({
         // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
         error: (error: Error) => {
           this.error.set(error.message);
         },
-        complete: () => {
-          this.isFetching.set(false);
-        }
       });
 
       this.destroyRef.onDestroy(() => {
@@ -224,14 +223,13 @@ export class Progetti {
   aggiornaProgetti(){
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
-      const subscription = this.requestsService.caricaProgettiDisponibili()
+      const subscription = this.requestsService.caricaProgettiDisponibili().pipe(
+          finalize(() => this.isFetching.set(false))
+        )
         .subscribe({ // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
           error: (error: Error) => {
             this.error.set(error.message);
           },
-          complete: () => {
-            this.isFetching.set(false);
-          }
         });
 
       this.destroyRef.onDestroy(() => {

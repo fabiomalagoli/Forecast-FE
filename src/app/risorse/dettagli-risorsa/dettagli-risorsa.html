@@ -1,0 +1,52 @@
+<div class="page-header">
+  <h2>Risorsa Selezionata</h2>
+</div>
+
+<header class="detail-header">
+  <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+</header>
+
+@if(isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento risorsa in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+  </div>
+} @else {
+    <div class="resource-selected-layout">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome Completo</th>
+                        <th>Ruolo</th>
+                        <th>Livello</th>
+                        <th>Azienda</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (risorsaSelezionata(); as risorsa) {
+                    <tr>
+                        <td>{{ risorsa.name }} {{ risorsa.surname }}</td>
+                        <td>{{ risorsa.jobRole }}</td>
+                        <td>{{ risorsa.jobRoleLevel }}</td>
+                        <td>{{ risorsa.company }}</td>
+                    </tr>
+                    } @else {
+                    <tr>
+                        <td colspan="4">Nessuna risorsa selezionata.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (risorsaSelezionata(); as risorsa) {
+    <app-progetti-associati-risorsa
+        [risorsaSelezionata]="risorsa">
+    </app-progetti-associati-risorsa>
+}

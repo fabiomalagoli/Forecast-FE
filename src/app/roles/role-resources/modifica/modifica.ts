@@ -13,7 +13,7 @@ import { forkJoin } from 'rxjs';
   templateUrl: './modifica.html',
   styleUrls: ['../../../shared/progetto-form.css'],
 })
-export class ModificaRisorsaPerRuolo {
+export class ModificaRisorsaPerRuoloComponent {
 
     private requests = inject(RequestsService);
     //Riceviamo dal Padre (Cliente.ts) il cliente da modificare, e definiamo gli output per comunicare al padre le azioni di modifica o cancellazione.

@@ -4,19 +4,20 @@ import { Location } from '@angular/common';
 import { Progetto } from '../progetto.model';
 import { RequestsService } from '../../../shared/requests.service';
 import { PROGETTO_COMPLETO_HEADERS } from '../progetto-completo.headers';
-import { AppButton } from '../../../shared/button/button';
-import { Progetti } from '../../progetti';
+import { AppButtonComponent } from '../../../shared/button/button';
+import { ProgettiComponent } from '../../progetti';
 import { ResourceDetailsGridComponent } from './resource-details-grid/resource-details-grid';
 import { ProjectEmployee } from '../progetto-employee.model';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-visualizza',
   standalone: true,
-  imports: [AppButton, ResourceDetailsGridComponent],
+  imports: [AppButtonComponent, ResourceDetailsGridComponent],
   templateUrl: './visualizza.html',
   styleUrls: ['./visualizza.css', '../../../shared/progetto-form.css'],
 })
-export class Visualizza {
+export class VisualizzaProgettoComponent {
   // Leggiamo l’ID dalla route (es. /progetti/:id)
   private route = inject(ActivatedRoute);
   // Usiamo la history del browser per tornare indietro
@@ -47,16 +48,16 @@ export class Visualizza {
       return;
     }
 
-    this.requests.caricaProgettoById(id).subscribe({
+    this.requests.caricaProgettoById(id).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
       next: (p) => {
         console.log('Progetto caricato:', p);
         this.progetto.set(p);
-        this.loading.set(false);
       },
       error: (err) => {
         console.error('Errore API:', err);
         this.error.set('Errore nel caricamento del progetto.');
-        this.loading.set(false);
       },
     });
   }

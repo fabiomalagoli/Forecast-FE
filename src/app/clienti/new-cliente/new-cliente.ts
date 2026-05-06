@@ -10,7 +10,7 @@ import { Cliente } from '../cliente/cliente.model';
   templateUrl: './new-cliente.html',
   styleUrls: ['./new-cliente.css', '../../shared/cliente-form.css'],
 })
-export class NewCliente {
+export class NewClienteComponent {
   readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof Cliente, string][])
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({ key, label }));

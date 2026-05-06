@@ -2,10 +2,10 @@ import { Component, Input, Output, EventEmitter, input, output } from '@angular/
 import { CommonModule } from '@angular/common';
 import { Progetto } from '../../progetto.model';
 import { PROGETTO_COMPLETO_HEADERS } from '../../progetto-completo.headers';
-import { AppButton } from '../../../../shared/button/button';
+import { AppButtonComponent } from '../../../../shared/button/button';
 import { inject, signal } from '@angular/core';
 import { RequestsService } from '../../../../shared/requests.service';
-import { Progetti } from '../../../progetti';
+import { ProgettiComponent } from '../../../progetti';
 import { ProjectEmployee } from '../../progetto-employee.model';
 import { TextInputComponent } from "../../../../shared/text-input/text-input";
 import { ResourceDetailsRecap } from './resource-details-recap.model';
@@ -15,7 +15,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-resource-details-grid',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, AppButton, FormsModule],
+  imports: [CommonModule, TextInputComponent, AppButtonComponent, FormsModule],
   templateUrl: './resource-details-grid.html',
   styleUrl: './resource-details-grid.css'
 })

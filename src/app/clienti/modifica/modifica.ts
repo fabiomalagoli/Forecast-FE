@@ -12,7 +12,7 @@ import { RequestsService } from '../../shared/requests.service';
   templateUrl: './modifica.html',
   styleUrls: ['../../shared/cliente-form.css'],
 })
-export class ModificaCliente implements OnInit {
+export class ModificaClienteComponent implements OnInit {
 
     private requests = inject(RequestsService);
     //Riceviamo dal Padre (Cliente.ts) il cliente da modificare, e definiamo gli output per comunicare al padre le azioni di modifica o cancellazione.

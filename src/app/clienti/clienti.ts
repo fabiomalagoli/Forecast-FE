@@ -5,22 +5,22 @@ import { TableRowComponent } from '../shared/table-row/table-row';
 import { CLIENTE_HEADERS } from './cliente/cliente.headers';
 import { Cliente } from './cliente/cliente.model';
 import { Column } from '../shared/table-row/table.types';
-import { NewCliente } from './new-cliente/new-cliente';
+import { NewClienteComponent } from './new-cliente/new-cliente';
 import { ClienteComponent } from './cliente/cliente';
-import { AppButton } from '../shared/button/button';
+import { AppButtonComponent } from '../shared/button/button';
 import { RequestsService } from '../shared/requests.service';
-import { ModificaCliente } from './modifica/modifica';
+import { ModificaClienteComponent } from './modifica/modifica';
 import { v4 as uuidv4 } from 'uuid';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, tap } from 'rxjs';
 
 @Component({
   selector: 'app-clienti',
-  imports: [CommonModule, ReactiveFormsModule, AppButton, NewCliente, ModificaCliente],
+  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewClienteComponent, ModificaClienteComponent],
   templateUrl: './clienti.html',
   styleUrls: ['./clienti.css', '../shared/filter-styles.css'],
 })
-export class Clienti {
+export class ClientiComponent {
 
   private requestsService = inject(RequestsService);
   private router = inject(Router);
@@ -106,12 +106,11 @@ export class Clienti {
 
   ngOnInit() {
     this.isFetching.set(true);
-    const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
+    const subscription = this.requestsService.caricaClientiDisponibili().pipe(
+      finalize(() => this.isFetching.set(false))
+    ).subscribe({
       error: (error: Error) => {
         this.error.set(error.message);
-      },
-      complete: () => {
-        this.isFetching.set(false);
       },
     });
 
@@ -129,12 +128,11 @@ export class Clienti {
   aggiornaClienti() {
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
-      const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
+      const subscription = this.requestsService.caricaClientiDisponibili().pipe(
+        finalize(() => this.isFetching.set(false))
+      ).subscribe({
         error: (error: Error) => {
           this.error.set(error.message);
-        },
-        complete: () => {
-          this.isFetching.set(false);
         },
       });
 
@@ -150,13 +148,12 @@ export class Clienti {
 
   ricaricaClienti() {
     this.isFetching.set(true);
-    const subscription = this.requestsService.caricaClientiDisponibili().subscribe({
+    const subscription = this.requestsService.caricaClientiDisponibili().pipe(
+      finalize(() => this.isFetching.set(false))
+    ).subscribe({
       error: (error: Error) => {
         this.error.set(error.message);
         this.showNotification('Errore nel caricamento dei clienti', 'error');
-      },
-      complete: () => {
-        this.isFetching.set(false);
       },
     });
 

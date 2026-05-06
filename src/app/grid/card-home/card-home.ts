@@ -7,6 +7,6 @@ import { CardModel } from './card-home.model';
   templateUrl: './card-home.html',
   styleUrl: './card-home.css',
 })
-export class CardHome {
+export class CardHomeComponent {
   @Input() cards!: CardModel;
 }

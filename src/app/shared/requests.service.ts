@@ -1003,7 +1003,11 @@ export class RequestsService {
   }
 
   private fetchEmployeeById(id: string) {
-    return this.httpClient.get<any>(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`).pipe(
+    return this.httpClient.get<any>(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`, {
+      params: {
+        employeeId: id 
+      }
+    }).pipe(
       tap((resData) => console.log('Risposta dal backend (employee byId):', resData)),
       map((employee) => ({
         id: employee.Id || employee.id, 

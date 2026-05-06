@@ -7,7 +7,7 @@ import { NewRoleComponent } from "./new-role/new-role";
 import { RoleRowComponent } from './role/role';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, tap } from 'rxjs';
 import { ModificaRoleComponent } from './modifica-role/modifica-role';
 
 @Component({
@@ -117,7 +117,9 @@ export class RolesComponent {
         this.currentPage.set(page);
         this.chiudiPannello();
 
-        this.requestsService.caricaJobRolesDisponibili(page, this.pageSize).subscribe({
+        this.requestsService.caricaJobRolesDisponibili(page, this.pageSize).pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
             next: () => {
                 const meta = this.pagination();
                 if (meta) {
@@ -129,9 +131,6 @@ export class RolesComponent {
             error: (err) => {
                 this.error.set('Errore durante il caricamento dei ruoli: ' + err.message);
                 this.statusMessage.set({text: 'Errore durante il caricamento dei ruoli', type: 'error'});
-            },
-            complete: () => {
-                this.isFetching.set(false);
             },
         });
     }
@@ -152,23 +151,20 @@ export class RolesComponent {
 
     ngOnInit() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaJobRolesDisponibili(this.currentPage(), this.pageSize).subscribe({
-            next: (data) => {
+        const subscription = this.requestsService.caricaJobRolesDisponibili(this.currentPage(), this.pageSize).pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
+            next: () => {
                 const meta = this.pagination();
                 if (meta) {
                     this.currentPage.set(meta.currentPage);
                     this.pageSize = meta.pageSize;
                 }
-                this.isFetching.set(false);
                 this.statusMessage.set({text: 'Ruoli caricati con successo!', type: 'success'});
             },
             error: (err) => {
-                this.isFetching.set(false);
                 this.error.set('Errore durante il caricamento dei ruoli: ' + err.message);
                 this.statusMessage.set({text: 'Errore durante il caricamento dei ruoli', type: 'error'});
-            },
-            complete: () => {
-                this.isFetching.set(false);
             },
         });
 
@@ -177,7 +173,7 @@ export class RolesComponent {
         });
 
         const risorseSubscription = this.requestsService.caricaEmployeesDisponibili().subscribe({
-            next: (data) => {
+            next: () => {
                 this.statusMessage.set({text: 'Risorse caricate con successo!', type: 'success'});
             },
             error: (err) => {
@@ -223,13 +219,13 @@ export class RolesComponent {
 
     ricaricaRuoli() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaJobRolesDisponibili().subscribe({
-            next: (data) => {
-                this.isFetching.set(false);
+        const subscription = this.requestsService.caricaJobRolesDisponibili().pipe(
+            finalize(() => this.isFetching.set(false))
+        ).subscribe({
+            next: () => {
                 this.statusMessage.set({text: 'Ruoli caricati con successo!', type: 'success'});
             },
             error: (err) => {
-                this.isFetching.set(false);
                 this.error.set('Errore durante il caricamento dei ruoli: ' + err.message);
                 this.statusMessage.set({text: 'Errore durante il caricamento dei ruoli', type: 'error'});
             }
@@ -243,14 +239,13 @@ export class RolesComponent {
     aggiornaRuoli(){
         this.isFetching.set(true);
         const timeoutId = setTimeout(() => {
-        const subscription = this.requestsService.caricaJobRolesDisponibili()
+        const subscription = this.requestsService.caricaJobRolesDisponibili().pipe(
+                finalize(() => this.isFetching.set(false))
+            )
             .subscribe({ 
             error: (error: Error) => {
                 this.error.set(error.message);
             },
-            complete: () => {
-                this.isFetching.set(false);
-            }
             });
 
         this.destroyRef.onDestroy(() => {

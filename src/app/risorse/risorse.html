@@ -143,6 +143,7 @@
                     <tr
                       app-risorsa-row
                       [risorsa]="r"
+                      (viewRisorsa)="apriDettagli($event)"
                       (editRisorsa)="apriModifica($event)">
                     </tr>
                 } @empty {

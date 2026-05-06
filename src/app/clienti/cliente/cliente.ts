@@ -2,12 +2,12 @@ import { Component, inject, input, Input, output } from '@angular/core';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
 import { Cliente } from './cliente.model';
-import { AppButton } from '../../shared/button/button';
+import { AppButtonComponent } from '../../shared/button/button';
 import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-cliente',
-  imports: [AppButton, TableRowComponent, RouterModule],
+  imports: [AppButtonComponent, TableRowComponent, RouterModule],
   templateUrl: './cliente.html',
   styleUrl: './cliente.css',
   host: {

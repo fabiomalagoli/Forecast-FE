@@ -4,17 +4,18 @@ import { Location } from '@angular/common';
 import { Cliente } from '../cliente/cliente.model';
 import { RequestsService } from '../../shared/requests.service';
 import { CLIENTE_COMPLETO_HEADERS } from '../cliente/cliente-completo.headers';
-import { AppButton } from '../../shared/button/button';
+import { AppButtonComponent } from '../../shared/button/button';
 import { Progetto } from '../../progetti/progetto/progetto.model';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-visualizza',
   standalone: true,
-  imports: [AppButton, RouterModule],
+  imports: [AppButtonComponent, RouterModule],
   templateUrl: './visualizza.html',
   styleUrls: ['./visualizza.css', '../../shared/progetto-form.css'],
 })
-export class Visualizza {
+export class VisualizzaClienteComponent {
   // Leggiamo l'ID dalla route (es. /clienti/:id)
   private route = inject(ActivatedRoute);
   // Usiamo la history del browser per tornare indietro
@@ -72,16 +73,16 @@ export class Visualizza {
       return;
     }
 
-    this.requests.caricaClienteById(id).subscribe({
+    this.requests.caricaClienteById(id).pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
       next: (c) => {
         console.log('Cliente caricato:', c);
         this.cliente.set(c);
-        this.loading.set(false);
       },
       error: (err) => {
         console.error('Errore API:', err);
         this.error.set('Errore nel caricamento del cliente.');
-        this.loading.set(false);
       },
     });
   }

@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, signal, DestroyRef } from '@angular/core';
-import { AppButton } from '../../shared/button/button';
+import { AppButtonComponent } from '../../shared/button/button';
 import { output } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -10,7 +10,7 @@ import { filter } from 'rxjs/operators';
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
-export class Sidebar {
+export class SidebarComponent {
   selected = output<string>();
 
   private router = inject(Router);

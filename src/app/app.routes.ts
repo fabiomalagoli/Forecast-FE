@@ -1,26 +1,28 @@
 import { Routes } from '@angular/router';
-import { Visualizza } from './progetti/progetto/visualizza/visualizza';
-import { Progetti } from './progetti/progetti';
-import { Clienti } from './clienti/clienti';
+import { VisualizzaProgettoComponent } from './progetti/progetto/visualizza/visualizza';
+import { ProgettiComponent } from './progetti/progetti';
+import { ClientiComponent } from './clienti/clienti';
 import { RolesComponent } from './roles/roles';
-import { Grid } from './grid/grid';
-import { Visualizza as VisualizzaCliente } from './clienti/visualizza/visualizza';
-import { elencoProgettiCliente } from './clienti/visualizza/progetti-attivi-cliente/progetti-attivi-cliente';
+import { GridComponent } from './grid/grid';
+import { VisualizzaClienteComponent } from './clienti/visualizza/visualizza';
+import { ElencoProgettiClienteComponent } from './clienti/visualizza/progetti-attivi-cliente/progetti-attivi-cliente';
 import { RisorseComponent } from './risorse/risorse';
+import { DettagliRisorsaComponent } from './risorse/dettagli-risorsa/dettagli-risorsa';
 
 export const routes: Routes = [  
-  { path: 'home', component: Grid },
+  { path: 'home', component: GridComponent },
 
-  { path: 'clienti', component: Clienti },
-  { path: 'clienti/:id', component: VisualizzaCliente },
+  { path: 'clienti', component: ClientiComponent },
+  { path: 'clienti/:id', component: VisualizzaClienteComponent },
 
-  { path: 'progetti', component: Progetti },
-  { path: 'progetti/:id', component: Visualizza },
+  { path: 'progetti', component: ProgettiComponent },
+  { path: 'progetti/:id', component: VisualizzaProgettoComponent },
 
-  { path : 'clienti/:id/progetti-attivi-cliente', component: elencoProgettiCliente },
+  { path : 'clienti/:id/progetti-attivi-cliente', component: ElencoProgettiClienteComponent },
 
   { path: 'ruoli', component: RolesComponent },
 
+  { path: 'risorse/:id', component: DettagliRisorsaComponent },
   { path: 'risorse', component: RisorseComponent },
 
   { path: '', redirectTo: 'home', pathMatch: 'full' },
