@@ -47,6 +47,7 @@
 
 @if (risorsaSelezionata(); as risorsa) {
     <app-progetti-associati-risorsa
-        [risorsaSelezionata]="risorsa">
+        [risorsaSelezionata]="risorsa"
+        (viewProgetto)="apriProgettoRisorsa($event)">
     </app-progetti-associati-risorsa>
 }

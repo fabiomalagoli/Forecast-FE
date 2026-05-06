@@ -1,12 +1,13 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Employee } from '../risorse.model';
 import { RequestsService } from '../../shared/requests.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ProgettiAssociatiRisorsaComponent } from "./progetti-associati-risorsa/progetti-associati-risorsa";
 import { Location } from '@angular/common';
 import { AppButtonComponent } from '../../shared/button/button';
+import { Progetto } from '../../progetti/progetto/progetto.model';
 
 @Component({
   selector: 'app-dettagli-risorsa',
@@ -19,9 +20,11 @@ export class DettagliRisorsaComponent {
     private requestsService = inject(RequestsService);
     private destroyRef = inject(DestroyRef);
     private route = inject(ActivatedRoute);
+    private router = inject(Router);
     private location = inject(Location);
     
     risorsaSelezionata = signal<Employee | null>(null);
+    progettoSelezionato = signal<Progetto | null>(null);
     isFetching = signal(false);
     error = signal('');
 
@@ -66,5 +69,10 @@ export class DettagliRisorsaComponent {
 
     indietro() {
         this.location.back();
+    }
+
+    apriProgettoRisorsa(p: Progetto) {
+        this.progettoSelezionato.set(p);
+        this.router.navigate(['/progetti', p.id]);
     }
 }

@@ -24,7 +24,7 @@
       </thead>
       <tbody>
         @for (p of ProgettiFiltrati(); track p.id) {
-          <tr>
+          <tr (click)="viewProgetto.emit(p)">
             @for (h of headersArray; track h.key) {
               <td>{{ getValue(p, h.key) }}</td>
             }

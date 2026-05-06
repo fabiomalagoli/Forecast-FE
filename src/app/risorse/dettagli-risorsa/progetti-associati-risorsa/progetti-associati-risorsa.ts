@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, input, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RequestsService } from '../../../shared/requests.service';
 import { finalize } from 'rxjs';
@@ -7,6 +7,7 @@ import { Employee } from '../../risorse.model';
 import { PROGETTO_COMPLETO_HEADERS } from '../../../progetti/progetto/progetto-completo.headers';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-progetti-associati-risorsa',
@@ -26,6 +27,8 @@ export class ProgettiAssociatiRisorsaComponent {
 
     listaProgetti = this.requestsService.progettiCaricati;
     risorsaSelezionata = input.required<Employee>();
+
+    viewProgetto = output<Progetto>();
 
     readonly headersProgetti: Partial<Record<keyof Progetto, string>> = PROGETTO_COMPLETO_HEADERS;
     readonly headersArray = Object.entries(this.headersProgetti)
