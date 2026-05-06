@@ -82,14 +82,17 @@
   background-color: #ffffff;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
-  overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
 
+/* Per mantenere gli angoli arrotondati della tabella 
+   senza usare overflow: hidden sul contenitore:
+*/
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* Cambiamo da collapse a separate */
+  border-spacing: 0;
 }
 
 thead {

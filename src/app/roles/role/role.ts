@@ -7,7 +7,7 @@ import { ModificaRoleComponent } from '../modifica-role/modifica-role';
   selector: 'tr[app-role-row]',
   imports: [AppButtonComponent],
   templateUrl: './role.html',
-  styleUrl: './role.css',
+  styleUrls: ['./role.css'],
 })
 export class RoleRowComponent {
   role = input.required<Role>();
