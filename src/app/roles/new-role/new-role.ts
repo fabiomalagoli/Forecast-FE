@@ -10,7 +10,7 @@ import { CreateRoleRequest, Role } from '../role.model';
   selector: 'app-new-role',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './new-role.html',
-  styleUrls: ['../../shared/progetto-form.css', './new-role.css'],
+  styleUrls: ['../../shared/form-styles.css'],
 })
 export class NewRoleComponent implements OnInit {
 

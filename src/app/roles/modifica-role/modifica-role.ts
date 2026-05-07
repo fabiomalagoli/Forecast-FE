@@ -10,7 +10,7 @@ import { RequestsService } from '../../shared/requests.service';
   selector: 'app-modifica-role',
   imports: [CommonModule, FormsModule, TextInputComponent],
   templateUrl: './modifica-role.html',
-  styleUrls: ['../../shared/progetto-form.css', './modifica-role.css'],
+  styleUrls: ['../../shared/form-styles.css'],
 })
 export class ModificaRoleComponent {
   ruoloDaModificare = input.required<Role>();

@@ -12,7 +12,7 @@ import { forkJoin } from 'rxjs';
   standalone: true,
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './new-progetto.html',
-  styleUrls: ['./new-progetto.css', '../../shared/progetto-form.css'],
+  styleUrls: ['../../shared/form-styles.css'],
 })
 
 export class NewProgettoComponent implements OnInit{

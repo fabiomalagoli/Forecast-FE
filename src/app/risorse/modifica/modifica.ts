@@ -12,7 +12,7 @@ import { RISORSE_HEADERS } from '../risorse.headers';
   selector: 'app-modifica-risorsa',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './modifica.html',
-  styleUrls: ['../../shared/progetto-form.css', './modifica.css'], // Mantenuto il css condiviso e aggiunto quello specifico
+  styleUrls: ['../../shared/form-styles.css'],
 })
 export class ModificaRisorsaComponent implements OnInit {
 

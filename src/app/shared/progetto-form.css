@@ -1,8 +1,8 @@
 /* backdrop */
 .backdrop {
-  background-color: #afaeae7c;
   position: fixed;
   inset: 0;
+  background: rgba(15, 23, 42, 0.45);
   z-index: 10;
 }
 
@@ -13,17 +13,17 @@ dialog {
   top: 50%;
   transform: translate(-50%, -50%);
 
-  width: min(92vw, 46rem);
-  max-height: 90vh;
+  width: min(92vw, 64rem);
+  max-height: calc(100vh - 48px);
 
-  padding: 1rem;
+  padding: 0;
   margin: 0;                
-  overflow: auto;
+  overflow: hidden;
 
-  background-color: #f7a205;
-  border-radius: 6px;
-  border: none;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  background: #fff;
+  border: 4px solid #ff9800;
+  border-radius: 8px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.26);
 
   z-index: 11;             
 }
@@ -31,27 +31,29 @@ dialog {
 /* pannello */
 .np-panel {
   width: 100%;
+  max-height: calc(100vh - 56px);
+  overflow: auto;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  border: 0;
+  border-radius: 4px;
+  padding: 24px;
+  box-shadow: none;
   box-sizing: border-box;
 }
 
 /* titolo */
 .np-title {
-  margin: 0 0 12px;
-  font-size: 18px;
+  margin: 0 0 18px;
+  font-size: 1.35rem;
   font-weight: 700;
-  color: #5e5866;
+  color: #111827;
 }
 
 /* Form Grid */
 .np-form--grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 20px;
+  gap: 16px 20px;
 }
 
 @media (max-width: 720px) {
@@ -89,7 +91,7 @@ dialog {
   display: block;
   font-weight: 700;
   font-size: 0.85rem;
-  color: #5e5866;
+  color: #374151;
   margin: 0;
 }
 
@@ -97,7 +99,7 @@ dialog {
   display: block;
   font-weight: 700;
   font-size: 0.85rem;
-  color: #5e5866;
+  color: #374151;
   margin: 0 0 6px;
 }
 
@@ -110,7 +112,7 @@ dialog {
   padding: 0 10px;
 
   border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border-radius: 6px;
   outline: none;
   background: #fff;
 
@@ -158,7 +160,7 @@ dialog {
   height: 36px;
   padding: 0 36px 0 10px;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border-radius: 6px;
   outline: none;
   background: #fff;
   box-sizing: border-box;
@@ -166,8 +168,8 @@ dialog {
 }
 
 .combo-input:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16);
 }
 
 .combo-toggle[type="button"] {
@@ -177,7 +179,9 @@ dialog {
   width: 34px;
   height: 34px;
   padding: 0;
-  border-radius: 0 9px 9px 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0 5px 5px 0;
   color: #6b7280;
   background: transparent;
   box-shadow: none;
@@ -200,7 +204,7 @@ dialog {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: #fff;
-  box-shadow: 0 10px 20px rgba(17, 24, 39, 0.16);
+  box-shadow: 0 16px 30px rgba(17, 24, 39, 0.16);
 }
 
 .combo-option[type="button"] {
@@ -229,8 +233,8 @@ dialog {
 :host ::ng-deep app-text-input input:focus,
 :host ::ng-deep app-text-input textarea:focus,
 :host ::ng-deep app-text-input select:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16);
 }
 
 /* testo di errore */
@@ -251,7 +255,7 @@ dialog {
 /* azioni */
 .actions {
   grid-column: 1 / -1;
-  margin: 1rem 0 0;
+  margin: 1.25rem 0 0;
 
   display: flex;
   justify-content: flex-end;
@@ -262,49 +266,79 @@ dialog {
 button {
   font: inherit;
   cursor: pointer;
-  border: none;
+  min-height: 38px;
+  border: 1px solid #d1d5db;
   padding: 0.35rem 1.25rem;
-  border-radius: 4px;
+  border-radius: 6px;
   background-color: transparent;
+  font-weight: 600;
 }
 
 button[type="button"] {
-  color: #bdadcf;
+  color: #111827;
+  background: #fff;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 button[type="button"]:hover,
 button[type="button"]:active {
-  color: #d0c2e1;
+  border-color: #9ca3af;
+  background: #f9fafb;
+  color: #111827;
 }
 
 button[type="submit"] {
-  background-color: #f7a205;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+  border-color: #ff9800;
+  background-color: #ff9800;
+  color: #111827;
+  font-weight: 700;
+  box-shadow: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-button[type="submit"]:hover,
-button[type="submit"]:active {
+button[type="submit"]:not(:disabled):hover,
+button[type="submit"]:not(:disabled):active {
+  border-color: #f07d00;
   background-color: #f07d00;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+  color: #111827;
+  box-shadow: none;
 }
 
 button[type="submit"].btn--disabled,
 button[type="submit"]:disabled {
-  color: #9ca3af !important;
+  border-color: #ffc46b;
+  background-color: #ffc46b;
+  color: rgba(17, 24, 39, 0.55) !important;
   cursor: not-allowed;
   box-shadow: none;
-  opacity: 0.8;
+  opacity: 1;
+}
+
+.btn-add-role[type="button"],
+.btn-add-resource[type="button"] {
+  border-color: #ff9800;
+  background-color: #ff9800;
+  color: #111827;
+  font-weight: 700;
+}
+
+.btn-add-role[type="button"]:hover,
+.btn-add-resource[type="button"]:hover {
+  border-color: #f07d00;
+  background-color: #f07d00;
+  color: #111827;
 }
 /* --- SEZIONE RUOLI --- */
 .np-roles-section {
   grid-column: 1 / -1;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 2px solid #eee;
+  border-top: 1px solid #e5e7eb;
 }
 
-.roles-header {
+.roles-header,
+.resources-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -321,75 +355,7 @@ button[type="submit"]:disabled {
   align-items: center;
 }
 
-.np-role-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.role-grid-header {
-  margin-bottom: 8px;
-  padding: 0 5px;
-}
-
-.role-grid-header span {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #5e5866; /* Grigio come le tue label */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Stile per gli input DIRETTI (non app-text-input) */
-.role-grid-row .np-input-direct {
-  width: 100%;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  background: #fff;
-  font: inherit;
-  box-sizing: border-box;
-  outline: none;
-}
-
-.role-grid-row .np-input--currency {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='6' y='24' font-size='22' font-family='Arial' fill='%236b7280'%3E%E2%82%AC%3C/text%3E%3C/svg%3E");
-  background-position: 8px 50%;
-  background-repeat: no-repeat;
-  background-size: 24px 24px;
-  padding-left: 34px;
-}
-
-.role-grid-row .np-input-direct:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
-}
-
-/* --- SEZIONE RISORSE --- */
-.np-resources-section {
-  grid-column: 1 / -1;
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 2px solid #eee;
-}
-
-.resources-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.resource-grid-header,
-.resource-grid-row {
-  display: grid;
-  grid-template-columns: 2fr 1.2fr 1fr 1fr 40px;
-  gap: 12px;
-  align-items: center;
-}
-
+.np-role-field,
 .np-resource-field {
   display: flex;
   flex-direction: column;
@@ -397,32 +363,35 @@ button[type="submit"]:disabled {
   min-width: 0;
 }
 
+.role-grid-header,
 .resource-grid-header {
   margin-bottom: 8px;
   padding: 0 5px;
 }
 
+.role-grid-header span,
 .resource-grid-header span {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #5e5866;
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* Stile per gli input DIRETTI (non app-text-input) */
+.role-grid-row .np-input-direct,
 .resource-grid-row .np-input-direct {
   width: 100%;
   height: 36px;
   padding: 0 10px;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border-radius: 6px;
   background: #fff;
   font: inherit;
   box-sizing: border-box;
   outline: none;
 }
 
+.role-grid-row .np-input--currency,
 .resource-grid-row .np-input--currency {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='6' y='24' font-size='22' font-family='Arial' fill='%236b7280'%3E%E2%82%AC%3C/text%3E%3C/svg%3E");
   background-position: 8px 50%;
@@ -431,15 +400,26 @@ button[type="submit"]:disabled {
   padding-left: 34px;
 }
 
+.role-grid-row .np-input-direct:focus,
 .resource-grid-row .np-input-direct:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16);
 }
 
-/* Colore del testo quando il bottone è abilitato */
-button[type="submit"]:not(.btn--disabled) {
-  color: #000 !important;
-  font-weight: 700;
+/* --- SEZIONE RISORSE --- */
+.np-resources-section {
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.resource-grid-header,
+.resource-grid-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1fr 1fr 40px;
+  gap: 12px;
+  align-items: center;
 }
 
 /* Messaggio Toast in basso */

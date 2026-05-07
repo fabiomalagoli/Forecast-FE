@@ -880,9 +880,12 @@ export class RequestsService {
 
   private updateEmployee(employee: Employee) {
     // 1. Troviamo i GUID corretti come abbiamo sempre fatto
-    const companyObj = this.Aziende().find(c => c.name === employee.company);
-    const roleObj = this.getJobRolesForLookup().find(r => r.name === employee.jobRole);
-    const levelObj = this.JobRoleLevels().find(l => l.name === employee.jobRoleLevel);
+    const normalizedCompanyName = (employee.company || '').trim().toLowerCase();
+    const normalizedRoleName = (employee.jobRole || '').trim().toLowerCase();
+    const normalizedLevelName = (employee.jobRoleLevel || '').trim().toLowerCase();
+    const companyObj = this.Aziende().find(c => (c.name || '').trim().toLowerCase() === normalizedCompanyName);
+    const roleObj = this.getJobRolesForLookup().find(r => (r.name || '').trim().toLowerCase() === normalizedRoleName);
+    const levelObj = this.JobRoleLevels().find(l => (l.name || '').trim().toLowerCase() === normalizedLevelName);
 
     // 2. IL PAYLOAD ESATTO DA SWAGGER: camelCase, niente ID, solo i campi richiesti
     const payload = {

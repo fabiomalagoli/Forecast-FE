@@ -9,12 +9,14 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, tap } from 'rxjs';
 import { ModificaRoleComponent } from './modifica-role/modifica-role';
+import { AssegnaRisorseComponent } from './role/assegna-risorse/assegna-risorse';
+import { Employee } from '../risorse/risorse.model';
 
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.html',
   styleUrls: ['../shared/filter-styles.css', './roles.css'],
-  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent],
+  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent, AssegnaRisorseComponent],
 })
 export class RolesComponent {
     isFetching = signal(false);
@@ -73,6 +75,7 @@ export class RolesComponent {
 
     roleInModifica = signal<Role | null>(null);
     roleInAggiunta = signal<Role | null>(null);
+    roleInAssegnazione = signal<Role | null>(null);
 
 
     selectedRoleId = signal<string | null>(null);
@@ -349,10 +352,31 @@ export class RolesComponent {
         this.roleInModifica.set(null);
     }
 
+    apriAssegnaRisorse(r: Role) {
+        this.roleInAssegnazione.set(r);
+    }
+
+    chiudiAssegnaRisorse() {
+        this.roleInAssegnazione.set(null);
+    }
+
     salvaModifica(roleAggiornato: Role) {
         this.ricaricaRuoli();
         this.roleInModifica.set(null);
         this.showNotification('Ruolo aggiornato con successo!', 'success');
+    }
+
+    salvaAssegnazioneRisorse(risorseAggiornate: Employee[]) {
+        this.roleInAssegnazione.set(null);
+        this.showNotification('Risorse assegnate con successo!', 'success');
+
+        const ruolo = this.selectedRuolo();
+        if (ruolo) {
+            const risorseFiltrate = this.requestsService.employeesCaricati().filter(risorsa =>
+                risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
+            );
+            this.risorseFiltrateSelezionate.set(risorseFiltrate);
+        }
     }
 
     showNotification(text: string, type: 'success' | 'error') {

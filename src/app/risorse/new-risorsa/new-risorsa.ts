@@ -12,7 +12,7 @@ import { RISORSE_HEADERS } from '../risorse.headers';
   selector: 'app-new-risorsa',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './new-risorsa.html',
-  styleUrls: ['../../shared/progetto-form.css', './new-risorsa.css'],
+  styleUrls: ['../../shared/form-styles.css'],
 })
 export class NewRisorsaComponent implements OnInit {
 

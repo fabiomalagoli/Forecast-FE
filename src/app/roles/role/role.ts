@@ -15,4 +15,5 @@ export class RoleRowComponent {
 
   showResources = output<Role>();
   editRole = output<Role>();
+  assignResourcesToRoles = output<Role>();
 }

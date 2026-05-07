@@ -8,7 +8,7 @@ import { Cliente } from '../cliente/cliente.model';
   selector: 'app-new-cliente',
   imports: [FormsModule, TextInputComponent],
   templateUrl: './new-cliente.html',
-  styleUrls: ['./new-cliente.css', '../../shared/cliente-form.css'],
+  styleUrls: ['../../shared/form-styles.css'],
 })
 export class NewClienteComponent {
   readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof Cliente, string][])

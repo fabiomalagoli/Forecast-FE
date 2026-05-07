@@ -10,7 +10,7 @@ import { RequestsService } from '../../shared/requests.service';
   selector: 'app-modifica-cliente',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './modifica.html',
-  styleUrls: ['../../shared/cliente-form.css'],
+  styleUrls: ['../../shared/form-styles.css'],
 })
 export class ModificaClienteComponent implements OnInit {
 

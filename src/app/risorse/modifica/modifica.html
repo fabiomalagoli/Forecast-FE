@@ -58,6 +58,17 @@
                 (input)="onJobRoleInput()"
                 required
               />
+              
+              @if (formData[header.key]) {
+                <button
+                  class="combo-clear"
+                  type="button"
+                  aria-label="Cancella ruolo"
+                  (click)="formData[header.key] = ''; onFieldChange()">
+                  ×
+                </button>
+              }
+
               <button
                 class="combo-toggle"
                 type="button"

@@ -6,7 +6,11 @@
   <button appButton class="btn-small btn-outline" type="button" (click)="editRole.emit(role())">
     Modifica
   </button>
-  <button class="icon-btn tooltip-container" type="button" data-tooltip="Assegna Risorse al Ruolo">
+  <button
+    class="icon-btn tooltip-container"
+    type="button"
+    data-tooltip="Assegna Risorse al Ruolo"
+    (click)="assignResourcesToRoles.emit(role())">
     <span class="material-symbols-outlined bold-icon">add</span>
   </button>
 </td>

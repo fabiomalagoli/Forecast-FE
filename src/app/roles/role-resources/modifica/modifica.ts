@@ -11,7 +11,7 @@ import { forkJoin } from 'rxjs';
   selector: 'app-modifica-risorsa-per-ruolo',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './modifica.html',
-  styleUrls: ['../../../shared/progetto-form.css'],
+  styleUrls: ['../../../shared/form-styles.css'],
 })
 export class ModificaRisorsaPerRuoloComponent {
 

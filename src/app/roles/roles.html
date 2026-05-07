@@ -75,7 +75,8 @@
                       [selected]="selectedRoleId() === r.id"
                       [class.selected-row]="selectedRoleId() === r.id"
                       (showResources)="mostraRisorsePerRuolo($event)"
-                      (editRole)="apriModifica($event)">
+                      (editRole)="apriModifica($event)"
+                      (assignResourcesToRoles)="apriAssegnaRisorse($event)">
                     </tr>
                 }
                 </tbody>
@@ -120,6 +121,14 @@
         (cancel)="chiudiModifica()"
         (modified)="salvaModifica($event)"
     ></app-modifica-role>
+}
+
+@if(roleInAssegnazione()) {
+    <app-assegna-risorse
+        [ruoloSelezionato]="roleInAssegnazione()!"
+        (cancel)="chiudiAssegnaRisorse()"
+        (saved)="salvaAssegnazioneRisorse($event)"
+    ></app-assegna-risorse>
 }
 
 <div class="bottom-actions">
