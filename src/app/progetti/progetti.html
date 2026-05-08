@@ -187,7 +187,7 @@
   @if (isProgettoInAggiunta()) {
     <app-new-progetto 
       (cancel)="annullaAggiuntaProgetto()" 
-      (add)="aggiungiProgetto($event)">
+      (created)="aggiungiProgetto($event)">
     </app-new-progetto>
   }
   
