@@ -41,6 +41,8 @@ export class RequestsService {
 
   private ProjectEmployees = signal<{ id: string; project: string; isActive: boolean; employee: string; jobRole: string; jobRoleLevel: string; dailyCost: number; daysSpent: number; effort: number; winProbability: number }[]>([]);
 
+  private lastSelectedRole = signal<Role | null>(null);
+
   projectJobRolesCaricati = this.ProjectJobRoles.asReadonly();
 
   projectEmployeesCaricati = this.ProjectEmployees.asReadonly();
@@ -62,6 +64,8 @@ export class RequestsService {
   employeesCaricati = this.Employees.asReadonly();
 
   allEmployeesCaricati = this.AllEmployees.asReadonly();
+
+  ultimoRuoloSelezionato = this.lastSelectedRole.asReadonly();
 
   cardsCaricate = this.Cards.asReadonly();
 
@@ -86,6 +90,10 @@ export class RequestsService {
   employeesPagination = this.EmployeesPagination.asReadonly();
 
   jobRolesPagination = this.JobRolesPagination.asReadonly();
+
+  setUltimoRuoloSelezionato(ruolo: Role | null){
+    this.lastSelectedRole.set(ruolo);
+  }
 
   caricaProgettiDisponibili() {
     return this.fetchProgetti(

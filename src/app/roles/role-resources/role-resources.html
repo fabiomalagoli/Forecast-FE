@@ -29,7 +29,7 @@
         <tbody>
           @for (resource of risorseAssociate(); track resource.id) {
             <tr>
-              <td class="font-semibold">{{ resource.name }} {{ resource.surname }}</td>
+              <td class="font-semibold" (click)="apriDettagliRisorsa(resource)">{{ resource.name }} {{ resource.surname }}</td>
               <td>
                 <span class="badge">{{ resource.jobRoleLevel || resource.livello || '-' }}</span>
               </td>

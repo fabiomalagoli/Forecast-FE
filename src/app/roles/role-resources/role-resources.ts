@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../shared/button/button';
 import { NewRisorsaComponent } from '../../risorse/new-risorsa/new-risorsa';
 import { finalize } from 'rxjs';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-role-resources',
@@ -17,21 +18,65 @@ import { finalize } from 'rxjs';
 })
 export class RoleResourcesComponent {
 
-    isFetching = signal(false);
-    error = signal('');
     private requestsService = inject(RequestsService);
     private destroyRef = inject(DestroyRef);
+    private route = inject(ActivatedRoute);
+    private router = inject(Router);
+    private location = inject(Location);
+    
+    isFetching = signal(false);
+    error = signal('');
+
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
     risorseAssociate = input<any[]>([]);
+    ruoloSelezionato = input<Role| null>(null);
 
     risorsaInModifica = signal<Employee | null>(null);
 
-    constructor(private router: Router) {
+    risorsaPerDettaglio = signal<Employee | null>(null);
+
+    constructor() {
         effect(() => {
             console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.risorseAssociate());
         });
         
+    }
+
+    ngOnInit() {
+        const id = this.route.snapshot.paramMap.get('id');
+
+        if (!id) {
+            this.error.set('ID risorsa mancante.');
+            this.statusMessage.set({ text: this.error(), type: 'error' });
+            return;
+        }
+
+        this.isFetching.set(true);
+
+        const subscription = this.requestsService.caricaEmployeeById(id)
+        .pipe(
+            finalize(() => {
+                this.isFetching.set(false);
+            })
+        ).subscribe({
+            next: (employee) => {
+                this.risorsaPerDettaglio.set(employee);
+            },
+            error: (err) => {
+                this.error.set('Errore durante il caricamento della risorsa: ' + err.message);
+                this.statusMessage.set({ text: this.error(), type: 'error' });
+            }
+        });
+
+        this.destroyRef.onDestroy(() => {
+            subscription.unsubscribe();
+        });
+
+    }
+
+    indietro() {
+        this.location.back();
     }
 
     aggiornaRisorsePerRuolo() {
@@ -60,6 +105,12 @@ export class RoleResourcesComponent {
 
     chiudiModificaRisorsa() {
         this.risorsaInModifica.set(null); // Nasconde l' @if nel template
+    }
+
+    apriDettagliRisorsa(r: Employee) {
+        this.risorsaPerDettaglio.set(r);
+        this.requestsService.setUltimoRuoloSelezionato(this.ruoloSelezionato());
+        this.router.navigate(['/risorse', r.id]);
     }
 
 }

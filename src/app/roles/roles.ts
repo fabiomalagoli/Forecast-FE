@@ -218,6 +218,13 @@ export class RolesComponent {
             allJobRolesSuibscription.unsubscribe()
         });
 
+        const ruoloSalvato = this.requestsService.ultimoRuoloSelezionato();
+
+        if(ruoloSalvato){
+            this.mostraRisorsePerRuolo(ruoloSalvato);
+        }
+
+
     }
 
     ricaricaRuoli() {
