@@ -160,7 +160,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (p of progetti(); track p.id) {
+        @for (p of progettiFiltrati(); track p.id) {
           <tr>
             @for (col of columns; track col.header) {
               <td>{{ col.value(p) }}</td>

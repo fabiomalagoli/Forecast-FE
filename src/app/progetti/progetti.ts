@@ -58,15 +58,32 @@ export class ProgettiComponent {
   filtroAzienda = new FormControl('');
   filtroCliente = new FormControl('');
   filtroStato = new FormControl('');
+
   filtroAziendaValue = signal<string>('');
   filtroClienteValue = signal<string>('');
   filtroStatoValue = signal<string>('');
+
   companyDropdownOpen = signal(false);
   customerDropdownOpen = signal(false);
   statusDropdownOpen = signal(false);
   showAllCompanyOptions = signal(false);
   showAllCustomerOptions = signal(false);
   showAllStatusOptions = signal(false);
+
+  progettiFiltrati = computed<Progetto[]>(() => {
+    const hasFilters = !!(
+      this.filtroAziendaValue() ||
+      this.filtroClienteValue() ||
+      this.filtroStatoValue()
+    );
+    
+    return this.progetti().filter(progetto =>
+      progetto.company.toLowerCase().includes(this.filtroAziendaValue()) &&
+      progetto.customer.toLowerCase().includes(this.filtroClienteValue()) &&
+      progetto.projectStatus.toLowerCase().includes(this.filtroStatoValue())
+    );
+
+  })
 
   companyFilterOptions = computed<any[]>(() => {
     const term = this.showAllCompanyOptions()

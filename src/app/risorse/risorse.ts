@@ -61,7 +61,8 @@ export class RisorseComponent implements OnInit {
             this.filtroLivelloValue() ||
             this.filtroAziendaValue()
         );
-        const source = hasFilters ? this.allRisorse() : this.risorse();
+        const source = hasFilters ? this.allRisorse() : this.risorse(); // Se ci sono applicati filtri, mi mostri i risultati filtrati
+                                                                        // Basati su TUTTE le risorse, altrimenti mi mostri solo le risorse impaginate
 
         return source.filter(risorsa =>
             this.fullName(risorsa).toLowerCase().includes(this.filtroNomeValue()) &&
