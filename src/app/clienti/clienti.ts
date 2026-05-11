@@ -28,7 +28,6 @@ export class ClientiComponent {
 
   //dummyClienti = CLIENTI_DUMMY;
   Clienti = this.requestsService.clientiCaricati;
-  clientiFiltrati = signal<Cliente[]>([]);
 
 
   isFetching = signal(false);
@@ -65,6 +64,14 @@ export class ClientiComponent {
   customerDropDownOpen = signal(false);
   filtroNomeValue = signal<string>('');
 
+  clientiFiltrati = computed<Cliente[]>(() => {
+    const hasFilters = !!this.filtroNomeValue();
+
+    return this.Clienti().filter((cliente) => 
+    cliente.name.toLowerCase().includes(this.filtroNomeValue())
+    );
+  })
+
   customerFilterOptions = computed<Cliente[]>(() => {
     const term = this.showAllCustomersOptions()
       ? ''
@@ -80,29 +87,6 @@ export class ClientiComponent {
     );
 
   });
-
-  constructor() {
-    // Effect per aggiornare i clienti filtrati quando cambiano i dati o il filtro
-    effect(() => {
-      const clientiData = this.Clienti();
-      const filtro = this.filtroNomeValue().toLowerCase();
-      
-      if (!clientiData) {
-        this.clientiFiltrati.set([]);
-        return;
-      }
-
-      if (!filtro) {
-        this.clientiFiltrati.set(clientiData);
-        return;
-      }
-
-      const filtered = clientiData.filter(c => 
-        c.name.toLowerCase().includes(filtro)
-      );
-      this.clientiFiltrati.set(filtered);
-    });
-  }
 
   ngOnInit() {
     this.isFetching.set(true);
