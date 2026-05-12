@@ -1,0 +1,12 @@
+<td>{{ employee().name }} {{ employee().surname }}</td>
+<td>{{ employee().jobRole }}</td>
+<td>{{ employee().jobRoleLevel }}</td>
+<td>{{ employee().company }}</td>
+<td class="actions-cell">
+  <button appButton class="btn-small" type="button" (click)="viewEmployee.emit(employee())">
+    Dettagli
+  </button>
+  <button appButton class="btn-small btn-outline" type="button" (click)="editEmployee.emit(employee())">
+    Modifica
+  </button>
+</td>

@@ -1,37 +1,39 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { Role } from './role.model';
-import { RequestsService } from '../shared/requests.service';
+import { RolesService } from '../shared/services/roles.service';
 import { Router } from '@angular/router';
-import { RoleResourcesComponent } from './role-resources/role-resources';
-import { NewRoleComponent } from "./new-role/new-role";
-import { RoleRowComponent } from './role/role';
+import { RoleResourcesComponent } from './role-resources/role-resources.component';
+import { NewRoleComponent } from "./new-role/new-role.component";
+import { RoleRowComponent } from './role/role.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, tap } from 'rxjs';
-import { ModificaRoleComponent } from './modifica-role/modifica-role';
-import { AssegnaRisorseComponent } from './role/assegna-risorse/assegna-risorse';
-import { Employee } from '../risorse/risorse.model';
+import { ModificaRoleComponent } from './edit-role/edit-role.component';
+import { AssignEmployeeComponent } from './role/assign-employees/assign-employees.component';
+import { Employee } from '../employees/employee.model';
+import { EmployeesService } from '../shared/services/employees.service';
 
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.html',
   styleUrls: ['../shared/filter-styles.css', './roles.css'],
-  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent, AssegnaRisorseComponent],
+  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent, AssignEmployeeComponent],
 })
 export class RolesComponent {
     isFetching = signal(false);
     error = signal('');
-    private requestsService = inject(RequestsService);
+    private rolesService = inject(RolesService);
+    private employeesService = inject(EmployeesService)
     private destroyRef = inject(DestroyRef);
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
-    listaAllJobRoles = this.requestsService.allJobRolesCaricati;
-    roles = this.requestsService.jobRolesCaricati;
+    listAllJobRoles = this.rolesService.loadedAllJobRoles;
+    roles = this.rolesService.loadedJobRoles;
 
-    rolesFiltrati = computed<Role[]>(() => {
+    filteredRoles = computed<Role[]>(() => {
         const rolesData = this.roles() ?? [];
-        const AllRolesData = this.listaAllJobRoles() ?? [];
-        const filtro = this.filtroNomeValue().toLowerCase();
+        const AllRolesData = this.listAllJobRoles() ?? [];
+        const filtro = this.filterNameValue().toLowerCase();
 
         if (!filtro) {
             return rolesData; // Mi dai solo quelli impaginati
@@ -44,12 +46,12 @@ export class RolesComponent {
         // A seconda dei valori di rolesData, AllRolesData e filtro
 
 
-    listaRisorse = signal<any[]>([]);
+    employeesList = signal<any[]>([]);
 
 
-    nomeRuolo = signal<string | null>(null);
-    filtroNomeValue = signal<string>('');
-    filtroNomeRuolo = new FormControl('');
+    roleName = signal<string | null>(null);
+    filterNameValue = signal<string>('');
+    filterNameRole = new FormControl('');
     roleFilterDropdownOpen = signal(false);
     showAllRoleOptions = signal(false);
     filterData: any = {};
@@ -57,8 +59,8 @@ export class RolesComponent {
     roleFilterOptions = computed<Role[]>(() => {
         const term = this.showAllRoleOptions()
             ? ''
-            : this.filtroNomeValue().toLowerCase();
-        const rolesData = this.listaAllJobRoles() ?? [];
+            : this.filterNameValue().toLowerCase();
+        const rolesData = this.listAllJobRoles() ?? [];
 
         if (!term) {
             return rolesData;
@@ -70,22 +72,22 @@ export class RolesComponent {
     });
 
 
-    isRoleInAggiunta = signal<boolean | null>(null);
+    isAddingRoleState = signal<boolean | null>(null);
 
 
-    roleInModifica = signal<Role | null>(null);
-    roleInAggiunta = signal<Role | null>(null);
-    roleInAssegnazione = signal<Role | null>(null);
+    editingRole = signal<Role | null>(null);
+    addingRole = signal<Role | null>(null);
+    assigningRole = signal<Role | null>(null);
 
 
     selectedRoleId = signal<string | null>(null);
-    selectedRuolo = signal<any | null>(null);
-    risorseFiltrateSelezionate = signal<any[]>([]);
+    selectedRole = signal<any | null>(null);
+    filteredSelectedEmployees = signal<any[]>([]);
 
 
     currentPage = signal(1);
     pageSize = 10;
-    pagination = this.requestsService.jobRolesPagination; // Variabili per l'impaginazione
+    pagination = this.rolesService.paginationData; // Variabili per l'impaginazione
 
 
     constructor(private router: Router) {
@@ -95,14 +97,14 @@ export class RolesComponent {
 
         // Quando gli employees vengono aggiornati nel service, filtra automaticamente
         effect(() => {
-            const employees = this.requestsService.employeesCaricati();
-            const ruolo = this.selectedRuolo();
+            const employees = this.employeesService.loadedAllEmployees();
+            const ruolo = this.selectedRole();
             
             if (ruolo) {
                 const risorseFiltrate = employees.filter(risorsa => {
                     return risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name;
                 });
-                this.risorseFiltrateSelezionate.set(risorseFiltrate);
+                this.filteredSelectedEmployees.set(risorseFiltrate);
             }
         });
     }
@@ -120,7 +122,7 @@ export class RolesComponent {
         this.currentPage.set(page);
         this.chiudiPannello();
 
-        this.requestsService.caricaJobRolesDisponibili(page, this.pageSize).pipe(
+        this.rolesService.loadJobRoles(page, this.pageSize).pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
@@ -154,7 +156,7 @@ export class RolesComponent {
 
     ngOnInit() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaJobRolesDisponibili(this.currentPage(), this.pageSize).pipe(
+        const subscription = this.rolesService.loadJobRoles(this.currentPage(), this.pageSize).pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
@@ -175,7 +177,7 @@ export class RolesComponent {
             subscription.unsubscribe();
         });
 
-        const risorseSubscription = this.requestsService.caricaEmployeesDisponibili().subscribe({
+        const risorseSubscription = this.employeesService.loadAllEmployees().subscribe({
             next: () => {
                 this.statusMessage.set({text: 'Risorse caricate con successo!', type: 'success'});
             },
@@ -191,11 +193,11 @@ export class RolesComponent {
 
         //Imnplementiamo la funzione di filtro ed i listeners
 
-        this.filtroNomeRuolo.valueChanges.pipe(
+        this.filterNameRole.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
             tap(value => {
-                this.filtroNomeValue.set(value?.toLowerCase() || '');
+                this.filterNameValue.set(value?.toLowerCase() || '');
                 this.showAllRoleOptions.set(false);
                 this.chiudiPannello();
             })
@@ -208,7 +210,7 @@ export class RolesComponent {
         //carichiamo tutti i JobRoles, volendo applicare il filtro per tutti quelli presenti e non solo quelli impaginati
         //solo sottoscrivendoci (avendo già allJobRoles nel file request.service.ts) alla chiamata API relativa
 
-        const allJobRolesSuibscription = this.requestsService.caricaTuttiJobRolesDisponibili().subscribe({
+        const allJobRolesSuibscription = this.rolesService.loadAllJobRoles().subscribe({
             error: (err) => {
                 this.error.set('Errore durante il caricamento di tutti i ruoli: ' + err.message);
             }
@@ -218,7 +220,7 @@ export class RolesComponent {
             allJobRolesSuibscription.unsubscribe()
         });
 
-        const ruoloSalvato = this.requestsService.ultimoRuoloSelezionato();
+        const ruoloSalvato = this.rolesService.lastRoleSelected();
 
         if(ruoloSalvato){
             this.mostraRisorsePerRuolo(ruoloSalvato);
@@ -229,7 +231,7 @@ export class RolesComponent {
 
     ricaricaRuoli() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaJobRolesDisponibili().pipe(
+        const subscription = this.rolesService.loadJobRoles().pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
@@ -249,7 +251,7 @@ export class RolesComponent {
     aggiornaRuoli(){
         this.isFetching.set(true);
         const timeoutId = setTimeout(() => {
-        const subscription = this.requestsService.caricaJobRolesDisponibili().pipe(
+        const subscription = this.rolesService.loadJobRoles().pipe(
                 finalize(() => this.isFetching.set(false))
             )
             .subscribe({ 
@@ -270,9 +272,9 @@ export class RolesComponent {
 
     mostraRisorsePerRuolo(ruolo: any) {
         this.selectedRoleId.set(ruolo.id);
-        this.selectedRuolo.set(ruolo);
+        this.selectedRole.set(ruolo);
         
-        const tutteLeRisorse = this.requestsService.employeesCaricati();
+        const tutteLeRisorse = this.employeesService.loadedAllEmployees();
         
         console.log('Ruolo cliccato:', ruolo);
         console.log('Prima risorsa dell array (per capire la struttura):', tutteLeRisorse[0]);
@@ -284,7 +286,7 @@ export class RolesComponent {
         
         console.log('Risorse trovate dal filtro:', risorseFiltrate);
         
-        this.risorseFiltrateSelezionate.set(risorseFiltrate);
+        this.filteredSelectedEmployees.set(risorseFiltrate);
         
         if(risorseFiltrate.length === 0) {
             this.statusMessage.set({text: 'Nessuna risorsa trovata per questo ruolo', type: 'error'});
@@ -322,23 +324,23 @@ export class RolesComponent {
 
     selectRoleFilter(role: Role) {
         const roleName = this.optionName(role);
-        this.filtroNomeRuolo.setValue(roleName);
-        this.filtroNomeValue.set(roleName.toLowerCase());
+        this.filterNameRole.setValue(roleName);
+        this.filterNameValue.set(roleName.toLowerCase());
         this.roleFilterDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
         this.chiudiPannello();
     }
 
     clearRoleFilter() {
-        this.filtroNomeRuolo.setValue('');
-        this.filtroNomeValue.set('');
+        this.filterNameRole.setValue('');
+        this.filterNameValue.set('');
         this.roleFilterDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
         this.chiudiPannello();
     }
 
     aggiungiRuolo(newRole: any) {
-        this.isRoleInAggiunta.set(false);
+        this.isAddingRoleState.set(false);
         this.statusMessage.set({text: 'Ruolo aggiunto con successo!', type: 'success'});
         // Ricarica la lista dalla pagina 1 dopo la creazione
         this.currentPage.set(1);
@@ -347,42 +349,42 @@ export class RolesComponent {
 
     chiudiPannello() {
         this.selectedRoleId.set(null);
-        this.selectedRuolo.set(null);
-        this.risorseFiltrateSelezionate.set([]);
+        this.selectedRole.set(null);
+        this.filteredSelectedEmployees.set([]);
     }
 
     apriModifica(r: Role) {
-        this.roleInModifica.set(r);
+        this.editingRole.set(r);
     }
 
     chiudiModifica() {
-        this.roleInModifica.set(null);
+        this.editingRole.set(null);
     }
 
     apriAssegnaRisorse(r: Role) {
-        this.roleInAssegnazione.set(r);
+        this.assigningRole.set(r);
     }
 
     chiudiAssegnaRisorse() {
-        this.roleInAssegnazione.set(null);
+        this.assigningRole.set(null);
     }
 
     salvaModifica(roleAggiornato: Role) {
         this.ricaricaRuoli();
-        this.roleInModifica.set(null);
+        this.editingRole.set(null);
         this.showNotification('Ruolo aggiornato con successo!', 'success');
     }
 
     salvaAssegnazioneRisorse(risorseAggiornate: Employee[]) {
-        this.roleInAssegnazione.set(null);
+        this.assigningRole.set(null);
         this.showNotification('Risorse assegnate con successo!', 'success');
 
-        const ruolo = this.selectedRuolo();
+        const ruolo = this.selectedRole();
         if (ruolo) {
-            const risorseFiltrate = this.requestsService.employeesCaricati().filter(risorsa =>
+            const filteredEmployees = this.employeesService.loadedAllEmployees().filter(risorsa =>
                 risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
             );
-            this.risorseFiltrateSelezionate.set(risorseFiltrate);
+            this.filteredSelectedEmployees.set(filteredEmployees);
         }
     }
 

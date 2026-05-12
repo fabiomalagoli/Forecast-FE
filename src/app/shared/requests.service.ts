@@ -1,12 +1,12 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { EMPTY, catchError, map, tap, throwError, of, Observable } from 'rxjs';
-import { Progetto } from '../progetti/progetto/progetto.model';
-import { Cliente } from '../clienti/cliente/cliente.model';
+import { Project } from '../projects/project/project.model';
+import { Customer } from '../customers/customer/customer.model';
 import { HttpClient } from '@angular/common/http';
 import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
 import { CardModel } from '../grid/card-home/card-home.model';
-import { Employee } from '../risorse/risorse.model';
+import { Employee } from '../employees/employee.model';
 import { CreateRoleRequest, Role } from '../roles/role.model';
 
 @Injectable({
@@ -17,9 +17,9 @@ export class RequestsService {
 
   private httpClient = inject(HttpClient);
 
-  private Progetti = signal<Progetto[]>([]);
+  private Progetti = signal<Project[]>([]);
 
-  private Clienti = signal<Cliente[]>([]);
+  private Clienti = signal<Customer[]>([]);
 
   private Aziende = signal<{ id: string; name: string; isDefault: boolean }[]>([]);
 
@@ -106,7 +106,7 @@ export class RequestsService {
     );
   }
 
-  caricaProgettoById(id: string): Observable<Progetto> {
+  caricaProgettoById(id: string): Observable<Project> {
   const cached = this.Progetti().find(p => p.id === id);
   if (cached) {
     return of(cached);
@@ -139,7 +139,7 @@ export class RequestsService {
     );
   }
 
-  caricaClienteById(id: string): Observable<Cliente> {
+  caricaClienteById(id: string): Observable<Customer> {
     const cached = this.Clienti().find(c => c.id === id);
     if (cached) {
       return of(cached);
@@ -161,7 +161,7 @@ export class RequestsService {
     );
   }
 
-  private updateProgetto(progetto: Progetto) {
+  private updateProgetto(progetto: Project) {
     return this.httpClient.put(`${environment.apiUrl}/projects/${progetto.id}`, this.toProjectPayload(progetto)).pipe(
       tap(() => {
         this.Progetti.update(prev =>
@@ -178,7 +178,7 @@ export class RequestsService {
     );
   }
 
-  aggiornaProgetto(progetto: Progetto) {
+  aggiornaProgetto(progetto: Project) {
     return this.updateProgetto(progetto);
   }
 
@@ -221,7 +221,7 @@ export class RequestsService {
     ).subscribe();
   }
 
-  aggiungiNuovoProgetto(progetto: Progetto) {
+  aggiungiNuovoProgetto(progetto: Project) {
     const progettiPrecedenti = this.Progetti();
 
     if (!progettiPrecedenti.some((p) => p.id === progetto.id)) {
@@ -232,7 +232,7 @@ export class RequestsService {
     delete payload.id;
 
     return this.httpClient
-      .post<Progetto>(`${environment.apiUrl}/projects`, payload)
+      .post<Project>(`${environment.apiUrl}/projects`, payload)
       .pipe(
         tap((created) => {
           if (created?.id) {
@@ -249,7 +249,7 @@ export class RequestsService {
       );
   }
 
-  aggiungiNuovoCliente(cliente: Cliente) {
+  aggiungiNuovoCliente(cliente: Customer) {
     const clientiPrecedenti = this.Clienti();
 
     if (!clientiPrecedenti.some((c) => c.id === cliente.id)) {
@@ -260,7 +260,7 @@ export class RequestsService {
     delete payload.id;
 
     return this.httpClient
-      .post<Cliente>(`${environment.apiUrl}/customers`, payload)
+      .post<Customer>(`${environment.apiUrl}/customers`, payload)
       .pipe(
         tap((created) => {
           if(created?.id) {
@@ -336,7 +336,7 @@ export class RequestsService {
     );
   }
 
-  private fetchProgettoById(url: string, errorMessage: string): Observable<Progetto> {
+  private fetchProgettoById(url: string, errorMessage: string): Observable<Project> {
     return this.httpClient.get<any>(url).pipe(
       tap((resData) => console.log('Risposta dal backend (byId):', resData)),
       map((project) => ({
@@ -390,7 +390,7 @@ export class RequestsService {
     );
   }
 
-  private fetchClienteById(url: string, errorMessage: string): Observable<Cliente> {
+  private fetchClienteById(url: string, errorMessage: string): Observable<Customer> {
     return this.httpClient.get<any>(url).pipe(
       tap((resData) => console.log('Risposta dal backend (byId):', resData)),
       map((customer) => ({
@@ -408,7 +408,7 @@ export class RequestsService {
     );
   }
 
-  private updateCliente(cliente: Cliente) {
+  private updateCliente(cliente: Customer) {
     const payload = this.toCustomerPayload(cliente);
     const url = `${environment.apiUrl}/customers/${encodeURIComponent(cliente.id)}`;
 
@@ -479,7 +479,7 @@ export class RequestsService {
 
   }
 
-  aggiornaCliente(cliente: Cliente) {
+  aggiornaCliente(cliente: Customer) {
     return this.updateCliente(cliente);
   }
 
@@ -1379,7 +1379,7 @@ export class RequestsService {
     );
   }
 
-  toProjectPayload(progetto: Progetto) {
+  toProjectPayload(progetto: Project) {
     // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
     return {
       name: progetto.name,
@@ -1396,7 +1396,7 @@ export class RequestsService {
     };
   }
 
-  toCustomerPayload(cliente: Cliente) {
+  toCustomerPayload(cliente: Customer) {
     // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend
     return {
       vatNumber: cliente.vatNumber,

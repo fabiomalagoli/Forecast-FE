@@ -1,9 +1,5 @@
-import { Component, inject, input, Input, signal } from '@angular/core';
-import { HeaderComponent } from './header/header'
-import { GridComponent } from './grid/grid';
-import { ProgettiComponent } from './progetti/progetti';
-import { ClientiComponent } from './clienti/clienti';
-import { SidebarComponent } from './header/sidebar/sidebar';
+import { Component, inject, signal } from '@angular/core';
+import { SidebarComponent } from './header/sidebar/sidebar.component';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 

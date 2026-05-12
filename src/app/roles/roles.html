@@ -8,12 +8,12 @@
     <div class="combo-field role-filter-combo">
       <input
         type="text"
-        [formControl]="filtroNomeRuolo"
+        [formControl]="filterNameRole"
         placeholder="Filtra per nome..."
         autocomplete="off"
         (focus)="onRoleFilterFocus()"
         (input)="onRoleFilterInput()">
-      @if (filtroNomeValue()) {
+      @if (filterNameValue()) {
         <button
           class="combo-clear"
           type="button"
@@ -68,7 +68,7 @@
         <div class="table-container">
             <table>
                 <tbody>
-                @for (r of rolesFiltrati(); track r.id) { 
+                @for (r of filteredRoles(); track r.id) { 
                     <tr
                       app-role-row
                       [role]="r"
@@ -88,8 +88,8 @@
             <div class="side-panel">
                 <button class="btn-close-panel" (click)="chiudiPannello()">✖ Chiudi</button>
                 <app-role-resources 
-                  [risorseAssociate]="risorseFiltrateSelezionate()"
-                  [ruoloSelezionato]="selectedRuolo()">
+                  [risorseAssociate]="filteredSelectedEmployees()"
+                  [ruoloSelezionato]="selectedRole()">
                 </app-role-resources>
             </div>
         } @else {
@@ -110,30 +110,30 @@
     (page) = "onPageChange($event)">
 </mat-paginator>
 
-@if(isRoleInAggiunta()) {
+@if(isAddingRoleState()) {
     <app-new-role
-        [ruoloDaAggiungere]="roleInAggiunta()"
+        [ruoloDaAggiungere]="addingRole()"
         (added)="aggiungiRuolo($event)"
-        (cancel)="isRoleInAggiunta.set(false)"
+        (cancel)="isAddingRoleState.set(false)"
     ></app-new-role>
 }
 
-@if(roleInModifica()) {
+@if(editingRole()) {
     <app-modifica-role
-        [ruoloDaModificare]="roleInModifica()!"
+        [ruoloDaModificare]="editingRole()!"
         (cancel)="chiudiModifica()"
         (modified)="salvaModifica($event)"
     ></app-modifica-role>
 }
 
-@if(roleInAssegnazione()) {
+@if(assigningRole()) {
     <app-assegna-risorse
-        [ruoloSelezionato]="roleInAssegnazione()!"
+        [ruoloSelezionato]="assigningRole()!"
         (cancel)="chiudiAssegnaRisorse()"
         (saved)="salvaAssegnazioneRisorse($event)"
     ></app-assegna-risorse>
 }
 
 <div class="bottom-actions">
-    <button appButton class="btn-add" (click)="isRoleInAggiunta.set(true)">+ Aggiungi Ruolo</button>
+    <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
 </div>

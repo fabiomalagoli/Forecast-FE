@@ -1,0 +1,117 @@
+<div class="page-header">
+  <h2>Clienti</h2>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Filtra per Nome</label>
+    <div class="combo-field">
+      <input
+        type="text"
+        [formControl]="filtroNomeCliente"
+        placeholder="Filtra per nome..."
+        autocomplete="off"
+        (focus)="onCustomerFilterFocus()"
+        (input)="onCustomerFilterInput()">
+      @if (filtroNomeValue()){
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro"
+          (click)="clearCustomerFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista clienti"
+        (click)="toggleCustomerFilterDropdown()">
+        ▾
+      </button>
+      @if (customerDropDownOpen()){
+        <div class="combo-menu">
+          @for (c of customerFilterOptions(); track c.id){
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectCustomerFilter(c)">
+              {{ c.name }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun cliente trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (statusMessage()) {
+  <div class="notification" [class]="statusMessage()?.type">
+    {{ statusMessage()?.text }}
+  </div>
+}
+
+@if (isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento clienti in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button appButton (click)="onAddingCustomer()">Riprova</button>
+  </div>
+} @else {
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          @for (col of columns; track col.header) {
+            <th>{{ col.header }}</th>
+          }
+          <th class="actions-header">Azioni</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (cliente of clientiFiltrati(); track cliente.id) {
+          <tr>
+            @for (col of columns; track col.header) {
+              <td>{{ col.value(cliente) }}</td>
+            }
+            <td class="actions-cell">
+              <button appButton class="btn-small" (click)="openCustomerDetails(cliente.id)">Visualizza</button>
+              <button appButton class="btn-small btn-outline" (click)="openCustomerEditing(cliente)">Modifica</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="clientiColsCount + 1" class="empty-message">
+              Nessun cliente trovato con i filtri selezionati.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="count-footer">Numero clienti: {{ clientiFiltrati().length }}</p>
+  </div>
+}
+
+<div class="bottom-actions">
+  @if (editingCustomer()) {
+    <app-modifica-cliente 
+      [clienteDaModificare]="editingCustomer()!" 
+      (cancel)="closeCustomerEditing()" 
+      (modified)="saveEdits($event)" />
+  }
+  
+  @if (isAddingCustomerState) {
+    <app-new-cliente 
+      (cancel)="cancelCustomerAddition()" 
+      (created)="addCustomer()" />
+  }
+  
+  <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>
+</div>
+
+
