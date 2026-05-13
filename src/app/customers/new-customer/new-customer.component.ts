@@ -1,17 +1,18 @@
 import { Component, output } from '@angular/core';
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { CLIENTE_HEADERS } from '../customer/customer.headers';
+import { CUSTOMER_HEADERS } from '../customer/customer.headers';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Customer } from '../customer/customer.model';
+import { toElementId } from '../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-new-cliente',
+  selector: 'app-new-customer',
   imports: [FormsModule, TextInputComponent],
-  templateUrl: './new-cliente.html',
+  templateUrl: './new-customer.component.html',
   styleUrls: ['../../shared/form-styles.css'],
 })
-export class NewClienteComponent {
-  readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof Customer, string][])
+export class NewCustomerComponent {
+  readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({ key, label }));
   created = output<Customer>();
@@ -30,8 +31,8 @@ export class NewClienteComponent {
     //   return;
     // }
 
-    const clienteCreato = { ...this.formData } as Customer;
-    this.created.emit(clienteCreato);
+    const createdCustomer = { ...this.formData } as Customer;
+    this.created.emit(createdCustomer);
     form.resetForm();
     this.formData = {};
   }
@@ -42,12 +43,7 @@ export class NewClienteComponent {
 
   //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali.
   toId(key: string, i: number): string {
-    return `cliente-${i}-${key}`
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zA-Z0-9_-]/g, '')
-      .toLowerCase();
+    return toElementId('customer', key, i);
   }
 
   isNumericField(key: string): boolean {

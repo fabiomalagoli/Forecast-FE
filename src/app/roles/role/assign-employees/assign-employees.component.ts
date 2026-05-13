@@ -1,15 +1,20 @@
 import { Component, DestroyRef, HostListener, computed, inject, input, output, signal } from '@angular/core';
 import { Role } from '../../role.model';
 import { Employee } from '../../../employees/employee.model';
-import { RequestsService } from '../../../shared/requests.service';
 import { debounceTime, distinctUntilChanged, forkJoin, tap } from 'rxjs';
 import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { TextInputComponent } from '../../../shared/text-input/text-input';
-
-type RisorsaDaAssegnare = Employee & {
-    selectedJobRoleLevel: string;
-};
+import { EmployeesService } from '../../../shared/services/employees.service';
+import { RolesService } from '../../../shared/services/roles.service';
+import { LookupsService } from '../../../shared/services/lookups.service';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../shared/payloads/employee.payloads';
+import {
+    AssignableEmployee,
+    getEmployeeFullName,
+    isAssignableEmployeeComplete,
+    mapAssignedEmployeesToSelected,
+} from '../../../shared/utils/employee-form.utils';
+import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-assegna-risorse',
@@ -20,13 +25,15 @@ type RisorsaDaAssegnare = Employee & {
 })
 export class AssignEmployeeComponent {
 
-    private requests = inject(RequestsService)
+    private employeesService = inject(EmployeesService);
+    private rolesService = inject(RolesService);
+    private lookupsService = inject(LookupsService);
     private destroyRef = inject(DestroyRef);
 
 
     ruoloSelezionato = input.required<Role>();
     listaRisorseAsssegnate = signal<Employee[]>([]);
-    listaRisorseSelezionate = signal<RisorsaDaAssegnare[]>([]);
+    listaRisorseSelezionate = signal<AssignableEmployee[]>([]);
 
 
     listaTotaleRisorse = signal<any[]>([]);
@@ -44,7 +51,7 @@ export class AssignEmployeeComponent {
 
 
     fullName(employee: Employee): string {
-        return `${employee.name || ''} ${employee.surname || ''}`.trim();
+        return getEmployeeFullName(employee);
     }
 
     nameFilterOptions = computed<Employee[]>(() => {
@@ -82,19 +89,14 @@ export class AssignEmployeeComponent {
         this.isLoadingLookups.set(true);
 
         const ra = this.listaRisorseAsssegnate();
-        const risorseAssegnate = JSON.parse(JSON.stringify(ra)) as Employee[];
-        this.listaRisorseSelezionate.set(
-            risorseAssegnate.map((risorsa) => ({
-                ...risorsa,
-                selectedJobRoleLevel: risorsa.jobRoleLevel || '',
-            }))
-        );
+        const assignedEmployees = JSON.parse(JSON.stringify(ra)) as Employee[];
+        this.listaRisorseSelezionate.set(mapAssignedEmployeesToSelected(assignedEmployees));
         this.formData = {};
 
         const caricamenti = {
-            employees: this.requests.caricaTuttiEmployeesDisponibili(),
-            levels: this.requests.caricaJobRoleLevelsDisponibili(),
-            companies: this.requests.caricaAziendeDisponibili(),
+            employees: this.employeesService.loadAllEmployees(),
+            levels: this.rolesService.loadJobRoleLevels(),
+            companies: this.lookupsService.loadAvailableCompanies(),
         };
 
         forkJoin(caricamenti).subscribe({
@@ -187,9 +189,7 @@ export class AssignEmployeeComponent {
       hasValidResources(): boolean {
         const risorse = this.listaRisorseSelezionate();
         if (!risorse || risorse.length === 0) return true;
-        return risorse.every((r: any) => 
-        !!r.id && !!r.selectedJobRoleLevel
-        );
+        return risorse.every((resource) => isAssignableEmployeeComplete(resource));
     }
 
     isSubmitDisabled(form: NgForm): boolean {
@@ -216,35 +216,40 @@ export class AssignEmployeeComponent {
             return;
         }
 
-        const risorseSelezionate = this.listaRisorseSelezionate();
+        const selectedEmployees = this.listaRisorseSelezionate();
 
-        if (risorseSelezionate.length === 0) {
+        if (selectedEmployees.length === 0) {
             this.attemptedSubmit = true;
             this.statusMessage = { text: 'Seleziona almeno una risorsa da assegnare.', type: 'error' };
             return;
         }
 
-        //Ricaviamo Ruolo e Livello
-        const nuovoRuolo = this.ruoloSelezionato().name;
-
-        //attribuiamo Ruolo e Livello alle singole risorseSelezionate tramite mapping
-        const risorseAggiornate: Employee[] = risorseSelezionate.map((risorsa) => ({
-            ...risorsa,
-            jobRole: nuovoRuolo,
-            jobRoleLevel: risorsa.selectedJobRoleLevel,
-            company: risorsa.company
+        const selectedRole = this.ruoloSelezionato();
+        const updatedEmployees: Employee[] = selectedEmployees.map((employee) => ({
+            ...employee,
+            jobRole: selectedRole.name,
+            jobRoleLevel: employee.selectedJobRoleLevel,
+            company: employee.company,
         }));
 
-        const richiesteAggiornamento = risorseAggiornate.map((risorsa) =>
-            this.requests.aggiornaEmployee(risorsa) // Il mapping attribuirà una richiesta di aggiornamento ad ogni risorsa di risorseAggiornate
+        const updateRequests = updatedEmployees.map((employee) =>
+            this.employeesService.updateEmployee(
+                employee.id,
+                buildEmployeePayload(employee, {
+                    selectedRoleId: selectedRole.id,
+                    levels: this.listaJobRolesLevels(),
+                    companies: this.lookupsService.loadedCompanies(),
+                }),
+                buildEmployeeUiFallback(employee, employee.id),
+            )
         );
 
-        forkJoin(richiesteAggiornamento).subscribe({ //Sottoscrizione alle singole richieste di aggiornamento tramite forkJoin
+        forkJoin(updateRequests).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.statusMessage = { text: 'Risorse assegnate con successo!', type: 'success' };
-                this.saved.emit(risorseAggiornate);
+                this.saved.emit(updatedEmployees);
                 form.resetForm();
                 this.formData = {};
                 this.cancel.emit();
@@ -299,12 +304,7 @@ export class AssignEmployeeComponent {
     }
 
     toId(key: string, i: number): string {
-        return `risorsa-${i}-${key}`
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/[^a-zA-Z0-9_-]/g, '')
-            .toLowerCase();
+        return toElementId('risorsa', key, i);
     }
 
     getRequiredErrorMessage(key: string): string {

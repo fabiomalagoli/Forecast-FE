@@ -68,17 +68,38 @@ export class EmployeesService {
   }
 
   loadEmployeeById(id: string) {
-    const cached = this.employees().find(e => e.id === id);
+    const cached = this.findCachedEmployeeById(id);
     if (cached) return of(cached);
 
-    return this.httpClient.get<any>(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`).pipe(
+    return this.httpClient.get<any>(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`, {
+      params: {
+        employeeId: id,
+      },
+    }).pipe(
       map(e => this.normalizeEmployee(e)),
       tap(e => {
-        this.employees.update(prev => {
-          return prev.some(x => x.id === e.id) ? prev.map(x => (x.id === e.id ? e : x)) : [...prev, e];
-        });
+        this.upsertEmployee(e);
       }),
       catchError(error => throwError(() => new Error('Something went wrong.')))
+    );
+  }
+
+  private findCachedEmployeeById(id: string): Employee | undefined {
+    return this.employees().find(employee => employee.id === id)
+      || this.allEmployees().find(employee => employee.id === id);
+  }
+
+  private upsertEmployee(employee: Employee) {
+    this.employees.update(prev =>
+      prev.some(item => item.id === employee.id)
+        ? prev.map(item => (item.id === employee.id ? employee : item))
+        : [...prev, employee]
+    );
+
+    this.allEmployees.update(prev =>
+      prev.some(item => item.id === employee.id)
+        ? prev.map(item => (item.id === employee.id ? employee : item))
+        : [...prev, employee]
     );
   }
 

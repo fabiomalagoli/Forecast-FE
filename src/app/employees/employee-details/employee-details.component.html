@@ -27,12 +27,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                @if (selectedEmployee(); as risorsa) {
+                @if (selectedEmployee(); as employee) {
                     <tr>
-                        <td>{{ risorsa.name }} {{ risorsa.surname }}</td>
-                        <td>{{ risorsa.jobRole }}</td>
-                        <td>{{ risorsa.jobRoleLevel }}</td>
-                        <td>{{ risorsa.company }}</td>
+                        <td>{{ employee.name }} {{ employee.surname }}</td>
+                        <td>{{ employee.jobRole }}</td>
+                        <td>{{ employee.jobRoleLevel }}</td>
+                        <td>{{ employee.company }}</td>
                     </tr>
                     } @else {
                     <tr>
@@ -45,9 +45,9 @@
     </div>
 }
 
-@if (selectedEmployee(); as risorsa) {
-    <app-progetti-associati-risorsa
-        [risorsaSelezionata]="risorsa"
-        (viewProgetto)="openEmployeeProject($event)">
-    </app-progetti-associati-risorsa>
+@if (selectedEmployee(); as employee) {
+    <app-employee-projects
+        [selectedEmployee]="employee"
+        (viewProject)="openEmployeeProject($event)">
+    </app-employee-projects>
 }

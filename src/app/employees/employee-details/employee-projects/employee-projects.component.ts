@@ -1,23 +1,23 @@
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RequestsService } from '../../../shared/requests.service';
 import { finalize } from 'rxjs';
 import { Project } from '../../../projects/project/project.model';
 import { Employee } from '../../employee.model';
-import { PROGETTO_COMPLETO_HEADERS } from '../../../projects/project/full-project.headers';
-import { AppButtonComponent } from '../../../shared/button/button';
+import { COMPLETE_PROJECT_HEADERS } from '../../../projects/project/complete-project.headers';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { EmployeesService } from '../../../shared/services/employees.service';
+import { ProjectsService } from '../../../shared/services/projects.service';
 
 @Component({
-  selector: 'app-progetti-associati-risorsa',
+  selector: 'app-employee-projects',
   imports: [CommonModule],
   templateUrl: './employee-projects.component.html',
   styleUrl: './employee-projects.component.css',
 })
 export class EmployeeProjectsComponent {
 
-    private requestsService = inject(RequestsService);
+    private employeesService = inject(EmployeesService);
+    private projectsService = inject(ProjectsService)
     private destroyRef = inject(DestroyRef);
     private location = inject(Location);
 
@@ -25,13 +25,13 @@ export class EmployeeProjectsComponent {
     error = signal('');
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
-    listaProgetti = this.requestsService.progettiCaricati;
-    risorsaSelezionata = input.required<Employee>();
+    projectsList = this.projectsService.loadedProjects;
+    selectedEmployee = input.required<Employee>();
 
-    viewProgetto = output<Project>();
+    viewProject = output<Project>();
 
-    readonly headersProgetti: Partial<Record<keyof Project, string>> = PROGETTO_COMPLETO_HEADERS;
-    readonly headersArray = Object.entries(this.headersProgetti)
+    readonly projectsHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
+    readonly headersArray = Object.entries(this.projectsHeaders)
       .filter(([key]) => key === 'company'
                       || key === 'customer'
                       || key === 'head'
@@ -43,14 +43,14 @@ export class EmployeeProjectsComponent {
       }));
 
 
-  ProgettiFiltrati = computed<Project[]>(() => {
-    const risorsa = this.risorsaSelezionata();
+  filteredProjects = computed<Project[]>(() => {
+    const risorsa = this.selectedEmployee();
     
     // Creiamo entrambe le combinazioni per sicurezza
     const nomeCognome = `${risorsa.name} ${risorsa.surname}`.trim().toLowerCase();
     const cognomeNome = `${risorsa.surname} ${risorsa.name}`.trim().toLowerCase();
 
-    return this.listaProgetti().filter(project => {
+    return this.projectsList().filter(project => {
       const employees = project.projectEmployees || [];
 
       return employees.some((projectEmployee: any) => {
@@ -68,7 +68,7 @@ export class EmployeeProjectsComponent {
 
       this.isFetching.set(true);
 
-      const subscription = this.requestsService.caricaProgettiDisponibili()
+      const subscription = this.projectsService.loadAvailableProjects()
       .pipe(
         finalize (() => {
           this.isFetching.set(false);

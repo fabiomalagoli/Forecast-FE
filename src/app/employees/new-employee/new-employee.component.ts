@@ -2,24 +2,30 @@ import { Component, input, output, OnInit, inject, signal, effect } from '@angul
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { RequestsService } from '../../shared/requests.service';
 import { Employee } from '../employee.model'; 
 import { EMPLOYEES_HEADERS } from '../employee.headers'; 
+import { EmployeesService } from '../../shared/services/employees.service';
+import { RolesService } from '../../shared/services/roles.service';
+import { LookupsService } from '../../shared/services/lookups.service';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../shared/payloads/employee.payloads';
+import { normalizeEmployeeForForm } from '../../shared/utils/employee-form.utils';
+import { toElementId } from '../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-new-risorsa',
+  selector: 'app-new-employee',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './new-employee.component.html',
   styleUrls: ['../../shared/form-styles.css'],
 })
 export class NewRisorsaComponent implements OnInit {
 
-    private requests = inject(RequestsService);
+    private employeesService = inject(EmployeesService);
+    private rolesService = inject(RolesService);
+    private lookupsService = inject(LookupsService);
     
     // Input dal componente padre (RisorseComponent)
-    risorsaDaAggiungere = input.required<Employee | null>();
+    selectedEmployeeToAdd = input.required<Employee | null>();
 
     // Output verso il componente padre
     added = output<Employee>();
@@ -34,9 +40,9 @@ export class NewRisorsaComponent implements OnInit {
     baseData: any = {};
 
     // Segnali per i menu a tendina
-    listaJobRoles = signal<any[]>([]);
-    listaJobRoleLevels = signal<any[]>([]);
-    listaAziende = signal<any[]>([]);
+    jobRolesList = signal<any[]>([]);
+    jobRolesLevelsList = signal<any[]>([]);
+    companiesList = signal<any[]>([]);
     jobRoleDropdownOpen = signal(false);
     showAllJobRoles = signal(false);
 
@@ -50,16 +56,16 @@ export class NewRisorsaComponent implements OnInit {
 
     ngOnInit() {
         const caricamenti = [
-            this.requests.caricaTuttiJobRolesDisponibili(),
-            this.requests.caricaJobRoleLevelsDisponibili(),
-            this.requests.caricaAziendeDisponibili()
+            this.rolesService.loadAllJobRoles(),
+            this.rolesService.loadJobRoleLevels(),
+            this.lookupsService.loadAvailableCompanies()
         ];
 
         forkJoin(caricamenti).subscribe({
             next: (risultati) => {
-                this.listaJobRoles.set(risultati[0]);
-                this.listaJobRoleLevels.set(risultati[1]);
-                this.listaAziende.set(risultati[2]);
+                this.jobRolesList.set(risultati[0]);
+                this.jobRolesLevelsList.set(risultati[1]);
+                this.companiesList.set(risultati[2]);
             }, 
             error: (error) => {
                 this.statusMessage = { text: 'Errore durante il caricamento dei dati: ' + error.message, type: 'error' };
@@ -70,27 +76,13 @@ export class NewRisorsaComponent implements OnInit {
         this.OriginalData = JSON.stringify(this.formData);
     }
 
-    // Normalizziamo i dati in ingresso per uniformità delle chiavi
-    private normalizeEmployeeForForm(employee: any) {
-        if (!employee) return {};
-        return {
-            id: employee.id || employee.Id || employee.ID || '',
-            name: employee.name || employee.Name || '',
-            surname: employee.surname || employee.Surname || '',
-            jobRole: employee.jobRole || employee.JobRole || '',
-            jobRoleLevel: employee.jobRoleLevel || employee.JobRoleLevel || '',
-            company: employee.company || employee.Company || '',
-            isActive: employee.isActive !== undefined ? employee.isActive : (employee.IsActive !== undefined ? employee.IsActive : true),
-        };
-    }
-
     // Reagiamo ai cambiamenti dell'input `risorsaDaAggiungere`
     private syncRisorsa = effect(() => {
-        const r = this.risorsaDaAggiungere();
+        const r = this.selectedEmployeeToAdd();
         if (!r) return;
         
         this.baseData = JSON.parse(JSON.stringify(r));
-        const normalized = this.normalizeEmployeeForForm(this.baseData);
+        const normalized = normalizeEmployeeForForm(this.baseData);
         
         console.log('Nuova Risorsa: dati ricevuti:', r, '-> normalizzati:', normalized);
         
@@ -100,9 +92,9 @@ export class NewRisorsaComponent implements OnInit {
 
     getOptions(key: string): any[] {
         switch (key) {
-            case 'jobRole': return this.listaJobRoles();
-            case 'jobRoleLevel': return this.listaJobRoleLevels();
-            case 'company': return this.listaAziende();
+            case 'jobRole': return this.jobRolesList();
+            case 'jobRoleLevel': return this.jobRolesLevelsList();
+            case 'company': return this.companiesList();
             default: return [];
         }
     }
@@ -117,10 +109,10 @@ export class NewRisorsaComponent implements OnInit {
             : (this.formData.jobRole || '').toString().trim().toLowerCase();
 
         if (!term) {
-            return this.listaJobRoles();
+            return this.jobRolesList();
         }
 
-        return this.listaJobRoles().filter((role) =>
+        return this.jobRolesList().filter((role) =>
             this.optionName(role).toLowerCase().includes(term)
         );
     }
@@ -161,17 +153,19 @@ export class NewRisorsaComponent implements OnInit {
             return;
         }
 
-        const payloadCompleto = {
-            id: this.formData.id, // Recupero ID originale
-            ...form.value         // Dati aggiornati dal form
-        };
+        const uiFallback = buildEmployeeUiFallback({ ...this.formData, ...form.value }, this.formData.id);
+        const backendPayload = buildEmployeePayload(uiFallback, {
+            roles: this.jobRolesList(),
+            levels: this.jobRolesLevelsList(),
+            companies: this.companiesList(),
+        });
 
-        this.requests.aggiungiEmployee(payloadCompleto).subscribe({
+        this.employeesService.addEmployee(backendPayload).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.statusMessage = { text: 'Risorsa aggiunta con successo!', type: 'success' };
-                this.added.emit(payloadCompleto);
+                this.added.emit(uiFallback);
                 form.resetForm();
                 this.formData = {};
                 this.cancel.emit();
@@ -200,12 +194,7 @@ export class NewRisorsaComponent implements OnInit {
     }
     
     toId(key: string, i: number): string {
-        return `risorsa-${i}-${key}`
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/[^a-zA-Z0-9_-]/g, '')
-            .toLowerCase();
+        return toElementId('risorsa', key, i);
     }
 
     isRequiredField(key: string): boolean {

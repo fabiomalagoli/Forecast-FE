@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { RequestsService } from '../../shared/requests.service';
-import { CreateRoleRequest, Role } from '../role.model';
+import { RolesService } from '../../shared/services/roles.service';
+import { Role } from '../role.model';
+import { buildCreateRolePayload } from '../../shared/payloads/role.payloads';
+import { createEmptyRoleFormData, normalizeRoleForForm } from '../../shared/utils/role-form.utils';
 
 @Component({
   selector: 'app-new-role',
@@ -14,7 +16,7 @@ import { CreateRoleRequest, Role } from '../role.model';
 })
 export class NewRoleComponent implements OnInit {
 
-    private requests = inject(RequestsService);
+    private rolesService = inject(RolesService);
     
     // Input dal componente padre (RolesComponent)
     ruoloDaAggiungere = input.required<Role | null>();
@@ -38,16 +40,8 @@ export class NewRoleComponent implements OnInit {
     ];
 
     ngOnInit() {
-        this.formData = { ...this.baseData };
+        this.formData = createEmptyRoleFormData();
         this.OriginalData = JSON.stringify(this.formData);
-    }
-
-    private normalizeRoleForForm(role: any) {
-        if (!role) return {};
-        return {
-            id: role.id || role.Id || role.ID || '',
-            name: role.name || role.Name || '',
-        };
     }
 
     onCancel() {
@@ -60,7 +54,7 @@ export class NewRoleComponent implements OnInit {
         if (!r) return;
         
         this.baseData = JSON.parse(JSON.stringify(r));
-        const normalized = this.normalizeRoleForForm(this.baseData);
+        const normalized = normalizeRoleForForm(this.baseData);
         
         console.log('Nuovo Ruolo: dati ricevuti:', r, '-> normalizzati:', normalized);
         
@@ -105,13 +99,11 @@ export class NewRoleComponent implements OnInit {
             return;
         }
 
-        const payloadCompleto: CreateRoleRequest = {
-            name: this.formData.name || form.value.name
-        };
+        const payload = buildCreateRolePayload({ ...this.formData, ...form.value });
 
-        console.log("2. Nessun blocco. Chiamo il service con il payload:", payloadCompleto);
+        console.log("2. Nessun blocco. Chiamo il service con il payload:", payload);
 
-        this.requests.aggiungiJobRole(payloadCompleto).subscribe({
+        this.rolesService.addJobRole(payload).subscribe({
             next: (response) => {
                 console.log("3. SUCCESSO! Il server ha risposto:", response);
                 this.attemptedSubmit = false;

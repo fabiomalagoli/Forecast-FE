@@ -42,25 +42,25 @@
                     <span class="text-center">Conferma</span>
                 </div>
 
-                @for (mese of primoSemestre(); track mese.nome) {
+                @for (mese of firstSemester(); track mese.name) {
                     <div class="grid-row align-center">
-                        <strong class="month-label">{{ mese.nome }}</strong>
+                        <strong class="month-label">{{ mese.name }}</strong>
                         
                         <app-text-input>
                             <input type="number" 
-                                [(ngModel)]="mese.giorni" 
+                                [(ngModel)]="mese.days" 
                                 [readonly]="!isEditMode()">
                         </app-text-input>
                         
                         <app-text-input>
                             <input type="number" 
-                                [(ngModel)]="mese.tariffa" 
+                                [(ngModel)]="mese.tariffs" 
                                 [readonly]="!isEditMode()">
                         </app-text-input>
                         
                         <div class="checkbox-container">
                             <input type="checkbox" 
-                                [(ngModel)]="mese.conferma" 
+                                [(ngModel)]="mese.confirm" 
                                 [disabled]="!isEditMode()">
                         </div>
                     </div>
@@ -77,25 +77,25 @@
                     <span class="text-center">Conferma</span>
                 </div>
 
-                @for (mese of secondoSemestre(); track mese.nome) {
+                @for (mese of secondSemester(); track mese.name) {
                     <div class="grid-row align-center">
-                        <strong class="month-label">{{ mese.nome }}</strong>
+                        <strong class="month-label">{{ mese.name }}</strong>
                         
                         <app-text-input>
                             <input type="number" 
-                                [(ngModel)]="mese.giorni" 
+                                [(ngModel)]="mese.days" 
                                 [readonly]="!isEditMode()">
                         </app-text-input>
                         
                         <app-text-input>
                             <input type="number" 
-                                [(ngModel)]="mese.tariffa" 
+                                [(ngModel)]="mese.tariffs" 
                                 [readonly]="!isEditMode()">
                         </app-text-input>
                         
                         <div class="checkbox-container">
                             <input type="checkbox" 
-                                [(ngModel)]="mese.conferma" 
+                                [(ngModel)]="mese.confirm" 
                                 [disabled]="!isEditMode()">
                         </div>
                     </div>
@@ -106,7 +106,7 @@
 
         @if(isEditMode()) {
             <div class="actions">
-                <button appButton class="btn-small" (click)="salvaDati()">Salva</button>
+                <button appButton class="btn-small" (click)="saveData()">Salva</button>
                 <button appButton class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>
             </div>
         } 

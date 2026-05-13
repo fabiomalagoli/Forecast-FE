@@ -4,7 +4,7 @@ import { AppButtonComponent } from '../../../../shared/button/button';
 import { signal } from '@angular/core';
 import { ProjectEmployee } from '../../project-employee.model';
 import { TextInputComponent } from "../../../../shared/text-input/text-input";
-import { RISORSE_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
+import { EMPLOYEES_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -17,63 +17,63 @@ import { FormsModule } from '@angular/forms';
 export class ResourceDetailsGridComponent {
   
   resource = input<ProjectEmployee | null>();
-  resourceDetailsHeaders = RISORSE_DETAILS_RECAP_HEADERS;
+  resourceDetailsHeaders = EMPLOYEES_DETAILS_RECAP_HEADERS;
 
-  salvataggioCompletato = output<ProjectEmployee>();
+  savingComplete = output<ProjectEmployee>();
 
-  primoSemestre = signal([
-    { nome: 'Gennaio', giorni: 10, tariffa: 50, conferma: false },
-    { nome: 'Febbraio', giorni: 10, tariffa: 70, conferma: false },
-    { nome: 'Marzo', giorni: 10, tariffa: 30, conferma: false },
-    { nome: 'Aprile', giorni: 10, tariffa: 80, conferma: false },
-    { nome: 'Maggio', giorni: 10, tariffa: 10, conferma: false },
-    { nome: 'Giugno', giorni: 10, tariffa: 20, conferma: false }
+  firstSemester = signal([
+    { name: 'Gennaio', days: 10, tariffs: 50, confirm: false },
+    { name: 'Febbraio', days: 10, tariffs: 70, confirm: false },
+    { name: 'Marzo', days: 10, tariffs: 30, confirm: false },
+    { name: 'Aprile', days: 10, tariffs: 80, confirm: false },
+    { name: 'Maggio', days: 10, tariffs: 10, confirm: false },
+    { name: 'Giugno', days: 10, tariffs: 20, confirm: false }
   ]);
 
-  secondoSemestre = signal([
-    { nome: 'Luglio', giorni: 10, tariffa: 50, conferma: false },
-    { nome: 'Agosto', giorni: 10, tariffa: 70, conferma: false },
-    { nome: 'Settembre', giorni: 10, tariffa: 30, conferma: false },
-    { nome: 'Ottobre', giorni: 10, tariffa: 80, conferma: false },
-    { nome: 'Novembre', giorni: 10, tariffa: 10, conferma: false },
-    { nome: 'Dicembre', giorni: 10, tariffa: 20, conferma: false }
+  secondSemester = signal([
+    { name: 'Luglio', days: 10, tariffs: 50, confirm: false },
+    { name: 'Agosto', days: 10, tariffs: 70, confirm: false },
+    { name: 'Settembre', days: 10, tariffs: 30, confirm: false },
+    { name: 'Ottobre', days: 10, tariffs: 80, confirm: false },
+    { name: 'Novembre', days: 10, tariffs: 10, confirm: false },
+    { name: 'Dicembre', days: 10, tariffs: 20, confirm: false }
   ]);
 
   isEditMode = signal(false);
 
-  confermato = signal<boolean>(false);
-  totaleGiorniOccupati = signal<number>((projectEmployee => projectEmployee ? projectEmployee.daysSpent : 0)(this.resource()));
-  tariffaGiornaliera = signal<number>(0);
+  confirmed = signal<boolean>(false);
+  totalDaysSpent = signal<number>((projectEmployee => projectEmployee ? projectEmployee.daysSpent : 0)(this.resource()));
+  dailyTariff = signal<number>(0);
 
   toggleEditMode(){
     this.isEditMode.update(value => !value);
   }
 
-  salvaDati(){
+  saveData(){
     console.log("Salvataggio dati modificati per la risorsa:", this.resource());
 
-    const risorsaAttuale = this.resource();
-    if (!risorsaAttuale) {
+    const actualEmployee = this.resource();
+    if (!actualEmployee) {
       console.error("Nessuna risorsa selezionata per il salvataggio.");
       return;
     }
 
-    const totaleGiorni = this.primoSemestre().reduce((acc, mese) => acc + mese.giorni, 0)
-     + this.secondoSemestre().reduce((acc, mese) => acc + mese.giorni, 0); 
+    const totalDays = this.firstSemester().reduce((acc, mese) => acc + mese.days, 0)
+     + this.secondSemester().reduce((acc, mese) => acc + mese.days, 0); 
     // const tariffa = this.mesi().length > 0 ? this.mesi()[0].tariffa : 0;
 
-    const risorsaAggiornata: ProjectEmployee = {
-      ...risorsaAttuale,
-      daysSpent: totaleGiorni,
+    const updatedEmployee: ProjectEmployee = {
+      ...actualEmployee,
+      daysSpent: totalDays,
     };
 
-    this.salvataggioCompletato.emit(risorsaAggiornata);
+    this.savingComplete.emit(updatedEmployee);
     this.toggleEditMode();
   }
 
   closeDrawer = signal(new EventEmitter<void>());
 
-  chiudi() {
+  close() {
     this.closeDrawer().emit();
   }
 }

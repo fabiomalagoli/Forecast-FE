@@ -8,12 +8,12 @@
     <div class="combo-field resource-name-filter-combo">
       <input
         type="text"
-        [formControl]="filtroNomeRisorsa"
+        [formControl]="filterEmployeeName"
         placeholder="Filtra per nome..."
         autocomplete="off"
         (focus)="onNameFilterFocus()"
         (input)="onNameFilterInput()">
-      @if (filtroNomeValue()) {
+      @if (filterNameValue()) {
         <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
       }
       <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleNameFilterDropdown()">▾</button>
@@ -36,12 +36,12 @@
     <div class="combo-field resource-role-filter-combo">
       <input
         type="text"
-        [formControl]="filtroRuolo"
+        [formControl]="filterRole"
         placeholder="Filtra per ruolo..."
         autocomplete="off"
         (focus)="onRoleFilterFocus()"
         (input)="onRoleFilterInput()">
-      @if (filtroRuoloValue()) {
+      @if (filterRoleValue()) {
         <button class="combo-clear" type="button" aria-label="Cancella filtro ruolo" (click)="clearRoleFilter()">×</button>
       }
       <button class="combo-toggle" type="button" aria-label="Apri lista ruoli" (click)="toggleRoleFilterDropdown()">▾</button>
@@ -64,12 +64,12 @@
     <div class="combo-field resource-level-filter-combo">
       <input
         type="text"
-        [formControl]="filtroLivello"
+        [formControl]="filterLevel"
         placeholder="Filtra per livello..."
         autocomplete="off"
         (focus)="onLevelFilterFocus()"
         (input)="onLevelFilterInput()">
-      @if (filtroLivelloValue()) {
+      @if (filterLevelValue()) {
         <button class="combo-clear" type="button" aria-label="Cancella filtro livello" (click)="clearLevelFilter()">×</button>
       }
       <button class="combo-toggle" type="button" aria-label="Apri lista livelli" (click)="toggleLevelFilterDropdown()">▾</button>
@@ -92,12 +92,12 @@
     <div class="combo-field resource-company-filter-combo">
       <input
         type="text"
-        [formControl]="filtroAzienda"
+        [formControl]="filterCompany"
         placeholder="Filtra per azienda..."
         autocomplete="off"
         (focus)="onCompanyFilterFocus()"
         (input)="onCompanyFilterInput()">
-      @if (filtroAziendaValue()) {
+      @if (filterCompanyValue()) {
         <button class="combo-clear" type="button" aria-label="Cancella filtro azienda" (click)="clearCompanyFilter()">×</button>
       }
       <button class="combo-toggle" type="button" aria-label="Apri lista aziende" (click)="toggleCompanyFilterDropdown()">▾</button>
@@ -123,10 +123,10 @@
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton (click)="aggiornaRisorse()">Riprova</button>
+    <button appButton (click)="updateEmployees()">Riprova</button>
   </div>
 } @else {
-    <div class="resources-layout" [class.panel-open]="isRisorsaInAggiunta() || risorsaInModifica() !== null">
+    <div class="resources-layout" [class.panel-open]="isAddingEmployeeState() || editingEmployee() !== null">
         <div class="table-container">
             <table>
                 <thead>
@@ -139,12 +139,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                @for (r of risorseFiltrate(); track r.id) {
+                @for (r of filteredEmployees(); track r.id) {
                     <tr
                       app-employee-row
                       [employee]="r"
-                      (viewEmployee)="apriDettagli($event)"
-                      (editEmployee)="apriModifica($event)">
+                      (viewEmployee)="openEmployeeDetails($event)"
+                      (editEmployee)="openEmployeeEdit($event)">
                     </tr>
                 } @empty {
                     <tr>
@@ -168,22 +168,22 @@
     (page) = "onPageChange($event)">
 </mat-paginator>
 
-@if(risorsaInModifica()) {
-    <app-modifica-risorsa
-        [risorsaDaModificare]="risorsaInModifica()"
-        (cancel)="chiudiModifica()"
-        (modified)="salvaModifica()"
-    ></app-modifica-risorsa>
+@if(editingEmployee()) {
+    <app-edit-employee
+        [selectedEmployeeToEdit]="editingEmployee()!"
+        (cancel)="closeEmployeeEdit()"
+        (modified)="safeEdits()"
+    ></app-edit-employee>
 }
 
-@if(isRisorsaInAggiunta()) {
-    <app-new-risorsa
-        [risorsaDaAggiungere]="risorsaInAggiunta()"
-        (cancel)="isRisorsaInAggiunta.set(false)"
-        (added)="aggiungiRisorsa($event)"
-    ></app-new-risorsa>
+@if(isAddingEmployeeState()) {
+    <app-new-employee
+        [selectedEmployeeToAdd]="addingEmployee()"
+        (cancel)="isAddingEmployeeState.set(false)"
+        (added)="addEmployee()"
+    ></app-new-employee>
 }
 
 <div class="bottom-actions">
-    <button appButton class="btn-add" (click)="onAggiuntaRisorsa()">+ Aggiungi Risorsa</button>
+    <button appButton class="btn-add" (click)="onAddingEmployee()">+ Aggiungi Risorsa</button>
 </div>

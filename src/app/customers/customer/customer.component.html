@@ -6,11 +6,11 @@
       [class.tbl-cell--right]="c.align === 'right'"
       [class.tbl-cell--center]="c.align === 'center'"
     >
-      {{ c.value(cliente()) }}
+      {{ c.value(customer()) }}
     </div>
   }
   <div class="tbl-cell tbl-cell--actions">
-    <button appButton [routerLink]="['/clienti', cliente().id]" class="btn btn-primary">Visualizza</button>
-    <button appButton class="btn btn-secondary" (click)="apriModifica(cliente())">Modifica</button>
+    <button appButton [routerLink]="['/clienti', customer().id]" class="btn btn-primary">Visualizza</button>
+    <button appButton class="btn btn-secondary" (click)="openEdit(customer())">Modifica</button>
   </div>
 </app-table-row>

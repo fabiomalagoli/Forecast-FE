@@ -7,10 +7,10 @@
   <p>Caricamento...</p>
 } @else if (error()) {
   <p class="error">{{ error() }}</p>
-} @else if (progetti().length === 0) {
+} @else if (projects().length === 0) {
   <p>Nessun progetto trovato.</p>
 } @else {
-  @for (p of progetti(); track p.id) {
+  @for (p of projects(); track p.id) {
     <article class="project-container">
       <section class="card">
         <h3>{{ p.name }}</h3>

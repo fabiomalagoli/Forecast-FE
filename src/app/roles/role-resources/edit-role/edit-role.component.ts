@@ -2,10 +2,15 @@ import { Component, input, output, OnInit, inject, signal, effect } from '@angul
 import { TextInputComponent } from '../../../shared/text-input/text-input';
 import { FormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RequestsService } from '../../../shared/requests.service';
 import { Employee } from '../../../employees/employee.model';
 import { EMPLOYEES_HEADERS } from '../../../employees/employee.headers';
 import { forkJoin } from 'rxjs';
+import { EmployeesService } from '../../../shared/services/employees.service';
+import { RolesService } from '../../../shared/services/roles.service';
+import { LookupsService } from '../../../shared/services/lookups.service';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../shared/payloads/employee.payloads';
+import { normalizeEmployeeForForm } from '../../../shared/utils/employee-form.utils';
+import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-modifica-risorsa-per-ruolo',
@@ -15,7 +20,9 @@ import { forkJoin } from 'rxjs';
 })
 export class EditEmployeeForRoleComponent {
 
-    private requests = inject(RequestsService);
+    private employeesService = inject(EmployeesService);
+    private rolesService = inject(RolesService);
+    private lookupsService = inject(LookupsService);
     //Riceviamo dal Padre (Cliente.ts) il cliente da modificare, e definiamo gli output per comunicare al padre le azioni di modifica o cancellazione.
     risorsaDaModificare = input.required<Employee | null>();
 
@@ -47,9 +54,9 @@ export class EditEmployeeForRoleComponent {
 
     ngOnInit() {
         const caricamenti = [
-            this.requests.caricaTuttiJobRolesDisponibili(),
-            this.requests.caricaJobRoleLevelsDisponibili(),
-            this.requests.caricaAziendeDisponibili()
+            this.rolesService.loadAllJobRoles(),
+            this.rolesService.loadJobRoleLevels(),
+            this.lookupsService.loadAvailableCompanies()
         ];
 
         forkJoin(caricamenti).subscribe(risultati => {
@@ -68,25 +75,12 @@ export class EditEmployeeForRoleComponent {
     }
 
         // Reagiamo ai cambiamenti dell'input `risorsaDaModificare` (può arrivare dopo l'inizializzazione)
-        private normalizeEmployeeForForm(employee: any) {
-            if (!employee) return {};
-            return {
-                id: employee.id || employee.Id || employee.ID || '',
-                name: employee.name || employee.Name || '',
-                surname: employee.surname || employee.Surname || '',
-                jobRole: employee.jobRole || employee.JobRole || '',
-                jobRoleLevel: employee.jobRoleLevel || employee.JobRoleLevel || '',
-                company: employee.company || employee.Company || '',
-                isActive: employee.isActive !== undefined ? employee.isActive : (employee.IsActive !== undefined ? employee.IsActive : true),
-            };
-        }
-
         private syncRisorsa = effect(() => {
             const r = this.risorsaDaModificare();
             if (!r) return;
             // normalizziamo i campi per essere sicuri che `formData` contenga le chiavi usate nei `headers`
             this.baseData = JSON.parse(JSON.stringify(r));
-            const normalized = this.normalizeEmployeeForForm(this.baseData);
+            const normalized = normalizeEmployeeForForm(this.baseData);
             console.log('Modifica: risorsa ricevuta per edit:', r, '-> normalizzata:', normalized);
             this.formData = { ...normalized };
             this.OriginalData = JSON.stringify(this.formData);
@@ -191,17 +185,19 @@ export class EditEmployeeForRoleComponent {
             return;
         }
 
-        const payloadCompleto = {
-        id: this.formData.id, // Assicurati di recuperare l'ID originale qui
-        ...form.value            // Prende name, surname, jobRole ecc. dal form
-        };
+        const uiFallback = buildEmployeeUiFallback({ ...this.formData, ...form.value }, this.formData.id);
+        const backendPayload = buildEmployeePayload(uiFallback, {
+            roles: this.listaJobRoles(),
+            levels: this.listaJobRoleLevels(),
+            companies: this.listaAziende(),
+        });
 
-        this.requests.aggiornaEmployee(payloadCompleto).subscribe({
+        this.employeesService.updateEmployee(this.formData.id, backendPayload, uiFallback).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.statusMessage = { text: 'Risorsa modificata con successo!', type: 'success' };
-                this.modified.emit(payloadCompleto);
+                this.modified.emit(uiFallback);
                 form.resetForm();
                 this.formData = {};
                 // Chiudi il dialogo dopo il successo
@@ -232,12 +228,7 @@ export class EditEmployeeForRoleComponent {
     
     //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali.
     toId(key: string, i: number): string {
-    return `cliente-${i}-${key}`
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/[^a-zA-Z0-9_-]/g, '')
-        .toLowerCase();
+    return toElementId('employee', key, i);
     }
 
     isRequiredField(key: string): boolean {

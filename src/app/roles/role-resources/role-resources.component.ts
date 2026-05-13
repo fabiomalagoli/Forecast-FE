@@ -1,6 +1,5 @@
 import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RequestsService } from '../../shared/requests.service';
 import { Role } from '../role.model';
 import { Employee } from '../../employees/employee.model';
 import { EditEmployeeForRoleComponent } from './edit-role/edit-role.component';
@@ -8,6 +7,8 @@ import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../shared/button/button';
 import { finalize } from 'rxjs';
 import { Location } from '@angular/common';
+import { EmployeesService } from '../../shared/services/employees.service';
+import { RolesService } from '../../shared/services/roles.service';
 
 @Component({
   selector: 'app-role-resources',
@@ -17,7 +18,8 @@ import { Location } from '@angular/common';
 })
 export class RoleResourcesComponent {
 
-    private requestsService = inject(RequestsService);
+    private employeesService = inject(EmployeesService);
+    private rolesService = inject(RolesService);
     private destroyRef = inject(DestroyRef);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
@@ -53,7 +55,7 @@ export class RoleResourcesComponent {
 
         this.isFetching.set(true);
 
-        const subscription = this.requestsService.caricaEmployeeById(id)
+        const subscription = this.employeesService.loadEmployeeById(id)
         .pipe(
             finalize(() => {
                 this.isFetching.set(false);
@@ -80,7 +82,7 @@ export class RoleResourcesComponent {
 
     aggiornaRisorsePerRuolo() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaEmployeesDisponibili().pipe(
+        const subscription = this.employeesService.loadEmployees().pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
@@ -108,7 +110,7 @@ export class RoleResourcesComponent {
 
     apriDettagliRisorsa(r: Employee) {
         this.risorsaPerDettaglio.set(r);
-        this.requestsService.setUltimoRuoloSelezionato(this.ruoloSelezionato());
+        this.rolesService.setLastSelectedRole(this.ruoloSelezionato());
         this.router.navigate(['/risorse', r.id]);
     }
 

@@ -20,7 +20,7 @@ export class ProgettoComponent {
 
   @Input() align: 'left' | 'center' | 'right' = 'left' //allineamento di default a sinistra
   @Input({required: true}) columns!: Column<Project>[];
-  progetto = input.required<Project>();
+  project = input.required<Project>();
   edit = output<Project>();
 
   // Router usato per aprire il dettaglio del progetto
@@ -30,7 +30,7 @@ export class ProgettoComponent {
       return this.columns.length + 1;
   }
 
-  apriModifica(p: Project) {
+  openEdit(p: Project) {
     this.edit.emit(p);
   }
 

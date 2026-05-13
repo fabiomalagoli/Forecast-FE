@@ -4,28 +4,32 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { RequestsService } from '../../shared/requests.service';
 import { Employee } from '../employee.model'; 
 import { EMPLOYEES_HEADERS } from '../employee.headers'; 
+import { RolesService } from '../../shared/services/roles.service';
+import { LookupsService } from '../../shared/services/lookups.service';
+import { EmployeesService } from '../../shared/services/employees.service';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../shared/payloads/employee.payloads';
+import { normalizeEmployeeForForm } from '../../shared/utils/employee-form.utils';
+import { toElementId } from '../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-modifica-risorsa',
+  selector: 'app-edit-employee',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './edit-employee.component.html',
   styleUrls: ['../../shared/form-styles.css'],
 })
 export class EditEmployeeComponent implements OnInit {
 
-    private requests = inject(RequestsService);
+    private employeesService = inject(EmployeesService);
+    private rolesService = inject(RolesService);
+    private lookupsService = inject(LookupsService);
     
-    // Input dal componente padre (RisorseComponent)
-    risorsaDaModificare = input.required<Employee | null>();
+    selectedEmployeeToEdit = input.required<Employee>();
 
-    // Output verso il componente padre
     modified = output<Employee>();
     cancel = output<void>();
 
-    // Variabili per gestione stato del form e messaggi
     attemptedSubmit = false;
     noChangesMessage = false;
     statusMessage: { text: string; type: 'success' | 'error' } | null = null;
@@ -33,76 +37,59 @@ export class EditEmployeeComponent implements OnInit {
     formData: any = {};
     baseData: any = {};
 
-    // Segnali per i menu a tendina
-    listaJobRoles = signal<any[]>([]);
-    listaJobRoleLevels = signal<any[]>([]);
-    listaAziende = signal<any[]>([]);
+    // Segnali per le Combo Box
+    jobRolesList = signal<any[]>([]);
+    jobRoleLevelsList = signal<any[]>([]);
+    companiesList = signal<any[]>([]);
     jobRoleDropdownOpen = signal(false);
     showAllJobRoles = signal(false);
 
-    // Variabile per memorizzare i dati originali, utile per verificare se ci sono state modifiche
-    private OriginalData: string = '';
+    private originalData: string = '';
 
-    // Headers dinamici basati su RISORSE_HEADERS, escludendo campi non editabili come 'id' e 'isActive'
     readonly headers = (Object.entries(EMPLOYEES_HEADERS) as [keyof Employee, string][])
         .filter(([key]) => key !== 'id' && key !== 'isActive') 
         .map(([key, label]) => ({ key, label }));
 
     ngOnInit() {
-        const caricamenti = [
-            this.requests.caricaTuttiJobRolesDisponibili(),
-            this.requests.caricaJobRoleLevelsDisponibili(),
-            this.requests.caricaAziendeDisponibili()
+        const loadings = [
+            this.rolesService.loadAllJobRoles(),
+            this.rolesService.loadJobRoleLevels(),
+            this.lookupsService.loadAvailableCompanies()
         ];
 
-        forkJoin(caricamenti).subscribe({
-            next: (risultati) => {
-                this.listaJobRoles.set(risultati[0]);
-                this.listaJobRoleLevels.set(risultati[1]);
-                this.listaAziende.set(risultati[2]);
+        forkJoin(loadings).subscribe({
+            next: (results) => {
+                this.jobRolesList.set(results[0]);
+                this.jobRoleLevelsList.set(results[1]);
+                this.companiesList.set(results[2]);
             }, 
             error: (error) => {
-                this.statusMessage = { text: 'Errore durante il caricamento dei dati: ' + error.message, type: 'error' };
+                this.statusMessage = { text: 'Error loading data: ' + error.message, type: 'error' };
             }
         });
 
         this.formData = { ...this.baseData };
-        this.OriginalData = JSON.stringify(this.formData);
+        this.originalData = JSON.stringify(this.formData);
     }
 
-    // Normalizziamo i dati in ingresso per uniformità delle chiavi
-    private normalizeEmployeeForForm(employee: any) {
-        if (!employee) return {};
-        return {
-            id: employee.id || employee.Id || employee.ID || '',
-            name: employee.name || employee.Name || '',
-            surname: employee.surname || employee.Surname || '',
-            jobRole: employee.jobRole || employee.JobRole || '',
-            jobRoleLevel: employee.jobRoleLevel || employee.JobRoleLevel || '',
-            company: employee.company || employee.Company || '',
-            isActive: employee.isActive !== undefined ? employee.isActive : (employee.IsActive !== undefined ? employee.IsActive : true),
-        };
-    }
-
-    // Reagiamo ai cambiamenti dell'input `risorsaDaModificare`
-    private syncRisorsa = effect(() => {
-        const r = this.risorsaDaModificare();
-        if (!r) return;
+    private syncEmployee = effect(() => {
+        const emp = this.selectedEmployeeToEdit();
+        if (!emp) return;
         
-        this.baseData = JSON.parse(JSON.stringify(r));
-        const normalized = this.normalizeEmployeeForForm(this.baseData);
+        this.baseData = JSON.parse(JSON.stringify(emp));
+        const normalized = normalizeEmployeeForForm(this.baseData);
         
-        console.log('Modifica Risorsa: dati ricevuti:', r, '-> normalizzati:', normalized);
+        console.log('Edit Employee: received data:', emp, '-> normalized:', normalized);
         
         this.formData = { ...normalized };
-        this.OriginalData = JSON.stringify(this.formData);
+        this.originalData = JSON.stringify(this.formData);
     });
 
     getOptions(key: string): any[] {
         switch (key) {
-            case 'jobRole': return this.listaJobRoles();
-            case 'jobRoleLevel': return this.listaJobRoleLevels();
-            case 'company': return this.listaAziende();
+            case 'jobRole': return this.jobRolesList();
+            case 'jobRoleLevel': return this.jobRoleLevelsList();
+            case 'company': return this.companiesList();
             default: return [];
         }
     }
@@ -117,10 +104,10 @@ export class EditEmployeeComponent implements OnInit {
             : (this.formData.jobRole || '').toString().trim().toLowerCase();
 
         if (!term) {
-            return this.listaJobRoles();
+            return this.jobRolesList();
         }
 
-        return this.listaJobRoles().filter((role) =>
+        return this.jobRolesList().filter((role) =>
             this.optionName(role).toLowerCase().includes(term)
         );
     }
@@ -149,7 +136,7 @@ export class EditEmployeeComponent implements OnInit {
     }
 
     isChanged(): boolean {
-        return JSON.stringify(this.formData) !== this.OriginalData;
+        return JSON.stringify(this.formData) !== this.originalData;
     }
 
     isSubmitDisabled(form: NgForm): boolean {
@@ -161,33 +148,35 @@ export class EditEmployeeComponent implements OnInit {
             return;
         }
 
-        const payloadCompleto = {
-            id: this.formData.id, // Recupero ID originale
-            ...form.value         // Dati aggiornati dal form
-        };
+        const uiFallback = buildEmployeeUiFallback(this.formData, this.selectedEmployeeToEdit().id);
+        const backendPayload = buildEmployeePayload(this.formData, {
+            roles: this.jobRolesList(),
+            levels: this.jobRoleLevelsList(),
+            companies: this.companiesList(),
+        });
 
-        this.requests.aggiornaEmployee(payloadCompleto).subscribe({
+        this.employeesService.updateEmployee(this.selectedEmployeeToEdit().id, backendPayload, uiFallback).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
-                this.statusMessage = { text: 'Risorsa modificata con successo!', type: 'success' };
-                this.modified.emit(payloadCompleto);
+                this.statusMessage = { text: 'Employee successfully updated!', type: 'success' };
+                this.modified.emit(uiFallback);
                 form.resetForm();
                 this.formData = {};
                 this.cancel.emit();
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;
-                let errorMessage = 'Errore durante la modifica della risorsa';
+                let errorMessage = 'Error updating employee.';
                 
                 if (error.status === 400) {
-                    errorMessage = 'Dati non validi. Controlla i campi inseriti.';
+                    errorMessage = 'Invalid data. Check the input fields.';
                 } else if (error.status === 404) {
-                    errorMessage = 'Risorsa non trovata.';
+                    errorMessage = 'Employee not found.';
                 } else if (error.status === 500) {
-                    errorMessage = 'Errore del server. Riprova più tardi.';
+                    errorMessage = 'Server error. Please try again later.';
                 } else if (error.message) {
-                    errorMessage = `Errore: ${error.message}`;
+                    errorMessage = `Error: ${error.message}`;
                 }
                 
                 this.statusMessage = { text: errorMessage, type: 'error' };
@@ -200,12 +189,7 @@ export class EditEmployeeComponent implements OnInit {
     }
     
     toId(key: string, i: number): string {
-        return `risorsa-${i}-${key}`
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/[^a-zA-Z0-9_-]/g, '')
-            .toLowerCase();
+        return toElementId('employee', key, i);
     }
 
     isRequiredField(key: string): boolean {
@@ -214,10 +198,10 @@ export class EditEmployeeComponent implements OnInit {
 
     getRequiredErrorMessage(key: string): string {
         const messages: Record<string, string> = {
-            name: 'Nome obbligatorio',
-            surname: 'Cognome obbligatorio'
+            name: 'Name is required',
+            surname: 'Surname is required'
         };
-        return messages[key] || 'Campo obbligatorio';
+        return messages[key] || 'Field is required';
     }
 
     onSubmitClick(form: NgForm, event: Event) {

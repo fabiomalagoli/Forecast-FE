@@ -1,7 +1,7 @@
 //Headers per la tabella dei progetti e per la visualizzazione dettagliata del progetto
 import { Project } from './project.model';
 
-export const PROGETTO_COMPLETO_HEADERS: Partial<Record<keyof Project, string>> = {
+export const COMPLETE_PROJECT_HEADERS: Partial<Record<keyof Project, string>> = {
   company: 'Azienda',
   customer: 'Cliente',
   pm: 'PM',

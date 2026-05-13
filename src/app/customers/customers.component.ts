@@ -1,31 +1,30 @@
 import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { CLIENTE_HEADERS } from './customer/customer.headers';
+import { CUSTOMER_HEADERS } from './customer/customer.headers';
 import { Customer } from './customer/customer.model';
 import { Column } from '../shared/table-row/table.types';
-import { NewClienteComponent } from './new-cliente/new-cliente';
+import { NewCustomerComponent } from './new-customer/new-customer.component';
 import { AppButtonComponent } from '../shared/button/button';
-import { RequestsService } from '../shared/requests.service';
 import { EditCustomerComponent } from './edit-customer/edit-customer.component';
-import { v4 as uuidv4 } from 'uuid';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, tap } from 'rxjs';
+import { CustomersService } from '../shared/services/customers.service';
 
 @Component({
-  selector: 'app-clienti',
-  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewClienteComponent, EditCustomerComponent],
+  selector: 'app-customers',
+  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewCustomerComponent, EditCustomerComponent],
   templateUrl: './customers.component.html',
   styleUrls: ['./customers.component.css', '../shared/filter-styles.css'],
 })
 export class CustomersComponent {
 
-  private requestsService = inject(RequestsService);
+  private customersService = inject(CustomersService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
-  //dummyClienti = CLIENTI_DUMMY;
-  customers = this.requestsService.clientiCaricati;
+
+  customers = this.customersService.loadedCustomers;
 
 
   isFetching = signal(false);
@@ -38,7 +37,7 @@ export class CustomersComponent {
 
 
   //Record per inserire i titoli (headers) dei dati della tabella Clienti corrispondenti ai parametri del tipo Cliente.
-  readonly headersClienti = CLIENTE_HEADERS;
+  readonly customerHeaders = CUSTOMER_HEADERS;
   //Mappatura fra il tipo di colonne e gli headers ed i rispettivi valori del tipo Cliente.
   columns: Column<Customer>[] = [
     {
@@ -47,7 +46,7 @@ export class CustomersComponent {
     },
     {
       header: 'Indirizzo',
-      value: (cliente) => this.formatIndirizzo(cliente),
+      value: (cliente) => this.addressFormatting(cliente),
     },
     {
       header: 'Progetti Attivi',
@@ -56,24 +55,22 @@ export class CustomersComponent {
   ];
 
 
-  nomeCliente = signal<string | null>(null);
-  filtroNomeCliente = new FormControl('');
+  customerName = signal<string | null>(null);
+  filterCustomerName = new FormControl('');
   showAllCustomersOptions = signal(false);
   customerDropDownOpen = signal(false);
-  filtroNomeValue = signal<string>('');
+  filterNameValue = signal<string>('');
 
-  clientiFiltrati = computed<Customer[]>(() => {
-    const hasFilters = !!this.filtroNomeValue();
-
+  filteredCustomers = computed<Customer[]>(() => {
     return this.customers().filter((cliente) => 
-    cliente.name.toLowerCase().includes(this.filtroNomeValue())
+    cliente.name.toLowerCase().includes(this.filterNameValue())
     );
   })
 
   customerFilterOptions = computed<Customer[]>(() => {
     const term = this.showAllCustomersOptions()
       ? ''
-      : this.filtroNomeValue().toLowerCase();
+      : this.filterNameValue().toLowerCase();
     const customersData = this.customers() ?? [];
 
     if(!term){
@@ -88,7 +85,7 @@ export class CustomersComponent {
 
   ngOnInit() {
     this.isFetching.set(true);
-    const subscription = this.requestsService.caricaClientiDisponibili().pipe(
+    const subscription = this.customersService.loadAvailableCustomers().pipe(
       finalize(() => this.isFetching.set(false))
     ).subscribe({
       error: (error: Error) => {
@@ -100,17 +97,17 @@ export class CustomersComponent {
       subscription.unsubscribe();
     });
 
-    this.filtroNomeCliente.valueChanges.pipe(
+    this.filterCustomerName.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      tap(value => this.filtroNomeValue.set(value?.toLowerCase() || ''))
+      tap(value => this.filterNameValue.set(value?.toLowerCase() || ''))
     ).subscribe();
   }
 
-  aggiornaClienti() {
+  updateCustomers() {
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
-      const subscription = this.requestsService.caricaClientiDisponibili().pipe(
+      const subscription = this.customersService.loadAvailableCustomers().pipe(
         finalize(() => this.isFetching.set(false))
       ).subscribe({
         error: (error: Error) => {
@@ -128,9 +125,9 @@ export class CustomersComponent {
     });
   }
 
-  ricaricaClienti() {
+  reloadCustomers() {
     this.isFetching.set(true);
-    const subscription = this.requestsService.caricaClientiDisponibili().pipe(
+    const subscription = this.customersService.loadAvailableCustomers().pipe(
       finalize(() => this.isFetching.set(false))
     ).subscribe({
       error: (error: Error) => {
@@ -158,7 +155,7 @@ export class CustomersComponent {
 
   addCustomer() {
     // Invece di aggiornare localmente, ricarica i dati dal backend
-    this.ricaricaClienti();
+    this.reloadCustomers();
     this.isAddingCustomerState = false;
     this.showNotification('Cliente creato con successo!', 'success');
   }
@@ -175,9 +172,9 @@ export class CustomersComponent {
     this.editingCustomer.set(null);
   }
 
-  saveEdits(clienteAggiornato: Customer) {
+  saveEdits() {
     // Ricarica i dati dal backend per riflettere le modifiche effettive
-    this.ricaricaClienti();
+    this.reloadCustomers();
     this.closeCustomerEditing();
     this.showNotification('Modifiche salvate correttamente!', 'success');
   }
@@ -218,42 +215,39 @@ export class CustomersComponent {
 
   selectCustomerFilter(c: Customer) {
     const customerName = this.optionName(c);
-    this.filtroNomeCliente.setValue(customerName);
-    this.filtroNomeValue.set(customerName.toLowerCase())
+    this.filterCustomerName.setValue(customerName);
+    this.filterNameValue.set(customerName.toLowerCase())
     this.customerDropDownOpen.set(false);
     this.showAllCustomersOptions.set(false);
   }
 
   clearCustomerFilter() {
-    this.filtroNomeCliente.setValue('');
-    this.filtroNomeValue.set('');
+    this.filterCustomerName.setValue('');
+    this.filterNameValue.set('');
     this.customerDropDownOpen.set(false);
     this.showAllCustomersOptions.set(false);
   }
 
 
-  private formatIndirizzo(cliente: Customer): string {
+  private addressFormatting(customer: Customer): string {
     const parti: string[] = [];
 
-    if (cliente.address) parti.push(cliente.address);
-    if (cliente.streetNumber) parti.push(cliente.streetNumber);
-    if (cliente.city) parti.push(cliente.city);
-    if (cliente.province) parti.push(`(${cliente.province})`);
-    if (cliente.postalCode) parti.push(cliente.postalCode);
-    if (cliente.country && cliente.country !== 'Italia') parti.push(cliente.country);
+    if (customer.address) parti.push(customer.address);
+    if (customer.streetNumber) parti.push(customer.streetNumber);
+    if (customer.city) parti.push(customer.city);
+    if (customer.province) parti.push(`(${customer.province})`);
+    if (customer.postalCode) parti.push(customer.postalCode);
+    if (customer.country && customer.country !== 'Italia') parti.push(customer.country);
 
     if (parti.length > 0) {
       return parti.join(', ');
     }
 
-    if (cliente.fullAddress) {
-      return cliente.fullAddress;
+    if (customer.fullAddress) {
+      return customer.fullAddress;
     }
 
     return 'Indirizzo non specificato';
   }
 
-  private generateId(): string {
-    return uuidv4();
-  }
 }

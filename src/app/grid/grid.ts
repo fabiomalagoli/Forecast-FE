@@ -1,8 +1,8 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CardHomeComponent } from './card-home/card-home';
-import { RequestsService } from '../shared/requests.service';
 import { CardModel } from './card-home/card-home.model';
 import { finalize } from 'rxjs';
+import { DashboardService } from '../shared/services/dashboards.service';
 
 @Component({
   selector: 'app-grid',
@@ -15,13 +15,13 @@ export class GridComponent {
   isFetching = signal(false);
   error = signal('');
 
-  private requestService = inject(RequestsService);
+  private dashboardService = inject(DashboardService);
   private destroy = inject(DestroyRef);
 
   isGettingCard = false;
   ngOnInit() {
     this.isFetching.set(true);
-    const sub = this.requestService.caricaCardsDisponibili().pipe(
+    const sub = this.dashboardService.loadDashboardCards().pipe(
       finalize(() => this.isFetching.set(false))
     ).subscribe({
       next: (cards: CardModel[]) => {

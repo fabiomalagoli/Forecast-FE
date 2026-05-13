@@ -8,12 +8,12 @@
     <div class="combo-field">
       <input
         type="text"
-        [formControl]="filtroNomeCliente"
+        [formControl]="filterCustomerName"
         placeholder="Filtra per nome..."
         autocomplete="off"
         (focus)="onCustomerFilterFocus()"
         (input)="onCustomerFilterInput()">
-      @if (filtroNomeValue()){
+      @if (filterNameValue()){
         <button
           class="combo-clear"
           type="button"
@@ -74,7 +74,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (cliente of clientiFiltrati(); track cliente.id) {
+        @for (cliente of filteredCustomers(); track cliente.id) {
           <tr>
             @for (col of columns; track col.header) {
               <td>{{ col.value(cliente) }}</td>
@@ -93,20 +93,20 @@
         }
       </tbody>
     </table>
-    <p class="count-footer">Numero clienti: {{ clientiFiltrati().length }}</p>
+    <p class="count-footer">Numero clienti: {{ filteredCustomers().length }}</p>
   </div>
 }
 
 <div class="bottom-actions">
   @if (editingCustomer()) {
-    <app-modifica-cliente 
-      [clienteDaModificare]="editingCustomer()!" 
+    <app-edit-customer 
+      [selectedCustomerToEdit]="editingCustomer()!" 
       (cancel)="closeCustomerEditing()" 
-      (modified)="saveEdits($event)" />
+      (modified)="saveEdits()" />
   }
   
   @if (isAddingCustomerState) {
-    <app-new-cliente 
+    <app-new-customer 
       (cancel)="cancelCustomerAddition()" 
       (created)="addCustomer()" />
   }

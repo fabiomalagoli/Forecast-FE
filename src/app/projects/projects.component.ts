@@ -3,19 +3,21 @@ import { Project } from './project/project.model';
 import { Column } from '../shared/table-row/table.types';
 import { AppButtonComponent } from "../shared/button/button";
 import { PROGETTO_HEADERS } from './project/project.headers';
-import { PROGETTO_COMPLETO_HEADERS } from './project/full-project.headers';
+import { COMPLETE_PROJECT_HEADERS } from './project/complete-project.headers';
 import { NewProgettoComponent } from "./new-project/new-project.component";
-import { RequestsService } from '../shared/requests.service';
 import { Router } from '@angular/router';
 import { EditProjectComponent } from "./project/edit-project/edit-project.component";
 import { effect } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, finalize, forkJoin, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap } from 'rxjs';
 import { ReactiveFormsModule } from '@angular/forms';
+import { ProjectsService } from '../shared/services/projects.service';
+import { LookupsService } from '../shared/services/lookups.service';
+import { CustomersService } from '../shared/services/customers.service';
 
 
 @Component({
-  selector: 'app-progetti',
+  selector: 'app-projects',
   imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule],
   templateUrl: './projects.component.html',
   styleUrls: ['../shared/filter-styles.css', './projects.component.css'],
@@ -26,38 +28,40 @@ export class ProjectsComponent {
 
   isFetching = signal(false);
   error = signal('');
-  private requestsService = inject(RequestsService);
+  private projectsService = inject(ProjectsService);
+  private lookupsService = inject(LookupsService);
+  private customersService = inject(CustomersService);
   private destroyRef = inject(DestroyRef);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
-  progetti = this.requestsService.progettiCaricati;
+  projects = this.projectsService.loadedProjects;
 
-  isProgettoInAggiunta = signal<boolean | null>(null);
+  isAddingProject = signal<boolean | null>(null);
 
-  progettoInModifica = signal<Project | null>(null);
+  editingProject = signal<Project | null>(null);
 
-  listaAziende = signal<any[]>([]);
-  listaStati = signal<any[]>([]);
-  listaClienti = signal<any[]>([]);
+  companiesList = signal<any[]>([]);
+  statusesList = signal<any[]>([]);
+  customersList = signal<any[]>([]);
 
   // dummyProgetti = PROGETTI_DUMMY;
 
-  readonly headersProgetti: Partial<Record<keyof Project, string>> = PROGETTO_COMPLETO_HEADERS;  // Record per inserire i titoli (headers) dei dati della tabella Progetti corrispondenti ai parametri del tipo Progetto
+  readonly projectHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
 
   // Router per spostarci tra pagine/viste dei progetti
   constructor(private router: Router) {
     // Questo log scatterà ogni singola volta che il segnale del service cambia
     effect(() => {
-      console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.progetti());
+      console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.projects());
     });
   }
 
-  filtroAzienda = new FormControl('');
-  filtroCliente = new FormControl('');
-  filtroStato = new FormControl('');
+  companyFilter = new FormControl('');
+  customerFilter = new FormControl('');
+  statusFilter = new FormControl('');
 
-  filtroAziendaValue = signal<string>('');
-  filtroClienteValue = signal<string>('');
-  filtroStatoValue = signal<string>('');
+  companyFilterValue = signal<string>('');
+  customerFilterValue = signal<string>('');
+  statusFilterValue = signal<string>('');
 
   companyDropdownOpen = signal(false);
   customerDropdownOpen = signal(false);
@@ -66,17 +70,17 @@ export class ProjectsComponent {
   showAllCustomerOptions = signal(false);
   showAllStatusOptions = signal(false);
 
-  progettiFiltrati = computed<Project[]>(() => {
+  filteredProjects = computed<Project[]>(() => {
     const hasFilters = !!(
-      this.filtroAziendaValue() ||
-      this.filtroClienteValue() ||
-      this.filtroStatoValue()
+      this.companyFilterValue() ||
+      this.customerFilterValue() ||
+      this.statusFilterValue()
     );
     
-    return this.progetti().filter(progetto =>
-      progetto.company.toLowerCase().includes(this.filtroAziendaValue()) &&
-      progetto.customer.toLowerCase().includes(this.filtroClienteValue()) &&
-      progetto.projectStatus.toLowerCase().includes(this.filtroStatoValue())
+    return this.projects().filter(project =>
+      project.company.toLowerCase().includes(this.companyFilterValue()) &&
+      project.customer.toLowerCase().includes(this.customerFilterValue()) &&
+      project.projectStatus.toLowerCase().includes(this.statusFilterValue())
     );
 
   })
@@ -84,8 +88,8 @@ export class ProjectsComponent {
   companyFilterOptions = computed<any[]>(() => {
     const term = this.showAllCompanyOptions()
       ? ''
-      : this.filtroAziendaValue().toLowerCase();
-    const companies = this.listaAziende();
+      : this.companyFilterValue().toLowerCase();
+    const companies = this.companiesList();
 
     if (!term) {
       return companies;
@@ -99,8 +103,8 @@ export class ProjectsComponent {
   customerFilterOptions = computed<any[]>(() => {
     const term = this.showAllCustomerOptions()
       ? ''
-      : this.filtroClienteValue().toLowerCase();
-    const customers = this.listaClienti();
+      : this.customerFilterValue().toLowerCase();
+    const customers = this.customersList();
 
     if (!term) {
       return customers;
@@ -114,8 +118,8 @@ export class ProjectsComponent {
   statusFilterOptions = computed<any[]>(() => {
     const term = this.showAllStatusOptions()
       ? ''
-      : this.filtroStatoValue().toLowerCase();
-    const statuses = this.listaStati();
+      : this.statusFilterValue().toLowerCase();
+    const statuses = this.statusesList();
 
     if (!term) {
       return statuses;
@@ -130,7 +134,7 @@ export class ProjectsComponent {
 
   ngOnInit() {
     this.isFetching.set(true);
-    const subscription = this.requestsService.caricaProgettiDisponibili().pipe(
+    const subscription = this.projectsService.loadAvailableProjects().pipe(
         finalize(() => this.isFetching.set(false))
       )
       .subscribe({
@@ -145,14 +149,14 @@ export class ProjectsComponent {
       });
 
     // Imposta i listener per i filtri
-    this.filtroAzienda.valueChanges.pipe(
+    this.companyFilter.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       tap(value => {
         const filterValue = value || '';
-        this.filtroAziendaValue.set(filterValue.toLowerCase());
+        this.companyFilterValue.set(filterValue.toLowerCase());
         this.showAllCompanyOptions.set(false);
-        this.requestsService.setFiltroAzienda(filterValue);
+        this.projectsService.setCompanyFilter(filterValue);
       })
     ).subscribe();
 
@@ -160,14 +164,14 @@ export class ProjectsComponent {
       subscription.unsubscribe();
     });
 
-    this.filtroCliente.valueChanges.pipe(
+    this.customerFilter.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       tap(value => {
         const filterValue = value || '';
-        this.filtroClienteValue.set(filterValue.toLowerCase());
+        this.customerFilterValue.set(filterValue.toLowerCase());
         this.showAllCustomerOptions.set(false);
-        this.requestsService.setFiltroClienteInProgetti(filterValue);
+        this.projectsService.setCustomerFilter(filterValue);
       })
     ).subscribe();
 
@@ -175,11 +179,11 @@ export class ProjectsComponent {
       subscription.unsubscribe();
     });
 
-    this.filtroStato.valueChanges.pipe(
+    this.statusFilter.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       tap(value => {
-        this.filtroStatoValue.set((value || '').toLowerCase());
+        this.statusFilterValue.set((value || '').toLowerCase());
         this.showAllStatusOptions.set(false);
       })
     ).subscribe();
@@ -188,19 +192,19 @@ export class ProjectsComponent {
       subscription.unsubscribe();
     });
 
-    const caricamenti = [
-      this.requestsService.caricaAziendeDisponibili(),
-      this.requestsService.caricaStatiProgettoDisponibili(),
-      this.requestsService.caricaClientiDisponibili(),
+    const loadingRequests = [
+      this.lookupsService.loadAvailableCompanies(),
+      this.lookupsService.loadProjectStatuses(),
+      this.customersService.loadAvailableCustomers(),
     ];
     // Carica tutte le liste necessarie per i dropdown in parallelo
-    forkJoin(caricamenti).subscribe(risultati => {
-      this.listaAziende.set(risultati[0]);
-      this.listaStati.set(risultati[1]);
-      this.listaClienti.set(risultati[2]);
-      this.filterData.companyId = risultati[0].find(a => a.name === this.filterData.company)?.id || null;
-      this.filterData.customerId = risultati[2].find(c => c.name === this.filterData.customer)?.id || null;
-      this.filterData.projectStatusId = risultati[1].find(s => s.name === this.filterData.projectStatus)?.name || null;
+    forkJoin(loadingRequests).subscribe(results => {
+      this.companiesList.set(results[0]);
+      this.statusesList.set(results[1]);
+      this.customersList.set(results[2]);
+      this.filterData.companyId = results[0].find(a => a.name === this.filterData.company)?.id || null;
+      this.filterData.customerId = results[2].find(c => c.name === this.filterData.customer)?.id || null;
+      this.filterData.projectStatusId = results[1].find(s => s.name === this.filterData.projectStatus)?.name || null;
     });
 
 
@@ -208,35 +212,35 @@ export class ProjectsComponent {
   }
 
   columns: Column<Project>[] =
-    (Object.keys(this.headersProgetti) as (keyof Project)[])
+    (Object.keys(this.projectHeaders) as (keyof Project)[])
       .filter(key => key !== 'id' && key in PROGETTO_HEADERS) // Escludi il campo 'id' e tieni solo quelli visibili
       .map(key => ({
-        header: this.headersProgetti[key] ?? '',
+        header: this.projectHeaders[key] ?? '',
         value: (p: Project) => p[key] as any,
       }))
       .filter(column => column.header !== '');
 
-  get progettiColsCount(): number{
+  get projectColumnsCount(): number{
     return this.columns.length;
   }
 
-  onAggiuntaProgetto(){
-    this.isProgettoInAggiunta.set(true);
+  openCreateProject(){
+    this.isAddingProject.set(true);
   }
 
-  aggiungiProgetto(newProgetto: any) {
-    this.isProgettoInAggiunta.set(false);
+  onProjectCreated(newProject: any) {
+    this.isAddingProject.set(false);
     this.showNotification('Progetto creato con successo!', 'success');
   }
 
-  annullaAggiuntaProgetto(){
-    this.isProgettoInAggiunta.set(false);
+  closeCreateProject(){
+    this.isAddingProject.set(false);
   }
 
-  aggiornaProgetti(){
+  refreshProjects(){
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
-      const subscription = this.requestsService.caricaProgettiDisponibili().pipe(
+      const subscription = this.projectsService.loadAvailableProjects().pipe(
           finalize(() => this.isFetching.set(false))
         )
         .subscribe({ // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
@@ -255,18 +259,18 @@ export class ProjectsComponent {
     });
   }
 
-  apriModifica(p: Project) {
-    this.progettoInModifica.set(p); // Fa apparire l' @if nel template
+  openEditProject(project: Project) {
+    this.editingProject.set(project);
   }
 
-  chiudiModifica() {
-    this.progettoInModifica.set(null);
+  closeEditProject() {
+    this.editingProject.set(null);
   }
 
-  salvaModifica(progettoAggiornato: Project) {
-    this.progettoInModifica.set(null);
+  onProjectSaved(updatedProject: Project) {
+    this.editingProject.set(null);
     // Qui potresti chiamare un metodo del service per salvare le modifiche sul backend, ad esempio:
-    this.requestsService.caricaProgettiDisponibili().subscribe({
+    this.projectsService.loadAvailableProjects().subscribe({
       next: () => {
         this.showNotification('Dati aggiornati dal database', 'success');
       }
@@ -299,15 +303,15 @@ export class ProjectsComponent {
 
   selectCompanyFilter(company: any) {
     const companyName = this.optionName(company);
-    this.filtroAzienda.setValue(companyName);
-    this.filtroAziendaValue.set(companyName.toLowerCase());
+    this.companyFilter.setValue(companyName);
+    this.companyFilterValue.set(companyName.toLowerCase());
     this.companyDropdownOpen.set(false);
     this.showAllCompanyOptions.set(false);
   }
 
   clearCompanyFilter() {
-    this.filtroAzienda.setValue('');
-    this.filtroAziendaValue.set('');
+    this.companyFilter.setValue('');
+    this.companyFilterValue.set('');
     this.companyDropdownOpen.set(false);
     this.showAllCompanyOptions.set(false);
   }
@@ -329,15 +333,15 @@ export class ProjectsComponent {
 
   selectCustomerFilter(customer: any) {
     const customerName = this.optionName(customer);
-    this.filtroCliente.setValue(customerName);
-    this.filtroClienteValue.set(customerName.toLowerCase());
+    this.customerFilter.setValue(customerName);
+    this.customerFilterValue.set(customerName.toLowerCase());
     this.customerDropdownOpen.set(false);
     this.showAllCustomerOptions.set(false);
   }
 
   clearCustomerFilter() {
-    this.filtroCliente.setValue('');
-    this.filtroClienteValue.set('');
+    this.customerFilter.setValue('');
+    this.customerFilterValue.set('');
     this.customerDropdownOpen.set(false);
     this.showAllCustomerOptions.set(false);
   }
@@ -360,17 +364,17 @@ export class ProjectsComponent {
   selectStatusFilter(status: any) {
     const statusName = this.optionName(status);
     const statusId = status?.id || status?.Id || '';
-    this.filtroStato.setValue(statusName);
-    this.filtroStatoValue.set(statusName.toLowerCase());
-    this.requestsService.setFiltroStato(statusId);
+    this.statusFilter.setValue(statusName);
+    this.statusFilterValue.set(statusName.toLowerCase());
+    this.projectsService.setStatusFilter(statusId);
     this.statusDropdownOpen.set(false);
     this.showAllStatusOptions.set(false);
   }
 
   clearStatusFilter() {
-    this.filtroStato.setValue('');
-    this.filtroStatoValue.set('');
-    this.requestsService.setFiltroStato('');
+    this.statusFilter.setValue('');
+    this.statusFilterValue.set('');
+    this.projectsService.setStatusFilter('');
     this.statusDropdownOpen.set(false);
     this.showAllStatusOptions.set(false);
   }
@@ -395,7 +399,7 @@ export class ProjectsComponent {
     }
   }
 
-  apriPaginaVisualizza(id: string){
+  openProjectDetails(id: string){
     this.router.navigate(['/progetti', id]);
   }
 

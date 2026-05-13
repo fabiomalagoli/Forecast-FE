@@ -2,14 +2,14 @@ import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Location } from '@angular/common';
 import { Customer } from '../customer/customer.model';
-import { RequestsService } from '../../shared/requests.service';
 import { COMPLETE_CUSTOMER_HEADERS } from '../customer/complete-customer.headers';
 import { AppButtonComponent } from '../../shared/button/button';
 import { Project } from '../../projects/project/project.model';
 import { finalize } from 'rxjs';
+import { CustomersService } from '../../shared/services/customers.service';
 
 @Component({
-  selector: 'app-visualizza',
+  selector: 'app-customer-details',
   standalone: true,
   imports: [AppButtonComponent, RouterModule],
   templateUrl: './customer-details.component.html',
@@ -21,23 +21,15 @@ export class CustomerDetailsComponent {
   // Usiamo la history del browser per tornare indietro
   private location = inject(Location);
   private router = inject(Router);
-  private requests = inject(RequestsService);
+  private customersService = inject(CustomersService);
 
-  MostraProgettiAttivi = signal(false);
+  showActiveProjects = signal(false);
   loading = signal(true);
   error = signal<string | null>(null);
-  cliente = signal<Customer | null>(null);
+  customer = signal<Customer | null>(null);
 
-  /*    address?: string,
-    streetNumber?: string,
-    postalCode?: string,
-    city?: string,
-    province?: string,
-    country?: string,*/ 
-
-
-  readonly headersClienti: Record<keyof Customer, string> = COMPLETE_CUSTOMER_HEADERS;
-  readonly headersArray = Object.entries(this.headersClienti)
+  readonly customerHeaders: Record<keyof Customer, string> = COMPLETE_CUSTOMER_HEADERS;
+  readonly headersArray = Object.entries(this.customerHeaders)
     .filter(([key]) => key !== 'id'
                     && key !== 'address'
                     && key !== 'streetNumber'
@@ -50,13 +42,13 @@ export class CustomerDetailsComponent {
       label,
     }));
 
-    readonly headersProgetti = {
+    readonly projectsHeaders = {
       name: 'Nome Progetto',
       company: 'Azienda',
       totalBudget: 'Budget Totale',
       projectStatus: 'Stato',
     };
-    readonly headersProgettiArray = Object.entries(this.headersProgetti)
+    readonly headersProgettiArray = Object.entries(this.projectsHeaders)
     .filter(([key]) => key !== 'description') // Escludi campi non necessari
     .map(([key, label]) => ({
       key: key as keyof Project,
@@ -73,12 +65,12 @@ export class CustomerDetailsComponent {
       return;
     }
 
-    this.requests.caricaClienteById(id).pipe(
+    this.customersService.loadCustomerById(id).pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
       next: (c) => {
         console.log('Cliente caricato:', c);
-        this.cliente.set(c);
+        this.customer.set(c);
       },
       error: (err) => {
         console.error('Errore API:', err);
@@ -88,13 +80,13 @@ export class CustomerDetailsComponent {
   }
 
   getValue(c: Customer, key: keyof Customer): string {
-    const clienteValue = c[key];
+    const customerValue = c[key];
 
     // format base (evita [object Object])
-    if (clienteValue == null) return '';
-    if (Array.isArray(clienteValue)) return clienteValue.join(', ');
-    if (typeof clienteValue === 'object') return JSON.stringify(clienteValue);
-    return String(clienteValue);
+    if (customerValue == null) return '';
+    if (Array.isArray(customerValue)) return customerValue.join(', ');
+    if (typeof customerValue === 'object') return JSON.stringify(customerValue);
+    return String(customerValue);
   }
 
   getProgettoValue(p: Project, key: keyof Project): string {
@@ -109,11 +101,11 @@ export class CustomerDetailsComponent {
     this.location.back();
   }
 
-  mostraProgettiAttivi() {
-    this.MostraProgettiAttivi.set(true);
+  showProjects() {
+    this.showActiveProjects.set(true);
   }
 
-  vaiAiProgetti() {
+  goToProjects() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.router.navigate(['/clienti', id, 'progetti-attivi-cliente']);

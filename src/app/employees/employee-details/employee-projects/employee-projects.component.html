@@ -8,7 +8,7 @@
   <div class="error-state">
     <p>{{ error() }}</p>
   </div>
-} @else if (ProgettiFiltrati().length === 0) {
+} @else if (filteredProjects().length === 0) {
   <div class="empty-state">
     <p>Nessun progetto associato a questa risorsa.</p>
   </div>
@@ -23,8 +23,8 @@
         </tr>
       </thead>
       <tbody>
-        @for (p of ProgettiFiltrati(); track p.id) {
-          <tr (click)="viewProgetto.emit(p)">
+        @for (p of filteredProjects(); track p.id) {
+          <tr (click)="viewProject.emit(p)">
             @for (h of headersArray; track h.key) {
               <td>{{ getValue(p, h.key) }}</td>
             }

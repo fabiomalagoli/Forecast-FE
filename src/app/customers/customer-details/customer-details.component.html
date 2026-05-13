@@ -7,10 +7,10 @@
   <p>Caricamento...</p>
 } @else if (error()) {
   <p class="error">{{ error() }}</p>
-} @else if (!cliente()) {
+} @else if (!customer()) {
   <p>Cliente non trovato.</p>
 } @else {
-  @let c = cliente()!;
+  @let c = customer()!;
   <div class="main-content-wrapper">
     <div class="card-cliente">
       @for (h of headersArray; track h.key) {
@@ -20,19 +20,19 @@
               <div class="value-container">
                 <strong class="value">{{ getValue(c, h.key) }}</strong>
                 @if(h.key === 'projects'){
-                  <button appButton class="btn btn-primary project-btn" (click)="mostraProgettiAttivi()">Progetti del cliente</button>
+                  <button appButton class="btn btn-primary project-btn" (click)="showProjects()">Progetti del cliente</button>
                 }
               </div>
           </div>
         }
       }
     </div>
-    @if(MostraProgettiAttivi()){
+    @if(showActiveProjects()){
       <div class="card-progetti">
-        @if (cliente()!.activeProjects.length === 0) {
+        @if (customer()!.activeProjects.length === 0) {
           <p>Nessun progetto attivo.</p>
         } @else {
-            @for (progetto of cliente()!.activeProjects; track progetto.id) {
+            @for (progetto of customer()!.activeProjects; track progetto.id) {
               <ul>
                 <h4>{{ progetto.name }}</h4>
                   @for (h of headersProgettiArray; track h.key) {

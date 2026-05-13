@@ -1,7 +1,7 @@
 import { Component, DestroyRef, effect, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Employee } from '../employee.model';
-import { RequestsService } from '../../shared/requests.service';
+import { EmployeesService } from '../../shared/services/employees.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { EmployeeProjectsComponent } from "./employee-projects/employee-projects.component";
@@ -17,7 +17,7 @@ import { Project } from '../../projects/project/project.model';
 })
 export class EmployeeDetailsComponent {
 
-    private requestsService = inject(RequestsService);
+    private employeesService = inject(EmployeesService);
     private destroyRef = inject(DestroyRef);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
@@ -47,7 +47,7 @@ export class EmployeeDetailsComponent {
 
         this.isFetching.set(true);
 
-        const subscription = this.requestsService.caricaEmployeeById(id)
+        const subscription = this.employeesService.loadEmployeeById(id)
         .pipe(
             finalize(() => {
                 this.isFetching.set(false);

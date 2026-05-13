@@ -9,11 +9,11 @@
 @else if (error()) {
   <p class="error">{{ error() }}</p>
 } 
-@else if (!progetto()) {
+@else if (!project()) {
   <p>Progetto non trovato.</p>
 } 
 @else {
-  @let p = progetto()!;
+  @let p = project()!;
 
   <section class="card-progetto">
     @for (h of headersArray; track h.key) {
@@ -71,7 +71,7 @@
         </thead>
         <tbody>
           @for (employee of p.projectEmployees; track employee.id) {
-            <tr class="resource-row" (click)="apriDettagliRisorsa(employee)">
+            <tr class="resource-row" (click)="openEmployeeDetails(employee)">
               <td><strong>{{ employee.employee }}</strong></td>
               <td>{{ employee.jobRole }}</td>
               <td>{{ employee.jobRoleLevel }}</td>

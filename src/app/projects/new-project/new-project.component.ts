@@ -1,11 +1,34 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, output, signal } from '@angular/core';
+import { Component, OnInit, inject, output, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Project } from '../project/project.model';
-import { TextInputComponent } from "../../shared/text-input/text-input";
-import { PROGETTO_COMPLETO_HEADERS } from '../project/full-project.headers';
-import { RequestsService } from '../../shared/requests.service';
 import { forkJoin } from 'rxjs';
+import {
+  buildProjectEmployeePayload,
+  buildProjectJobRolePayload,
+} from '../../shared/payloads/project.payloads';
+import { CustomersService } from '../../shared/services/customers.service';
+import { EmployeesService } from '../../shared/services/employees.service';
+import { LookupsService } from '../../shared/services/lookups.service';
+import { ProjectsService } from '../../shared/services/projects.service';
+import { RolesService } from '../../shared/services/roles.service';
+import { TextInputComponent } from '../../shared/text-input/text-input';
+import {
+  buildEditableProjectHeaders,
+  calculateProjectTotals,
+  createEmptyProjectEmployee,
+  createEmptyProjectFormData,
+  createEmptyProjectRole,
+  formatEuroCurrency,
+  getDateAfterDays,
+  getExclusiveDaysDiff,
+  getTodayIsoDate,
+  getWinProbabilityError,
+  isProjectEmployeeComplete,
+  isProjectRoleComplete,
+  parseIsoDate,
+  toElementId,
+} from '../../shared/utils/project-form.utils';
+import { Project } from '../project/project.model';
 
 @Component({
   selector: 'app-new-progetto',
@@ -14,26 +37,26 @@ import { forkJoin } from 'rxjs';
   templateUrl: './new-project.component.html',
   styleUrls: ['../../shared/form-styles.css'],
 })
+export class NewProgettoComponent implements OnInit {
+  private projectsService = inject(ProjectsService);
+  private customersService = inject(CustomersService);
+  private rolesService = inject(RolesService);
+  private lookupsService = inject(LookupsService);
+  private employeesService = inject(EmployeesService);
 
-export class NewProgettoComponent implements OnInit{
-
-  private requestsService = inject(RequestsService);
-
-  listaAziende = signal<any[]>([]);
-  listaPM = signal<any[]>([]);
-  listaClienti = signal<any[]>([]);
-  listaStatiProgetto = signal<any[]>([]);
-  listaEmployees = signal<any[]>([]);
-  listaJobRoles = signal<any[]>([])
-  listaJobRoleLevels = signal<any[]>([])
-  progettoDaAggiungere = signal<Project | null>(null);
+  companiesList = signal<any[]>([]);
+  customersList = signal<any[]>([]);
+  projectStatusesList = signal<any[]>([]);
+  employeesList = signal<any[]>([]);
+  jobRolesList = signal<any[]>([]);
+  jobRoleLevelsList = signal<any[]>([]);
 
   created = output<Project>();
   cancel = output<void>();
 
-    // Variabili per gestione stato del form e messaggi
-  private dataOriginale: string = '';
-  private initialDataObj: any = null; // Ci serve per il CSS (vedi sotto)
+  private originalFormSnapshot = '';
+  private initialFormData: any = null;
+
   attemptedSubmit = false;
   noChangesMessage = false;
   statusMessage: { text: string; type: 'success' | 'error' } | null = null;
@@ -41,124 +64,75 @@ export class NewProgettoComponent implements OnInit{
 
   formData: any = {
     projectStatus: 'Initiation',
-    startDate: this.getTodayIsoDate(),
+    startDate: getTodayIsoDate(),
   };
 
-  readonly headers = (Object.entries(PROGETTO_COMPLETO_HEADERS) as [keyof Project, string][])
-    .filter(([key]) => key !== 'id' && key !== 'projectEmployees' && key !== 'projectJobRoles')
-    .map(([key, label]) => {
-      let finalKey = key as string;
-      if (['company', 'customer', 'pm', 'projectStatus'].includes(finalKey)) {
-        finalKey += 'Id';
-      }
-      return { key: finalKey, label };
-    });
-
-  readonly statusOptions: Project['projectStatus'][] = [
-    'Initiation',
-    'Planning',
-    'Execution',
-    'Monitoring',
-    'Closing',
-  ];
+  readonly headers = buildEditableProjectHeaders();
 
   ngOnInit() {
-    const caricamenti = {
-      aziende: this.requestsService.caricaAziendeDisponibili(),
-      clienti: this.requestsService.caricaClientiDisponibili(),
-      stati: this.requestsService.caricaStatiProgettoDisponibili(),
-      roles: this.requestsService.caricaJobRolesDisponibili(),
-      levels: this.requestsService.caricaJobRoleLevelsDisponibili(),
-      employees: this.requestsService.caricaEmployeesDisponibili()
+    const lookupRequests = {
+      companies: this.lookupsService.loadAvailableCompanies(),
+      customers: this.customersService.loadAvailableCustomers(),
+      statuses: this.lookupsService.loadProjectStatuses(),
+      roles: this.rolesService.loadAllJobRoles(),
+      levels: this.rolesService.loadJobRoleLevels(),
+      employees: this.employeesService.loadAllEmployees(),
     };
 
-    forkJoin(caricamenti).subscribe(risultati => {
-      this.listaAziende.set(risultati.aziende);
-      this.listaClienti.set(risultati.clienti);
-      this.listaStatiProgetto.set(risultati.stati);
-      this.listaEmployees.set(risultati.employees);
-      this.listaJobRoles.set(risultati.roles);
-      this.listaJobRoleLevels.set(risultati.levels);
+    forkJoin(lookupRequests).subscribe((lookups) => {
+      this.companiesList.set(lookups.companies);
+      this.customersList.set(lookups.customers);
+      this.projectStatusesList.set(lookups.statuses);
+      this.employeesList.set(lookups.employees);
+      this.jobRolesList.set(lookups.roles);
+      this.jobRoleLevelsList.set(lookups.levels);
 
-      this.formData = {
-        name: '',
-        description: '',
-        companyId: null,
-        customerId: null,
-        pmId: null,
-        projectStatusId: risultati.stati.find(s => s.name === 'Initiation')?.id || null,
-        startDate: this.getTodayIsoDate(),
-        endDate: '',
-        totalDays: 0,
-        winProbability: 0,
-        totalBudget: '0,00 €',
-        projectEmployees: [],
-        projectJobRoles: []
-      };
-
-      this.dataOriginale = JSON.stringify(this.formData);
-      this.initialDataObj = JSON.parse(this.dataOriginale);
-    })
+      const defaultStatusId = lookups.statuses.find((status) => status.name === 'Initiation')?.id || null;
+      this.formData = createEmptyProjectFormData(defaultStatusId);
+      this.saveInitialSnapshot();
+    });
   }
-  
 
   submit(form: NgForm) {
     if (this.isSubmitDisabled(form)) return;
 
-    // 1. Prepariamo il payload del progetto
-    const progettoPayload = {
+    const projectPayload = {
       ...this.formData,
-      totalBudget: this.parseBudgetNumber(this.formData.totalBudget)
+      totalBudget: Number(this.formData.totalBudget),
     };
 
-    // 2. Creiamo il progetto
-    this.requestsService.aggiungiNuovoProgetto(progettoPayload).subscribe({
-      next: (progettoCreato) => {
-        const newProjectId = progettoCreato.id; // L'ID restituito dal DB
-        const chiamateDettagli: any[] = [];
+    this.projectsService.addProject(projectPayload).subscribe({
+      next: (createdProject: any) => {
+        const newProjectId = createdProject.id;
+        const detailRequests: any[] = [];
 
-        // 3. Prepariamo le chiamate per i Ruoli
         this.formData.projectJobRoles.forEach((role: any) => {
-          const roleData = {
-            jobRoleId: role.jobRole,
-            jobRoleLevelId: role.jobRoleLevel,
-            dailyCost: this.parseBudgetNumber(role.dailyCost),
-            daysSpent: Number(role.daysSpent),
-            winProbability: this.parseDecimal(role.winProbability)
-          };
-          chiamateDettagli.push(this.requestsService.aggiungiProjectJobRole(newProjectId, [roleData]));
+          detailRequests.push(this.projectsService.addProjectJobRole(newProjectId, [buildProjectJobRolePayload(role)]));
         });
 
-        // 4. Prepariamo le chiamate per le Risorse
-        this.formData.projectEmployees.forEach((emp: any) => {
-          const empData = {
-            EmployeeId: emp.employeeId,
-            dailyCost: this.parseBudgetNumber(emp.dailyCost),
-            daysSpent: Number(emp.daysSpent),
-            winProbability: this.parseDecimal(emp.winProbability)
-          };
-          chiamateDettagli.push(this.requestsService.aggiungiProjectEmployee(newProjectId, [empData]));
+        this.formData.projectEmployees.forEach((employee: any) => {
+          detailRequests.push(this.projectsService.addProjectEmployee(newProjectId, [buildProjectEmployeePayload(employee)]));
         });
 
-        // 5. Eseguiamo tutto il resto insieme
-        if (chiamateDettagli.length > 0) {
-          forkJoin(chiamateDettagli).subscribe({
-            next: () => {
-              this.showNotification('Progetto creato con successo con tutti i dettagli!', 'success');
-              this.created.emit(progettoCreato);
-            },
-            error: () => this.showNotification('Progetto creato, ma errore nel salvataggio di ruoli/risorse.', 'error')
-          });
-        } else {
-          this.created.emit(progettoCreato);
+        if (!detailRequests.length) {
+          this.created.emit(createdProject);
+          return;
         }
+
+        forkJoin(detailRequests).subscribe({
+          next: () => {
+            this.showNotification('Progetto creato con successo con tutti i dettagli!', 'success');
+            this.created.emit(createdProject);
+          },
+          error: () => this.showNotification('Progetto creato, ma errore nel salvataggio di ruoli/risorse.', 'error'),
+        });
       },
-      error: (err) => this.showNotification('Errore nella creazione del progetto.', 'error')
+      error: () => this.showNotification('Errore nella creazione del progetto.', 'error'),
     });
   }
 
   onCancel() {
-    this.cancel.emit(); // Comunichiamo al genitore che vogliamo chiudere il form
+    this.cancel.emit();
   }
 
   isNumericField(key: string): boolean {
@@ -167,182 +141,108 @@ export class NewProgettoComponent implements OnInit{
 
   getOptions(key: string): any[] {
     switch (key) {
-      case 'projectStatusId': return this.listaStatiProgetto();
-      case 'companyId': return this.listaAziende();
-      case 'customerId': return this.listaClienti();
-      case 'pmId': return this.listaEmployees();
-      default: return [];
-      }
+      case 'projectStatusId':
+        return this.projectStatusesList();
+      case 'companyId':
+        return this.companiesList();
+      case 'customerId':
+        return this.customersList();
+      case 'pmId':
+        return this.employeesList();
+      default:
+        return [];
+    }
   }
 
   isFieldChanged(key: string): boolean {
-    if (!this.initialDataObj) return false;
-    return JSON.stringify(this.formData[key]) !== JSON.stringify(this.initialDataObj[key]);
+    if (!this.initialFormData) return false;
+
+    return JSON.stringify(this.formData[key]) !== JSON.stringify(this.initialFormData[key]);
   }
 
-
   getPattern(key: string): string {
-    if (key === 'winProbability') {
-      return '^(100|[1-9][0-9]?)$';
-    }
+    if (key === 'winProbability') return '^(100|[1-9][0-9]?)$';
     if (key === 'totalBudget') {
       return '^\\s*(?:\\u20AC\\s*)?(?:\\d{1,3}(?:[.,]\\d{3})*|\\d+)(?:[.,]\\d{1,2})?\\s*(?:\\u20AC\\s*)?$';
     }
-    if (this.isNumericField(key)) {
-      return '^[0-9]+$';
-    }
-    return '';
-  }
+    if (this.isNumericField(key)) return '^[0-9]+$';
 
-  private getTodayIsoDate(): string {
-    const today = new Date();
-    const local = new Date(today.getTime() - today.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 10);
+    return '';
   }
 
   onFieldChange() {
     this.noChangesMessage = false;
   }
 
-
   onDateChange() {
-    const start = this.parseIsoDate(this.formData.startDate);
-    const end = this.parseIsoDate(this.formData.endDate);
+    const start = parseIsoDate(this.formData.startDate);
+    const end = parseIsoDate(this.formData.endDate);
 
     if (!start || !end) {
-      // Se manca una delle due date, non ha senso calcolare i giorni
       this.dateRangeError = false;
       this.formData.totalDays = '';
       return;
     }
 
     if (end < start) {
-      // Data fine prima dell’inizio: segnaliamo l’errore e lasciamo i giorni vuoti
       this.dateRangeError = true;
       this.formData.totalDays = '';
       return;
     }
 
     this.dateRangeError = false;
-    const diffDays = this.diffGiorniEsclusivo(start, end);
-    this.formData.totalDays = diffDays;
+    this.formData.totalDays = getExclusiveDaysDiff(start, end);
   }
 
   onTotalDaysChange() {
-    const start = this.parseIsoDate(this.formData.startDate);
+    const start = parseIsoDate(this.formData.startDate);
     const totalDays = Number(this.formData.totalDays);
 
     if (!start || !Number.isFinite(totalDays) || totalDays <= 0) {
-      // Giorni non validi: evitiamo di impostare una data fine “sballata”
       this.formData.endDate = '';
       return;
     }
 
     this.dateRangeError = false;
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + Math.floor(totalDays));
-    this.formData.endDate = end.toISOString().slice(0, 10);
+    this.formData.endDate = getDateAfterDays(start, totalDays);
   }
 
-  private parseIsoDate(value: string | undefined): Date | null {
-    if (!value) return null;
-    // Gestione manuale per evitare problemi di timezone negli input date
-    const [y, m, d] = value.split('-').map((v) => Number(v));
-    if (!y || !m || !d) return null;
-    return new Date(Date.UTC(y, m - 1, d));
+  toId(key: string, index: number): string {
+    return toElementId('progetto', key, index);
   }
 
-  private diffGiorniEsclusivo(start: Date, end: Date): number {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const diff = Math.floor((end.getTime() - start.getTime()) / msPerDay);
-    return diff;
+  recalculateTotals() {
+    const roles = this.formData.projectJobRoles || [];
+    const employees = this.formData.projectEmployees || [];
+    const totals = calculateProjectTotals([...roles, ...employees]);
+
+    this.formData.totalDays = totals.totalDays;
+    this.formData.totalBudget = formatEuroCurrency(totals.totalBudget);
   }
 
-  private parseBudgetNumber(value: unknown): number {
-    if (value === null || value === undefined || value === '') return NaN;
-    // Accettiamo formati diversi (€, punti/migliaia, virgola decimale) e normalizziamo
-    const raw = String(value).trim().replace(/[\u20AC\s]/g, '');
-    if (!raw) return NaN;
-    const lastComma = raw.lastIndexOf(',');
-    const lastDot = raw.lastIndexOf('.');
-    let normalized = raw;
-    if (lastComma !== -1 && lastDot !== -1) {
-      const decimalIndex = lastComma > lastDot ? lastComma : lastDot;
-      normalized = raw.replace(/[.,]/g, (match, offset) => (offset === decimalIndex ? '.' : ''));
-    } else if (lastComma !== -1) {
-      normalized = raw.replace(/\./g, '').replace(',', '.');
-    } else {
-      normalized = raw.replace(/,/g, '');
-    }
-    return Number(normalized);
+  addRole() {
+    this.formData.projectJobRoles ??= [];
+    this.formData.projectJobRoles.push(createEmptyProjectRole());
+    this.recalculateTotals();
   }
 
-  toId(key: string, i: number): string {
-    return `progetto-${i}-${key}`
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
-      .replace(/\s+/g, '-')                             
-      .replace(/[^a-zA-Z0-9_-]/g, '')                   
-      .toLowerCase();
-  } //funzione per evitare problemi di caratteri speciali e maiuscole eventuali
-
-  ricalcolaTotali() {
-    const ruoli = this.formData.projectJobRoles || [];
-    const risorse = this.formData.projectEmployees || [];
-    const tutteLeVoci = [...ruoli, ...risorse];
-
-    const totaleGiorni = tutteLeVoci.reduce((sum: number, item: any) => sum + Number(item.daysSpent || 0), 0);
-    const totaleBudget = tutteLeVoci.reduce((sum: number, item: any) => {
-      const dailyCost = this.parseBudgetNumber(item.dailyCost);
-      const days = Number(item.daysSpent || 0);
-      return sum + (dailyCost * days);
-    }, 0);
-
-    this.formData.totalDays = totaleGiorni;
-    this.formData.totalBudget = this.formattaValuta(totaleBudget); // Formattiamo il budget come stringa con simbolo €
+  addEmployee() {
+    this.formData.projectEmployees ??= [];
+    this.formData.projectEmployees.push(createEmptyProjectEmployee());
   }
 
-  aggiungiRuolo() {
-    if (!this.formData.projectJobRoles) {
-      this.formData.projectJobRoles = [];
-      this.ricalcolaTotali(); // Per aggiornare totalDays e totalBudget se prima non c'erano ruoli
-    }
-
-    this.formData.projectJobRoles.push({
-      id: crypto.randomUUID(),
-      jobRole: null,      // Legato a r-role-i nell'HTML
-      jobRoleLevel: null, // Legato a r-lvl-i nell'HTML
-      dailyCost: null,
-      daysSpent: null,
-      winProbability: null
-    });
-  }
-
-  aggiungiRisorsa() {
-    if (!this.formData.projectEmployees) {
-      this.formData.projectEmployees = [];
-    }
-
-    this.formData.projectEmployees.push({
-      id: crypto.randomUUID(),
-      employeeId: null, // Legato a e-role-i nell'HTML
-      dailyCost: null, // Legato a e-cost-i nell'HTML
-      daysSpent: null, // Legato a e-days-i nell'HTML
-      winProbability: null // Legato a e-win-i nell'HTML
-    }); // Aggiungiamo un placeholder null per la nuova risorsa
-  }
-
-  rimuoviRuolo(index: number) {
+  removeRole(index: number) {
     this.formData.projectJobRoles.splice(index, 1);
-    this.ricalcolaTotali(); // Ricalcoliamo totali dopo la rimozione di un ruolo
+    this.recalculateTotals();
   }
 
-  rimuoviRisorsa(index: number) {
+  removeEmployee(index: number) {
     this.formData.projectEmployees.splice(index, 1);
-    this.ricalcolaTotali(); // Ricalcoliamo totali dopo la rimozione di una risorsa
+    this.recalculateTotals();
   }
 
   isChanged(): boolean {
-    return true;
+    return JSON.stringify(this.formData) !== this.originalFormSnapshot;
   }
 
   isSubmitDisabled(form: NgForm): boolean {
@@ -359,42 +259,24 @@ export class NewProgettoComponent implements OnInit{
   hasValidRoles(): boolean {
     const roles = this.formData.projectJobRoles;
     if (!roles || roles.length === 0) return true;
-    return roles.every((role: any) => this.isRoleComplete(role));
+
+    return roles.every((role: any) => isProjectRoleComplete(role));
   }
 
   hasValidResources(): boolean {
-    const risorse = this.formData.projectEmployees;
-    if (!risorse || risorse.length === 0) return true;
-    return risorse.every((r: any) => 
-      !!r.employeeId && 
-      this.parseBudgetNumber(r.dailyCost) > 0 && 
-      Number(r.daysSpent) > 0
-    );
+    const employees = this.formData.projectEmployees;
+    if (!employees || employees.length === 0) return true;
+
+    return employees.every((employee: any) => isProjectEmployeeComplete(employee));
   }
 
-  private isRoleComplete(role: any): boolean {
-    const hasRole = typeof role?.jobRole === 'string' && role.jobRole.trim().length > 0;
-    const hasLevel = typeof role?.jobRoleLevel === 'string' && role.jobRoleLevel.trim().length > 0;
-    const hasDailyCost = role?.dailyCost !== null && role?.dailyCost !== undefined && role?.dailyCost !== '';
-    const hasDaysSpent = role?.daysSpent !== null && role?.daysSpent !== undefined && role?.daysSpent !== '';
-    const roleWin = this.parseDecimal(role?.winProbability);
-    const hasWinProbability = Number.isFinite(roleWin) && roleWin >= 0.1 && roleWin <= 1;
-    return hasRole && hasLevel && hasDailyCost && hasDaysSpent && hasWinProbability;
+  getWinProbabilityError(item: any) {
+    return getWinProbabilityError(item);
   }
 
-  private parseDecimal(value: unknown): number {
-    if (value === null || value === undefined || value === '') return NaN;
-    const raw = String(value).trim().replace(',', '.');
-    const num = Number(raw);
-    return Number.isFinite(num) ? num : NaN;
-  }
-
-  getRoleWinError(role: any): 'required' | 'range' | null {
-    const value = role?.winProbability;
-    if (value === null || value === undefined || value === '') return 'required';
-    const num = this.parseDecimal(value);
-    if (!Number.isFinite(num) || num < 0.1 || num > 1) return 'range';
-    return null;
+  private saveInitialSnapshot() {
+    this.originalFormSnapshot = JSON.stringify(this.formData);
+    this.initialFormData = JSON.parse(this.originalFormSnapshot);
   }
 
   private showNotification(text: string, type: 'success' | 'error') {
@@ -403,27 +285,4 @@ export class NewProgettoComponent implements OnInit{
       this.statusMessage = null;
     }, 3000);
   }
-
-  private getErrorMessage(error: any, fallback: string): string {
-    const apiError = error?.error;
-    if (typeof apiError === 'string' && apiError.trim()) return apiError;
-    if (apiError?.title) return apiError.title;
-    if (apiError?.errors && typeof apiError.errors === 'object') {
-      const messages = Object.values(apiError.errors).flat();
-      if (messages.length) return String(messages.join(' '));
-    }
-    if (error?.message) return error.message;
-    return fallback;
-  }
-
-    private formattaValuta(valore: number): string {
-    if (isNaN(valore)) return '0,00 €';
-  
-    return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2
-    }).format(valore);
-  }
-
 }

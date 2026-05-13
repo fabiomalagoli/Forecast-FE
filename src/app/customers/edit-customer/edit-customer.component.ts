@@ -1,22 +1,24 @@
 import { Component, input, output, OnInit, inject } from '@angular/core';
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { CLIENTE_HEADERS } from '../customer/customer.headers';
+import { CUSTOMER_HEADERS } from '../customer/customer.headers';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Customer } from '../customer/customer.model';
 import { CommonModule } from '@angular/common';
-import { RequestsService } from '../../shared/requests.service';
+import { CustomersService } from '../../shared/services/customers.service';
+import { parseCustomerAddress } from '../../shared/utils/customer-form.utils';
+import { toElementId } from '../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-modifica-cliente',
+  selector: 'app-edit-customer',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './edit-customer.component.html',
   styleUrls: ['../../shared/form-styles.css'],
 })
 export class EditCustomerComponent implements OnInit {
 
-    private requests = inject(RequestsService);
+    private customersService = inject(CustomersService);
     //Riceviamo dal Padre (Cliente.ts) il cliente da modificare, e definiamo gli output per comunicare al padre le azioni di modifica o cancellazione.
-    clienteDaModificare = input.required<Customer>();
+    selectedCustomerToEdit = input.required<Customer>();
 
     //modified è l'output che emette il cliente modificato al padre, cancel è l'output che emette un evento di cancellazione al padre.
     modified = output<Customer>();
@@ -34,16 +36,16 @@ export class EditCustomerComponent implements OnInit {
     private OriginalData: string = '';
 
     // Headers dinamici basati su CLIENTE_HEADERS, escludendo campi non editabili come 'id'
-    readonly headers = (Object.entries(CLIENTE_HEADERS) as [keyof Customer, string][])
+    readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({ key, label }));
 
     ngOnInit() {
-        const c = this.clienteDaModificare();
+        const c = this.selectedCustomerToEdit();
         // Inizializza formData con i dati del cliente da modificare
         this.baseData = JSON.parse(JSON.stringify(c));
 
-        const separatedAddress = this.parseIndirizzo(c.fullAddress || '');
+        const separatedAddress = parseCustomerAddress(c.fullAddress || '');
 
         this.formData = {
             ...this.baseData,
@@ -51,42 +53,6 @@ export class EditCustomerComponent implements OnInit {
         };
 
         this.OriginalData = JSON.stringify(this.formData);
-    }
-
-    private parseIndirizzo(fullAddress : string){
-        if(!fullAddress) return {};
-
-        const parts = fullAddress.split(',');
-
-        const address = parts[0]?.trim();
-        const province = parts[2]?.trim();
-        const country = parts[3]?.trim();
-
-        let streetNumber = '';
-        let postalCode = '';
-        let city = '';
-
-        if(parts[1]) {
-            const middleParts = parts[1].split('-');
-
-            streetNumber = middleParts[0]?.trim();
-
-            if(middleParts[1]) {
-                const postaCodeAndCity = middleParts[1].trim();
-                postalCode = postaCodeAndCity.substring(0,5);
-                city = postaCodeAndCity.substring(5).trim();
-            }
-        }
-
-        return {
-            address,
-            streetNumber,
-            postalCode,
-            city,
-            province,
-            country,
-        };
-
     }
 
     isChanged(): boolean {
@@ -102,7 +68,7 @@ export class EditCustomerComponent implements OnInit {
             return;
         }
 
-        this.requests.aggiornaCliente(this.formData).subscribe({
+        this.customersService.updateCustomer(this.formData).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
@@ -136,12 +102,7 @@ export class EditCustomerComponent implements OnInit {
     
     //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali.
     toId(key: string, i: number): string {
-    return `cliente-${i}-${key}`
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/[^a-zA-Z0-9_-]/g, '')
-        .toLowerCase();
+    return toElementId('cliente', key, i);
     }
 
     isRequiredField(key: string): boolean {

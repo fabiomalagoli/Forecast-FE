@@ -1,14 +1,16 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, map, tap, throwError, of, Observable } from 'rxjs';
+import { catchError, concatMap, map, tap, throwError, of, Observable } from 'rxjs';
 import { Project } from '../../projects/project/project.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { toBackendDate, toNumber, normalizeWinProbability } from '../utils/shared-utils';
+import { LookupsService } from './lookups.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
   private errorService = inject(ErrorService);
+  private lookupsService = inject(LookupsService);
   private httpClient = inject(HttpClient);
 
   private projects = signal<Project[]>([]);
@@ -124,6 +126,32 @@ export class ProjectsService {
     ).subscribe();
   }
 
+  setCustomerFilter(value: string) {
+    this.loadAvailableProjects().pipe(
+      tap(projects => {
+        const filtered = projects.filter(p => 
+          p.customer.toLowerCase().includes(value.toLowerCase())
+        );
+        this.projects.set(filtered);
+      })
+    ).subscribe();
+  }
+
+  setStatusFilter(value: string) {
+    this.loadAvailableProjects().pipe(
+      tap(projects => {
+        if (!value) {
+          this.projects.set(projects);
+          return;
+        }       
+        const selectedStatus = this.lookupsService.loadedProjectStatuses().find(s => s.id === value);
+        const statusName = selectedStatus?.name || '';       
+        const filtered = projects.filter(p => p.projectStatus === statusName);
+        this.projects.set(filtered);
+      })
+    ).subscribe();
+  }
+
   // --- PROJECT JOB ROLES ---
   loadProjectJobRoles(projectId: string) {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles`).pipe(
@@ -148,6 +176,15 @@ export class ProjectsService {
         if (created?.id) {
           this.projectJobRoles.update(prev => [...prev, { ...created, project: this.projects().find(p => p.id === projectId)?.name || 'N/A' }]);
         }
+      }),
+      catchError(error => throwError(() => error))
+    );
+  }
+
+  updateProjectJobRole(projectId: string, roleId: string, data: any) {
+    return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles/${encodeURIComponent(roleId)}`, data).pipe(
+      tap(() => {
+        this.projectJobRoles.update(prev => prev.map(role => role.id === roleId ? { ...role, ...data } : role));
       }),
       catchError(error => throwError(() => error))
     );
@@ -188,6 +225,21 @@ export class ProjectsService {
         }
       }),
       catchError(error => throwError(() => error))
+    );
+  }
+
+  updateProjectEmployee(projectId: string, employeeId: string, data: any) {
+    return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(employeeId)}`, data).pipe(
+      tap(() => {
+        this.projectEmployees.update(prev => prev.map(employee => employee.id === employeeId ? { ...employee, ...data } : employee));
+      }),
+      catchError(error => throwError(() => error))
+    );
+  }
+
+  replaceProjectEmployee(projectId: string, employeeId: string, data: any) {
+    return this.deleteProjectEmployee(projectId, employeeId).pipe(
+      concatMap(() => this.addProjectEmployee(projectId, data))
     );
   }
 

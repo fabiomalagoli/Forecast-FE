@@ -18,7 +18,7 @@ import { Router, RouterModule } from '@angular/router';
 export class CustomerComponent {
   @Input() align: 'left' | 'center' | 'right' = 'left' //Allineamento di default a sinistra.
   @Input({required: true}) columns!: Column<Customer>[];
-  cliente = input.required<Customer>();
+  customer = input.required<Customer>();
   edit = output<Customer>();
 
   private router = inject(Router);
@@ -27,7 +27,7 @@ export class CustomerComponent {
     return this.columns.length + 1; //+1 per la colonna dei bottoni
   }
 
-  apriModifica(c: Customer) {
+  openEdit(c: Customer) {
     this.edit.emit(c);
   }
 }

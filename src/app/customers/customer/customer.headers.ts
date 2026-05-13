@@ -1,7 +1,7 @@
 import { Customer } from "./customer.model";
 
 //Record per inserire i titoli (headers) dei dati della tabella Clienti corrispondenti ai parametri del tipo ModelloCliente.
-export const CLIENTE_HEADERS = {
+export const CUSTOMER_HEADERS = {
    id: 'ID',
    vatNumber: 'Partita IVA',
    name: 'Nome',

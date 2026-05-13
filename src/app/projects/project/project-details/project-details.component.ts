@@ -2,16 +2,15 @@ import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { Project } from '../project.model';
-import { RequestsService } from '../../../shared/requests.service';
-import { PROGETTO_COMPLETO_HEADERS } from '../full-project.headers';
+import { COMPLETE_PROJECT_HEADERS } from '../complete-project.headers';
 import { AppButtonComponent } from '../../../shared/button/button';
-import { ProjectsComponent } from '../../projects.component';
 import { ResourceDetailsGridComponent } from './employees-details-grid/employee-details-grid.component';
 import { ProjectEmployee } from '../project-employee.model';
 import { finalize } from 'rxjs';
+import { ProjectsService } from '../../../shared/services/projects.service';
 
 @Component({
-  selector: 'app-visualizza',
+  selector: 'app-project-details',
   standalone: true,
   imports: [AppButtonComponent, ResourceDetailsGridComponent],
   templateUrl: './project-details.component.html',
@@ -22,15 +21,15 @@ export class ProjectDetailsComponent {
   private route = inject(ActivatedRoute);
   // Usiamo la history del browser per tornare indietro
   private location = inject(Location);
-  private requests = inject(RequestsService);
+  private projectsService = inject(ProjectsService);
 
   loading = signal(true);
   error = signal<string | null>(null);
-  progetto = signal<Project | null>(null);
+  project = signal<Project | null>(null);
   selectedResource = signal<ProjectEmployee | null>(null);
 
-  readonly headersProgetti: Partial<Record<keyof Project, string>> = PROGETTO_COMPLETO_HEADERS;
-  readonly headersArray = Object.entries(this.headersProgetti)
+  readonly projectsHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
+  readonly headersArray = Object.entries(this.projectsHeaders)
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({
       key: key as keyof Project,
@@ -48,12 +47,12 @@ export class ProjectDetailsComponent {
       return;
     }
 
-    this.requests.caricaProgettoById(id).pipe(
+    this.projectsService.loadProjectById(id).pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
       next: (p) => {
         console.log('Progetto caricato:', p);
-        this.progetto.set(p);
+        this.project.set(p);
       },
       error: (err) => {
         console.error('Errore API:', err);
@@ -62,7 +61,7 @@ export class ProjectDetailsComponent {
     });
   }
 
-  apriDettagliRisorsa(employee: ProjectEmployee) {
+  openEmployeeDetails(employee: ProjectEmployee) {
     this.selectedResource.set(employee);
   }
 
@@ -76,9 +75,9 @@ export class ProjectDetailsComponent {
     return String(progettoValue);
   }
 
-  gestisciSalvataggio(progettoAggiornato: Project) {
+  manageSaving(progettoAggiornato: Project) {
     console.log("Ricevuto progetto aggiornato dall'output:", progettoAggiornato);
-    this.progetto.set(progettoAggiornato);
+    this.project.set(progettoAggiornato);
   }
 
   indietro() {

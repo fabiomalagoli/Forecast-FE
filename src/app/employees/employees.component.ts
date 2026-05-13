@@ -1,5 +1,7 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal, OnInit } from '@angular/core';
-import { RequestsService } from '../shared/requests.service';
+import { EmployeesService } from '../shared/services/employees.service';
+import { RolesService } from '../shared/services/roles.service';
+import { LookupsService } from '../shared/services/lookups.service'; 
 import { Router } from '@angular/router';
 import { Employee } from './employee.model';
 import { CommonModule } from '@angular/common';
@@ -12,7 +14,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap } from 'rxjs';
 
 @Component({
-  selector: 'app-risorse',
+  selector: 'app-employees',
   templateUrl: './employees.component.html',
   styleUrls: ['../shared/filter-styles.css', './employees.component.css'],
   imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, EditEmployeeComponent, NewRisorsaComponent, EmployeeRowComponent, MatPaginatorModule],
@@ -21,28 +23,31 @@ import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap } from 'rxj
 export class EmployeesComponent implements OnInit {
     isFetching = signal(false);
     error = signal('');
-    private requestsService = inject(RequestsService);
+
+    private rolesService = inject(RolesService);
+    private employeesService = inject(EmployeesService);
+    private lookupsService = inject(LookupsService)
     private destroyRef = inject(DestroyRef);
     private router = inject(Router);
 
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
     
-    risorse = this.requestsService.employeesCaricati;
-    allRisorse = this.requestsService.allEmployeesCaricati;
+    employees = this.employeesService.loadedEmployees;
+    allEmployees = this.employeesService.loadedAllEmployees;
 
-    listaJobRoles = signal<any[]>([]);
-    listaJobRoleLevels = signal<any[]>([]);
-    listaAziende = signal<any[]>([]);
+    jobRolesList = signal<any[]>([]);
+    jobRoleLevelsList = signal<any[]>([]);
+    companiesList = signal<any[]>([]);
 
-    filtroNomeRisorsa = new FormControl('');
-    filtroRuolo = new FormControl('');
-    filtroLivello = new FormControl('');
-    filtroAzienda = new FormControl('');
+    filterEmployeeName = new FormControl('');
+    filterRole = new FormControl('');
+    filterLevel = new FormControl('');
+    filterCompany = new FormControl('');
 
-    filtroNomeValue = signal('');
-    filtroRuoloValue = signal('');
-    filtroLivelloValue = signal('');
-    filtroAziendaValue = signal('');
+    filterNameValue = signal('');
+    filterRoleValue = signal('');
+    filterLevelValue = signal('');
+    filterCompanyValue = signal('');
 
     nameDropdownOpen = signal(false);
     roleDropdownOpen = signal(false);
@@ -54,27 +59,27 @@ export class EmployeesComponent implements OnInit {
     showAllLevelOptions = signal(false);
     showAllCompanyOptions = signal(false);
 
-    risorseFiltrate = computed<Employee[]>(() => {
+    filteredEmployees = computed<Employee[]>(() => {
         const hasFilters = !!(
-            this.filtroNomeValue() ||
-            this.filtroRuoloValue() ||
-            this.filtroLivelloValue() ||
-            this.filtroAziendaValue()
+            this.filterNameValue() ||
+            this.filterRoleValue() ||
+            this.filterLevelValue() ||
+            this.filterCompanyValue()
         );
-        const source = hasFilters ? this.allRisorse() : this.risorse(); // Se ci sono applicati filtri, mi mostri i risultati filtrati
+        const source = hasFilters ? this.allEmployees() : this.employees(); // Se ci sono applicati filtri, mi mostri i risultati filtrati
                                                                         // Basati su TUTTE le risorse, altrimenti mi mostri solo le risorse impaginate
 
         return source.filter(risorsa =>
-            this.fullName(risorsa).toLowerCase().includes(this.filtroNomeValue()) &&
-            risorsa.jobRole.toLowerCase().includes(this.filtroRuoloValue()) &&
-            risorsa.jobRoleLevel.toLowerCase().includes(this.filtroLivelloValue()) &&
-            risorsa.company.toLowerCase().includes(this.filtroAziendaValue())
+            this.fullName(risorsa).toLowerCase().includes(this.filterNameValue()) &&
+            risorsa.jobRole.toLowerCase().includes(this.filterRoleValue()) &&
+            risorsa.jobRoleLevel.toLowerCase().includes(this.filterLevelValue()) &&
+            risorsa.company.toLowerCase().includes(this.filterCompanyValue())
         );
     });
 
     nameFilterOptions = computed<Employee[]>(() => {
-        const term = this.showAllNameOptions() ? '' : this.filtroNomeValue();
-        const employees = this.allRisorse();
+        const term = this.showAllNameOptions() ? '' : this.filterNameValue();
+        const employees = this.allEmployees();
 
         if (!term) {
             return employees;
@@ -86,8 +91,8 @@ export class EmployeesComponent implements OnInit {
     });
 
     roleFilterOptions = computed<any[]>(() => {
-        const term = this.showAllRoleOptions() ? '' : this.filtroRuoloValue();
-        const roles = this.listaJobRoles();
+        const term = this.showAllRoleOptions() ? '' : this.filterRoleValue();
+        const roles = this.jobRolesList();
 
         if (!term) {
             return roles;
@@ -99,8 +104,8 @@ export class EmployeesComponent implements OnInit {
     });
 
     levelFilterOptions = computed<any[]>(() => {
-        const term = this.showAllLevelOptions() ? '' : this.filtroLivelloValue();
-        const levels = this.listaJobRoleLevels();
+        const term = this.showAllLevelOptions() ? '' : this.filterLevelValue();
+        const levels = this.jobRoleLevelsList();
 
         if (!term) {
             return levels;
@@ -112,8 +117,8 @@ export class EmployeesComponent implements OnInit {
     });
 
     companyFilterOptions = computed<any[]>(() => {
-        const term = this.showAllCompanyOptions() ? '' : this.filtroAziendaValue();
-        const companies = this.listaAziende();
+        const term = this.showAllCompanyOptions() ? '' : this.filterCompanyValue();
+        const companies = this.companiesList();
 
         if (!term) {
             return companies;
@@ -124,21 +129,21 @@ export class EmployeesComponent implements OnInit {
         );
     });
 
-    isRisorsaInAggiunta = signal<boolean | null>(null);
-    risorsaInModifica = signal<Employee | null>(null); 
-    risorsaInAggiunta = signal<Employee | null>(null);
+    isAddingEmployeeState = signal<boolean | null>(null);
+    editingEmployee = signal<Employee | null>(null); 
+    addingEmployee = signal<Employee | null>(null);
 
-    selectedRisorsaId = signal<string | null>(null);
-    selectedRisorsa = signal<Employee | null>(null);
+    selectedEmployeeId = signal<string | null>(null);
+    selectedEmployee = signal<Employee | null>(null);
 
     currentPage = signal(1) //Pagina iniziale di default. Resa un signal per reagire ai cambiamenti
     pageSize = 10;
-    pagination = this.requestsService.employeesPagination;
+    pagination = this.employeesService.paginationData;
 
     constructor() {
         // Effetto per monitorare i cambiamenti della lista risorse
         effect(() => {
-            console.log('IL SEGNALE È CAMBIATO! Nuova lista risorse:', this.risorse());
+            console.log('IL SEGNALE È CAMBIATO! Nuova lista risorse:', this.employees());
         });
     }
 
@@ -147,15 +152,15 @@ export class EmployeesComponent implements OnInit {
         const nextPageSize = event.pageSize;
 
         this.pageSize = nextPageSize;
-        this.caricaPagina(nextPage);
+        this.loadPage(nextPage);
     }
 
-    caricaPagina(page: number){
+    loadPage(page: number){
         this.isFetching.set(true);
         this.currentPage.set(page);
-        this.chiudiPannello();
+        this.closePanel();
 
-        this.requestsService.caricaEmployeesDisponibili(page, this.pageSize).pipe(
+        this.employeesService.loadEmployees(page, this.pageSize).pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
@@ -176,14 +181,14 @@ export class EmployeesComponent implements OnInit {
     nextPage() {
         const meta = this.pagination();
         if(meta?.hasNext){
-            this.caricaPagina(meta.currentPage + 1);
+            this.loadPage(meta.currentPage + 1);
         }
     }
 
     prevPage() {
         const meta = this.pagination();
         if (meta?.hasPrevious) {
-            this.caricaPagina(meta.currentPage - 1);
+            this.loadPage(meta.currentPage - 1);
         }
     }
 
@@ -191,7 +196,7 @@ export class EmployeesComponent implements OnInit {
         this.isFetching.set(true);
         
         // Caricamento principale delle risorse
-        const subscription = this.requestsService.caricaEmployeesDisponibili(this.currentPage(), this.pageSize).pipe(
+        const subscription = this.employeesService.loadEmployees(this.currentPage(), this.pageSize).pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: (data) => {
@@ -213,15 +218,15 @@ export class EmployeesComponent implements OnInit {
         });
 
         const filterDataSubscription = forkJoin([
-            this.requestsService.caricaTuttiEmployeesDisponibili(),
-            this.requestsService.caricaTuttiJobRolesDisponibili(),
-            this.requestsService.caricaJobRoleLevelsDisponibili(),
-            this.requestsService.caricaAziendeDisponibili(),
+            this.employeesService.loadAllEmployees(),
+            this.rolesService.loadAllJobRoles(),
+            this.rolesService.loadJobRoleLevels(),
+            this.lookupsService.loadAvailableCompanies(),
         ]).subscribe({
             next: ([employees, roles, levels, companies]) => {
-                this.listaJobRoles.set(roles);
-                this.listaJobRoleLevels.set(levels);
-                this.listaAziende.set(companies);
+                this.jobRolesList.set(roles);
+                this.jobRoleLevelsList.set(levels);
+                this.companiesList.set(companies);
             },
             error: (err) => {
                 this.error.set('Errore durante il caricamento dei filtri risorse: ' + err.message);
@@ -233,38 +238,38 @@ export class EmployeesComponent implements OnInit {
             filterDataSubscription.unsubscribe();
         });
 
-        const nameFilterSubscription = this.filtroNomeRisorsa.valueChanges.pipe(
+        const nameFilterSubscription = this.filterEmployeeName.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
             tap(value => {
-                this.filtroNomeValue.set((value || '').toLowerCase());
+                this.filterNameValue.set((value || '').toLowerCase());
                 this.showAllNameOptions.set(false);
             })
         ).subscribe();
 
-        const roleFilterSubscription = this.filtroRuolo.valueChanges.pipe(
+        const roleFilterSubscription = this.filterRole.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
             tap(value => {
-                this.filtroRuoloValue.set((value || '').toLowerCase());
+                this.filterRoleValue.set((value || '').toLowerCase());
                 this.showAllRoleOptions.set(false);
             })
         ).subscribe();
 
-        const levelFilterSubscription = this.filtroLivello.valueChanges.pipe(
+        const levelFilterSubscription = this.filterLevel.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
             tap(value => {
-                this.filtroLivelloValue.set((value || '').toLowerCase());
+                this.filterLevelValue.set((value || '').toLowerCase());
                 this.showAllLevelOptions.set(false);
             })
         ).subscribe();
 
-        const companyFilterSubscription = this.filtroAzienda.valueChanges.pipe(
+        const companyFilterSubscription = this.filterCompany.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged(),
             tap(value => {
-                this.filtroAziendaValue.set((value || '').toLowerCase());
+                this.filterCompanyValue.set((value || '').toLowerCase());
                 this.showAllCompanyOptions.set(false);
             })
         ).subscribe();
@@ -277,9 +282,9 @@ export class EmployeesComponent implements OnInit {
         });
     }
 
-    ricaricaRisorse() {
+    reloadEmployees() {
         this.isFetching.set(true);
-        const subscription = this.requestsService.caricaEmployeesDisponibili().pipe(
+        const subscription = this.employeesService.loadEmployees().pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: (data) => {
@@ -301,14 +306,14 @@ export class EmployeesComponent implements OnInit {
         });
     }
 
-    aggiornaRisorse(){
+    updateEmployees(){
         this.isFetching.set(true);
         const timeoutId = setTimeout(() => {
-            const subscription = this.requestsService.caricaEmployeesDisponibili().pipe(
+            const subscription = this.employeesService.loadEmployees().pipe(
                 finalize(() => this.isFetching.set(false))
             )
             .subscribe({
-                next: (data) => {
+                next: () => {
                     this.statusMessage.set({text: 'Risorse aggiornate con successo!', type: 'success'});
                 },
                 error: (err) => {
@@ -328,27 +333,27 @@ export class EmployeesComponent implements OnInit {
         });
     }
 
-    onAggiuntaRisorsa() {
-        this.isRisorsaInAggiunta.set(true);
+    onAddingEmployee() {
+        this.isAddingEmployeeState.set(true);
     }
 
-    annullaAggiuntaRisorsa() {
-        this.isRisorsaInAggiunta.set(false);
+    cancelEmployeeAddition() {
+        this.isAddingEmployeeState.set(false);
     }
 
-    aggiungiRisorsa(newRisorsa: Employee) {
-        this.isRisorsaInAggiunta.set(false);
+    addEmployee() {
+        this.isAddingEmployeeState.set(false);
         this.statusMessage.set({text: 'Risorsa aggiunta con successo!', type: 'success'});
         this.currentPage.set(1); // torna alla pagina iniziale
-        this.caricaPagina(1); // carica pagina iniziale
+        this.loadPage(1); // carica pagina iniziale
     }
 
-    apriModifica(r: Employee) {
-        this.risorsaInModifica.set(r);
+    openEmployeeEdit(r: Employee) {
+        this.editingEmployee.set(r);
     }
 
-    chiudiModifica() {
-        this.risorsaInModifica.set(null);
+    closeEmployeeEdit() {
+        this.editingEmployee.set(null);
     }
 
     showNotification(text: string, type: 'success' | 'error') {
@@ -356,20 +361,20 @@ export class EmployeesComponent implements OnInit {
         setTimeout(() => this.statusMessage.set(null), 3000);
     }
 
-    salvaModifica() {
-        this.ricaricaRisorse(); // Ricarica le risorse dopo la modifica
-        this.risorsaInModifica.set(null);
+    safeEdits() {
+        this.reloadEmployees(); // Ricarica le risorse dopo la modifica
+        this.editingEmployee.set(null);
         this.showNotification('Risorsa aggiornata con successo!', 'success');
     }
 
-    apriDettagli(r: Employee){
-        this.selectedRisorsa.set(r);
+    openEmployeeDetails(r: Employee){
+        this.selectedEmployee.set(r);
         this.router.navigate(['/risorse', r.id]);
     }
 
-    chiudiPannello() {
-        this.selectedRisorsaId.set(null);
-        this.selectedRisorsa.set(null);
+    closePanel() {
+        this.selectedEmployeeId.set(null);
+        this.selectedEmployee.set(null);
         // this.risorseFiltrateSelezionate.set([]);
     }
 
@@ -398,15 +403,15 @@ export class EmployeesComponent implements OnInit {
 
     selectNameFilter(employee: Employee) {
         const employeeName = this.fullName(employee);
-        this.filtroNomeRisorsa.setValue(employeeName);
-        this.filtroNomeValue.set(employeeName.toLowerCase());
+        this.filterEmployeeName.setValue(employeeName);
+        this.filterNameValue.set(employeeName.toLowerCase());
         this.nameDropdownOpen.set(false);
         this.showAllNameOptions.set(false);
     }
 
     clearNameFilter() {
-        this.filtroNomeRisorsa.setValue('');
-        this.filtroNomeValue.set('');
+        this.filterEmployeeName.setValue('');
+        this.filterNameValue.set('');
         this.nameDropdownOpen.set(false);
         this.showAllNameOptions.set(false);
     }
@@ -428,15 +433,15 @@ export class EmployeesComponent implements OnInit {
 
     selectRoleFilter(role: any) {
         const roleName = this.optionName(role);
-        this.filtroRuolo.setValue(roleName);
-        this.filtroRuoloValue.set(roleName.toLowerCase());
+        this.filterRole.setValue(roleName);
+        this.filterRoleValue.set(roleName.toLowerCase());
         this.roleDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
     }
 
     clearRoleFilter() {
-        this.filtroRuolo.setValue('');
-        this.filtroRuoloValue.set('');
+        this.filterRole.setValue('');
+        this.filterRoleValue.set('');
         this.roleDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
     }
@@ -458,15 +463,15 @@ export class EmployeesComponent implements OnInit {
 
     selectLevelFilter(level: any) {
         const levelName = this.optionName(level);
-        this.filtroLivello.setValue(levelName);
-        this.filtroLivelloValue.set(levelName.toLowerCase());
+        this.filterLevel.setValue(levelName);
+        this.filterLevelValue.set(levelName.toLowerCase());
         this.levelDropdownOpen.set(false);
         this.showAllLevelOptions.set(false);
     }
 
     clearLevelFilter() {
-        this.filtroLivello.setValue('');
-        this.filtroLivelloValue.set('');
+        this.filterLevel.setValue('');
+        this.filterLevelValue.set('');
         this.levelDropdownOpen.set(false);
         this.showAllLevelOptions.set(false);
     }
@@ -488,15 +493,15 @@ export class EmployeesComponent implements OnInit {
 
     selectCompanyFilter(company: any) {
         const companyName = this.optionName(company);
-        this.filtroAzienda.setValue(companyName);
-        this.filtroAziendaValue.set(companyName.toLowerCase());
+        this.filterCompany.setValue(companyName);
+        this.filterCompanyValue.set(companyName.toLowerCase());
         this.companyDropdownOpen.set(false);
         this.showAllCompanyOptions.set(false);
     }
 
     clearCompanyFilter() {
-        this.filtroAzienda.setValue('');
-        this.filtroAziendaValue.set('');
+        this.filterCompany.setValue('');
+        this.filterCompanyValue.set('');
         this.companyDropdownOpen.set(false);
         this.showAllCompanyOptions.set(false);
     }

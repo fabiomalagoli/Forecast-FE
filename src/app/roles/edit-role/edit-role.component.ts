@@ -4,7 +4,8 @@ import { FormsModule, NgForm } from '@angular/forms';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { Role } from '../role.model';
-import { RequestsService } from '../../shared/requests.service';
+import { RolesService } from '../../shared/services/roles.service';
+import { buildUpdateRolePayload } from '../../shared/payloads/role.payloads';
 
 @Component({
   selector: 'app-modifica-role',
@@ -15,7 +16,7 @@ import { RequestsService } from '../../shared/requests.service';
 export class ModificaRoleComponent {
   ruoloDaModificare = input.required<Role>();
 
-  private requests = inject(RequestsService);
+  private rolesService = inject(RolesService);
 
   modified = output<Role>();
   cancel = output<void>();
@@ -79,12 +80,9 @@ export class ModificaRoleComponent {
       return;
     }
 
-    const updatedRole: Role = {
-      id: this.formData['id'] || this.ruoloDaModificare().id,
-      name: this.formData['name'] || form.value.name,
-    };
+    const updatedRole = buildUpdateRolePayload({ ...this.formData, ...form.value }, this.ruoloDaModificare().id);
 
-    this.requests.aggiornaJobRole(updatedRole).subscribe({
+    this.rolesService.updateJobRole(updatedRole).subscribe({
         next: () => {
             this.attemptedSubmit = false;
             this.noChangesMessage = false;
