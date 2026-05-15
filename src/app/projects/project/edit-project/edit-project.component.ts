@@ -37,9 +37,9 @@ import { EmployeesService } from '../../../shared/services/employees.service';
 import { LookupsService } from '../../../shared/services/lookups.service';
 import { ProjectsService } from '../../../shared/services/projects.service';
 import { RolesService } from '../../../shared/services/roles.service';
-import { ProjectEmployee } from '../project-employee.model';
-import { ProjectRole } from '../project-role.model';
-import { Project } from '../project.model';
+import { ProjectEmployee } from '../../../shared/models/project-employee.model';
+import { ProjectRole } from '../../../shared/models/project-role.model';
+import { Project } from '../../../shared/models/project.model';
 
 @Component({
   selector: 'app-modifica-progetto',
@@ -189,7 +189,7 @@ export class EditProjectComponent implements OnInit {
       }
     });
 
-    currentEmployees.forEach((employee: any) => {
+    currentEmployees.forEach((employee: ProjectEmployee) => {
       const employeePayload = buildProjectEmployeePayload(employee);
       const originalEmployee = findProjectItemById(this.initialFormData?.projectEmployees || [], employee.id);
 

@@ -1,5 +1,6 @@
-import { Project } from '../../projects/project/project.model';
+import { Project } from '../models/project.model';
 import { COMPLETE_PROJECT_HEADERS } from '../../projects/project/complete-project.headers';
+import { ProjectRole } from '../models/project-role.model';
 
 const UUID_PATTERN = /^[0-9a-fA-F-]{36}$/;
 
@@ -234,7 +235,7 @@ export function createEmptyProjectEmployee(): any {
 }
 
 export function getProjectEmployeeRequestId(employee: any): string {
-  return employee?.employeeId || employee?.EmployeeId || employee?.id;
+  return employee?.id;
 }
 
 export function isTemporaryProjectItem(id: string, originalItems: { id: string }[] = []): boolean {
@@ -299,7 +300,7 @@ function normalizeComparableNumber(value: number): number | null {
   return Number(value.toFixed(6));
 }
 
-function normalizeProjectRoleForForm(role: any, roles: LookupOption[], levels: LookupOption[]): any {
+function normalizeProjectRoleForForm(role: ProjectRole, roles: LookupOption[], levels: LookupOption[]): any {
   const jobRoleId = isUuid(role.jobRole) ? role.jobRole : findOptionIdByName(roles, role.jobRole);
   const jobRoleLevelId = isUuid(role.jobRoleLevel)
     ? role.jobRoleLevel

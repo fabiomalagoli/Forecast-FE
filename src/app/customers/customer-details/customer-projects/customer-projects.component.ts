@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { Project } from '../../../projects/project/project.model';
+import { Project } from '../../../shared/models/project.model';
 import { COMPLETE_PROJECT_HEADERS } from '../../../projects/project/complete-project.headers';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { finalize } from 'rxjs';

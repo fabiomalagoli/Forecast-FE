@@ -1,4 +1,4 @@
-import { Customer } from "./customer.model";
+import { Customer } from "../../shared/models/customer.model";
 
 //Record per inserire i titoli (headers) dei dati della tabella Clienti corrispondenti ai parametri del tipo ModelloCliente.
 export const CUSTOMER_HEADERS = {

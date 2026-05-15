@@ -1,5 +1,5 @@
 import { Component, inject, input, Input, output, signal } from '@angular/core';
-import { Project } from './project.model';
+import { Project } from '../../shared/models/project.model';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
 import { AppButtonComponent } from '../../shared/button/button';

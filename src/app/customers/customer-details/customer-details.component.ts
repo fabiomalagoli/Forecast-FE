@@ -1,10 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Location } from '@angular/common';
-import { Customer } from '../customer/customer.model';
+import { Customer } from '../../shared/models/customer.model';
 import { COMPLETE_CUSTOMER_HEADERS } from '../customer/complete-customer.headers';
 import { AppButtonComponent } from '../../shared/button/button';
-import { Project } from '../../projects/project/project.model';
+import { Project } from '../../shared/models/project.model';
 import { finalize } from 'rxjs';
 import { CustomersService } from '../../shared/services/customers.service';
 

@@ -1,5 +1,5 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal } from '@angular/core';
-import { Role } from './role.model';
+import { Role } from '../shared/models/role.model';
 import { RolesService } from '../shared/services/roles.service';
 import { Router } from '@angular/router';
 import { RoleResourcesComponent } from './role-resources/role-resources.component';
@@ -10,13 +10,13 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, tap } from 'rxjs';
 import { ModificaRoleComponent } from './edit-role/edit-role.component';
 import { AssignEmployeeComponent } from './role/assign-employees/assign-employees.component';
-import { Employee } from '../employees/employee.model';
+import { Employee } from '../shared/models/employee.model';
 import { EmployeesService } from '../shared/services/employees.service';
 
 @Component({
   selector: 'app-roles',
-  templateUrl: './roles.html',
-  styleUrls: ['../shared/filter-styles.css', './roles.css'],
+  templateUrl: './roles.component.html',
+  styleUrls: ['../shared/filter-styles.css', './roles.component.css'],
   imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent, AssignEmployeeComponent],
 })
 export class RolesComponent {

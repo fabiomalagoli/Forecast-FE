@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, concatMap, map, tap, throwError, of, Observable } from 'rxjs';
-import { Project } from '../../projects/project/project.model';
+import { Project } from '../models/project.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { toBackendDate, toNumber, normalizeWinProbability } from '../utils/shared-utils';

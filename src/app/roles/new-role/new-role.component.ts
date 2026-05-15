@@ -4,7 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { RolesService } from '../../shared/services/roles.service';
-import { Role } from '../role.model';
+import { Role } from '../../shared/models/role.model';
 import { buildCreateRolePayload } from '../../shared/payloads/role.payloads';
 import { createEmptyRoleFormData, normalizeRoleForForm } from '../../shared/utils/role-form.utils';
 

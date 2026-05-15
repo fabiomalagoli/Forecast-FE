@@ -1,7 +1,7 @@
 import { Component, inject, input, Input, output } from '@angular/core';
 import { Column } from '../../shared/table-row/table.types';
 import { TableRowComponent } from "../../shared/table-row/table-row";
-import { Customer } from './customer.model';
+import { Customer } from '../../shared/models/customer.model';
 import { AppButtonComponent } from '../../shared/button/button';
 import { Router, RouterModule } from '@angular/router';
 

@@ -1,5 +1,5 @@
 import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
-import { Project } from './project/project.model';
+import { Project } from '../shared/models/project.model';
 import { Column } from '../shared/table-row/table.types';
 import { AppButtonComponent } from "../shared/button/button";
 import { PROGETTO_HEADERS } from './project/project.headers';

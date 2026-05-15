@@ -5,7 +5,7 @@ import { CustomerDetailsComponent } from './customers/customer-details/customer-
 import { CustomerProjectsComponent } from './customers/customer-details/customer-projects/customer-projects.component';
 import { GridComponent } from './grid/grid';
 import { CustomersComponent } from './customers/customers.component';
-import { RolesComponent } from './roles/roles';
+import { RolesComponent } from './roles/roles.component';
 import { EmployeesComponent } from './employees/employees.component';
 import { EmployeeDetailsComponent } from './employees/employee-details/employee-details.component';
 export const routes: Routes = [  

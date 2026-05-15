@@ -1,8 +1,8 @@
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
-import { Project } from '../../../projects/project/project.model';
-import { Employee } from '../../employee.model';
+import { Project } from '../../../shared/models/project.model';
+import { Employee } from '../../../shared/models/employee.model';
 import { COMPLETE_PROJECT_HEADERS } from '../../../projects/project/complete-project.headers';
 import { Location } from '@angular/common';
 import { EmployeesService } from '../../../shared/services/employees.service';

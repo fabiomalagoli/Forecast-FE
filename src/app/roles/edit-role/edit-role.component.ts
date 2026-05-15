@@ -3,7 +3,7 @@ import { Component, effect, inject, input, output } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { Role } from '../role.model';
+import { Role } from '../../shared/models/role.model';
 import { RolesService } from '../../shared/services/roles.service';
 import { buildUpdateRolePayload } from '../../shared/payloads/role.payloads';
 

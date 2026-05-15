@@ -1,5 +1,5 @@
 //Headers per la tabella dei progetti e per la visualizzazione dettagliata del progetto
-import { Project } from './project.model';
+import { Project } from '../../shared/models/project.model';
 
 export const COMPLETE_PROJECT_HEADERS: Partial<Record<keyof Project, string>> = {
   company: 'Azienda',

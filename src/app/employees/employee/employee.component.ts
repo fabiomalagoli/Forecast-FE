@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { AppButtonComponent } from '../../shared/button/button';
-import { Employee } from '../employee.model';
+import { Employee } from '../../shared/models/employee.model';
 
 @Component({
   selector: 'tr[app-employee-row]',

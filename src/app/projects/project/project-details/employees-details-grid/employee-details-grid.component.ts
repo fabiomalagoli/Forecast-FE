@@ -2,7 +2,7 @@ import { Component, EventEmitter, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../../shared/button/button';
 import { signal } from '@angular/core';
-import { ProjectEmployee } from '../../project-employee.model';
+import { ProjectEmployee } from '../../../../shared/models/project-employee.model';
 import { TextInputComponent } from "../../../../shared/text-input/text-input";
 import { EMPLOYEES_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
 import { FormsModule } from '@angular/forms';

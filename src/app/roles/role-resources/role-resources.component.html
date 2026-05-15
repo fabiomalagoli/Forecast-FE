@@ -4,11 +4,11 @@
   </div>
 
   @if(risorsaInModifica()) {
-      <app-modifica-risorsa-per-ruolo
+      <app-edit-employee-for-role
           [risorsaDaModificare]="risorsaInModifica()"
-          (cancel)="chiudiModificaRisorsa()"
-          (modified)="aggiornaRisorsePerRuolo()"
-      ></app-modifica-risorsa-per-ruolo>
+          (cancel)="closeEmployeeEditing()"
+          (modified)="saveEdits()"
+      ></app-edit-employee-for-role>
   }
 
   @if (risorseAssociate().length === 0) {
@@ -35,7 +35,7 @@
               </td>
               <td>{{ resource.company }}</td>
             <td class="actions-cell">
-              <button appButton class="btn-small btn-outline" (click)="apriModificaRisorsa(resource)">Modifica</button>
+              <button appButton class="btn-small btn-outline" (click)="OpenEmployeeEditing(resource)">Modifica</button>
             </td>
             </tr>
           }

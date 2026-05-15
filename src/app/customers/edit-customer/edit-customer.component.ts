@@ -2,7 +2,7 @@ import { Component, input, output, OnInit, inject } from '@angular/core';
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { CUSTOMER_HEADERS } from '../customer/customer.headers';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Customer } from '../customer/customer.model';
+import { Customer } from '../../shared/models/customer.model';
 import { CommonModule } from '@angular/common';
 import { CustomersService } from '../../shared/services/customers.service';
 import { parseCustomerAddress } from '../../shared/utils/customer-form.utils';

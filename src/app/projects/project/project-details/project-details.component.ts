@@ -1,11 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { Project } from '../project.model';
+import { Project } from '../../../shared/models/project.model';
 import { COMPLETE_PROJECT_HEADERS } from '../complete-project.headers';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { ResourceDetailsGridComponent } from './employees-details-grid/employee-details-grid.component';
-import { ProjectEmployee } from '../project-employee.model';
+import { ProjectEmployee } from '../../../shared/models/project-employee.model';
 import { finalize } from 'rxjs';
 import { ProjectsService } from '../../../shared/services/projects.service';
 

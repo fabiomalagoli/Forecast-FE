@@ -1,4 +1,4 @@
-import { Project } from "../../shared/models/project.model";
+import { Project } from "./project.model";
 
 //Dati del cliente.
 export interface Customer {

@@ -1,4 +1,4 @@
-import { Employee } from '../../employees/employee.model';
+import { Employee } from '../models/employee.model';
 
 type LookupOption = {
   id?: string;

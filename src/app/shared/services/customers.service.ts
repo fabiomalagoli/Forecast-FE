@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, tap, throwError, of, Observable } from 'rxjs';
-import { Customer } from '../../customers/customer/customer.model';
+import { Customer } from '../models/customer.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 

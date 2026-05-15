@@ -1,13 +1,13 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { EMPTY, catchError, map, tap, throwError, of, Observable } from 'rxjs';
-import { Project } from '../projects/project/project.model';
-import { Customer } from '../customers/customer/customer.model';
+import { Project } from './models/project.model';
+import { Customer } from './models/customer.model';
 import { HttpClient } from '@angular/common/http';
 import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
 import { CardModel } from '../grid/card-home/card-home.model';
-import { Employee } from '../employees/employee.model';
-import { CreateRoleRequest, Role } from '../roles/role.model';
+import { Employee } from './models/employee.model';
+import { CreateRoleRequest, Role } from './models/role.model';
 
 @Injectable({
   providedIn: 'root',

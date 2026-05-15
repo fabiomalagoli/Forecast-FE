@@ -4,7 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
 import { TextInputComponent } from '../../shared/text-input/text-input';
-import { Employee } from '../employee.model'; 
+import { Employee } from '../../shared/models/employee.model'; 
 import { EMPLOYEES_HEADERS } from '../employee.headers'; 
 import { RolesService } from '../../shared/services/roles.service';
 import { LookupsService } from '../../shared/services/lookups.service';

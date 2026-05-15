@@ -1,13 +1,13 @@
 import { Component, DestroyRef, effect, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Employee } from '../employee.model';
+import { Employee } from '../../shared/models/employee.model';
 import { EmployeesService } from '../../shared/services/employees.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { EmployeeProjectsComponent } from "./employee-projects/employee-projects.component";
 import { Location } from '@angular/common';
 import { AppButtonComponent } from '../../shared/button/button';
-import { Project } from '../../projects/project/project.model';
+import { Project } from '../../shared/models/project.model';
 
 @Component({
   selector: 'app-employee-details',

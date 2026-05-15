@@ -2,7 +2,7 @@ import { Component, input, output, OnInit, inject, signal, effect } from '@angul
 import { TextInputComponent } from '../../../shared/text-input/text-input';
 import { FormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Employee } from '../../../employees/employee.model';
+import { Employee } from '../../../shared/models/employee.model';
 import { EMPLOYEES_HEADERS } from '../../../employees/employee.headers';
 import { forkJoin } from 'rxjs';
 import { EmployeesService } from '../../../shared/services/employees.service';
@@ -13,9 +13,9 @@ import { normalizeEmployeeForForm } from '../../../shared/utils/employee-form.ut
 import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-modifica-risorsa-per-ruolo',
+  selector: 'app-edit-employee-for-role',
   imports: [FormsModule, CommonModule, TextInputComponent],
-  templateUrl: './edit-role.component.html',
+  templateUrl: './edit-employee-for-role.component.html',
   styleUrls: ['../../../shared/form-styles.css'],
 })
 export class EditEmployeeForRoleComponent {

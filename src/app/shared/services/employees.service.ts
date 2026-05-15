@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, tap, throwError, of } from 'rxjs';
-import { Employee } from '../../employees/employee.model';
+import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 

@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, tap, throwError, of } from 'rxjs';
-import { CreateRoleRequest, Role } from '../../roles/role.model';
+import { CreateRoleRequest, Role } from '../models/role.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 

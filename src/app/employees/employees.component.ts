@@ -3,7 +3,7 @@ import { EmployeesService } from '../shared/services/employees.service';
 import { RolesService } from '../shared/services/roles.service';
 import { LookupsService } from '../shared/services/lookups.service'; 
 import { Router } from '@angular/router';
-import { Employee } from './employee.model';
+import { Employee } from '../shared/models/employee.model';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../shared/button/button';
 import { EditEmployeeComponent } from './edit-employee/edit-employee.component';

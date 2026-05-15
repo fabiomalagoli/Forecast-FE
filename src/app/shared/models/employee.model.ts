@@ -1,4 +1,4 @@
-import { Company } from "../shared/company.model";
+import { Company } from "../company.model";
 
 export interface Employee {
     id: string;

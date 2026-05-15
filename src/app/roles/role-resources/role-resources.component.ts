@@ -1,8 +1,8 @@
 import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Role } from '../role.model';
-import { Employee } from '../../employees/employee.model';
-import { EditEmployeeForRoleComponent } from './edit-role/edit-role.component';
+import { Role } from '../../shared/models/role.model';
+import { Employee } from '../../shared/models/employee.model';
+import { EditEmployeeForRoleComponent } from './edit-employee-for-role/edit-employee-for-role.component';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../shared/button/button';
 import { finalize } from 'rxjs';
@@ -31,7 +31,7 @@ export class RoleResourcesComponent {
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
     risorseAssociate = input<any[]>([]);
-    ruoloSelezionato = input<Role| null>(null);
+    ruoloSelezionato = input<Role | null>(null);
 
     risorsaInModifica = signal<Employee | null>(null);
 
@@ -80,9 +80,9 @@ export class RoleResourcesComponent {
         this.location.back();
     }
 
-    aggiornaRisorsePerRuolo() {
+    reloadEmployeesforRoleSelected() {
         this.isFetching.set(true);
-        const subscription = this.employeesService.loadEmployees().pipe(
+        const subscription = this.employeesService.loadAllEmployees().pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
@@ -100,12 +100,23 @@ export class RoleResourcesComponent {
         });
     }
 
-    apriModificaRisorsa(risorsa: Employee) {
+    OpenEmployeeEditing(risorsa: Employee) {
         this.risorsaInModifica.set(risorsa); // Fa apparire l' @if nel template
     }
 
-    chiudiModificaRisorsa() {
+    closeEmployeeEditing() {
         this.risorsaInModifica.set(null); // Nasconde l' @if nel template
+    }
+
+    saveEdits() {
+        this.reloadEmployeesforRoleSelected();
+        this.closeEmployeeEditing();
+        this.showNotification('Modifiche salvate correttamente!', 'success');
+    }
+
+    showNotification(text: string, type: 'success' | 'error') {
+        this.statusMessage.set({ text, type });
+        setTimeout(() => this.statusMessage.set(null), 3000);
     }
 
     apriDettagliRisorsa(r: Employee) {

@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, HostListener, inject, signal } from '@
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CUSTOMER_HEADERS } from './customer/customer.headers';
-import { Customer } from './customer/customer.model';
+import { Customer } from '../shared/models/customer.model';
 import { Column } from '../shared/table-row/table.types';
 import { NewCustomerComponent } from './new-customer/new-customer.component';
 import { AppButtonComponent } from '../shared/button/button';

@@ -1,4 +1,4 @@
-import { CreateRoleRequest, Role } from '../../roles/role.model';
+import { CreateRoleRequest, Role } from '../models/role.model';
 
 export function buildCreateRolePayload(formData: any): CreateRoleRequest {
   return {

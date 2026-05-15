@@ -28,7 +28,7 @@ import {
   parseIsoDate,
   toElementId,
 } from '../../shared/utils/project-form.utils';
-import { Project } from '../project/project.model';
+import { Project } from '../../shared/models/project.model';
 
 @Component({
   selector: 'app-new-progetto',

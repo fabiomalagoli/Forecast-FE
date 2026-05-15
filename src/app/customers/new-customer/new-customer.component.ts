@@ -2,7 +2,7 @@ import { Component, output } from '@angular/core';
 import { TextInputComponent } from '../../shared/text-input/text-input';
 import { CUSTOMER_HEADERS } from '../customer/customer.headers';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Customer } from '../customer/customer.model';
+import { Customer } from '../../shared/models/customer.model';
 import { toElementId } from '../../shared/utils/project-form.utils';
 
 @Component({

@@ -1,6 +1,6 @@
 import { Component, DestroyRef, HostListener, computed, inject, input, output, signal } from '@angular/core';
-import { Role } from '../../role.model';
-import { Employee } from '../../../employees/employee.model';
+import { Role } from '../../../shared/models/role.model';
+import { Employee } from '../../../shared/models/employee.model';
 import { debounceTime, distinctUntilChanged, forkJoin, tap } from 'rxjs';
 import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';

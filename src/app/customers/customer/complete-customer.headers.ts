@@ -1,5 +1,5 @@
 
-import { Customer } from './customer.model';
+import { Customer } from '../../shared/models/customer.model';
 
 //Headers per la tabella dei clienti e per la visualizzazione dettagliata del cliente
 export const COMPLETE_CUSTOMER_HEADERS: Record<keyof Customer, string> = {
