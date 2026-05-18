@@ -1,0 +1,124 @@
+@use 'variables' as *;
+
+/* FILTER BAR E GRUPPI */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: $bg-white;
+  border-radius: $radius-lg;
+  border: 1px solid $border-filter-light;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 250px;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $text-filter-dark;
+  }
+
+  input,
+  select {
+    padding: 0.75rem;
+    border: 1px solid $border-filter-main;
+    border-radius: $radius-sm;
+    font-size: 0.9375rem;
+    transition: border-color 0.2s; // o $transition-base, volendo
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+  }
+}
+
+/* COMBO FIELD E MENU A TENDINA (Filtri) */
+
+.combo-field {
+  position: relative;
+  width: 100%;
+
+  input {
+    width: 100%;
+    padding-right: 5rem;
+  }
+}
+
+// Icone/Pulsanti dentro l'input combo
+.combo-toggle,
+.combo-clear {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  color: $text-filter-muted;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: $transition-base;
+
+  &:hover {
+    color: $text-filter-dark;
+  }
+}
+
+.combo-toggle {
+  right: 0.5rem;
+}
+
+.combo-clear {
+  right: 2.5rem;
+}
+
+// Menù a tendina
+.combo-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 240px;
+  overflow-y: auto;
+  background-color: $bg-white;
+  border: 1px solid $border-filter-main;
+  border-radius: $radius-sm;
+  box-shadow: $shadow-filter-menu;
+}
+
+.combo-option {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  background: $bg-white;
+  color: $text-filter-medium;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  transition: background-color 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background-color: $color-primary-lighter;
+    outline: none;
+  }
+}
+
+.combo-empty {
+  padding: 0.75rem;
+  color: $text-filter-light;
+  font-style: italic;
+}

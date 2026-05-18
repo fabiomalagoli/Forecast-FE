@@ -1,0 +1,57 @@
+@use 'variables' as *;
+
+:host {
+  max-width: 18rem;
+  margin-bottom: 15px;
+  display: block; // Al posto di max-width su :host
+}
+
+.card {
+  border: 1px solid $border-main; // Sostituisce #ccc
+  border-radius: $radius-md; // Sostituisce 7px con i 6px del sistema
+  box-shadow: $shadow-sm; // Sostituisce 0 2px 5px rgba(0, 0, 0, 0.1)
+  padding: 5px;
+  display: flex;
+  justify-content: space-between;
+  
+  // Aggiunta una transizione base per rendere l'effetto hover più fluido
+  transition: $transition-base; 
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: $color-primary-dark; // Sostituisce #c36500
+    box-shadow: $shadow-card; // Sostituisce 0 10px 20px rgba(0, 0, 0, 0.1)
+  }
+
+  h2 {
+    margin: 0;
+  }
+
+  h3 {
+    margin: 8px 0 0 0;
+    color: $text-light; // Sostituisce #757575
+    font-weight: normal;
+  }
+
+  h4 {
+    font-size: 16px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 18px;
+    color: $text-muted; // Sostituisce #5c5c5c
+  }
+
+  .col-dx {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    padding: 0 5px;
+  }
+
+  .info-g {
+    display: flex;
+    flex-direction: column;
+  }
+}

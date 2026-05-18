@@ -1,0 +1,105 @@
+@use 'variables' as *;
+
+/* LAYOUT E CONTENITORI */
+
+.project-container {
+  & + .project-container {
+    margin-top: 60px;
+    border-top: 2px solid $border-card-divider;
+    padding-top: 60px;
+  }
+}
+
+.section-title {
+  margin: 24px 0 12px 16px;
+  font-size: 1.1rem;
+  color: $text-medium;
+}
+
+.card {
+  border: 1px solid $border-light;
+  border-radius: $radius-xl;
+  padding: 16px;
+  background: $bg-white;
+  box-shadow: $shadow-card;
+  max-width: 900px;
+
+  & + .section-title {
+    margin-top: 32px; 
+  }
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* RIGHE */
+
+.row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid $border-card-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span {
+    color: $text-light;
+    font-weight: 600;
+  }
+}
+
+.value-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px; 
+  width: 100%;
+  min-width: 0;
+
+  .value {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.project-btn {
+  white-space: nowrap; 
+  flex-shrink: 0; 
+  margin-left: auto;
+}
+
+/* TABELLA RUOLI */
+
+.roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+
+  th {
+    text-align: left;
+    color: $text-table-heading;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 8px;
+    border-bottom: 1px solid $border-light-alt;
+  }
+
+  td {
+    padding: 12px 8px;
+    border-bottom: 1px solid $border-lighter;
+    font-size: 0.95rem;
+  }
+
+  tr:last-child {
+    td {
+      border-bottom: none;
+    }
+  }
+}

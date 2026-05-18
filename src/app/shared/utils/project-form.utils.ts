@@ -1,6 +1,6 @@
 import { Project } from '../models/project.model';
-import { COMPLETE_PROJECT_HEADERS } from '../../projects/project/complete-project.headers';
-import { ProjectRole } from '../models/project-role.model';
+import { COMPLETE_PROJECT_HEADERS } from '../../pages/projects/project/complete-project.headers';
+import { ProjectRole } from '../models/project.model';
 
 const UUID_PATTERN = /^[0-9a-fA-F-]{36}$/;
 

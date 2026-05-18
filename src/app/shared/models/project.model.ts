@@ -1,6 +1,3 @@
-import { ProjectEmployee } from "./project-employee.model";
-import { ProjectRole } from "./project-role.model";
-
 export interface Project {
   id: string;
   description: string;
@@ -23,3 +20,30 @@ export interface Project {
   projectStatusId?: string;
   totalBudget: number;
 }
+
+
+export interface ProjectEmployee {
+  id: string;
+  employee: string;
+  isActive: boolean;
+  project: string;
+  jobRole: string; // Es. "Full-stack developer"
+  jobRoleLevel: string; // Es. "Junior", "Middle", "Senior"
+  dailyCost: number;
+  daysSpent: number;
+  effort: number;   
+  winProbability: number;
+}
+
+
+export interface ProjectRole {
+  id: string;
+  project: string;
+  jobRole: string; // Es. "Full-stack developer"
+  jobRoleLevel: string; // Es. "Junior", "Middle", "Senior"
+  dailyCost: number;
+  daysSpent: number;
+  effort: number;   
+  winProbability: number;
+}
+

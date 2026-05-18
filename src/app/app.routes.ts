@@ -1,13 +1,13 @@
 import { Routes } from '@angular/router';
-import { ProjectsComponent } from './projects/projects.component';
-import { ProjectDetailsComponent } from './projects/project/project-details/project-details.component';
-import { CustomerDetailsComponent } from './customers/customer-details/customer-details.component';
-import { CustomerProjectsComponent } from './customers/customer-details/customer-projects/customer-projects.component';
-import { GridComponent } from './grid/grid';
-import { CustomersComponent } from './customers/customers.component';
-import { RolesComponent } from './roles/roles.component';
-import { EmployeesComponent } from './employees/employees.component';
-import { EmployeeDetailsComponent } from './employees/employee-details/employee-details.component';
+import { ProjectsComponent } from './pages/projects/projects.component';
+import { ProjectDetailsComponent } from './pages/projects/project/project-details/project-details.component';
+import { CustomerDetailsComponent } from './pages/customers/customer-details/customer-details.component';
+import { CustomerProjectsComponent } from './pages/customers/customer-details/customer-projects/customer-projects.component';
+import { GridComponent } from './pages/grid/grid.component';
+import { CustomersComponent } from './pages/customers/customers.component';
+import { RolesComponent } from './pages/roles/roles.component';
+import { EmployeesComponent } from './pages/employees/employees.component';
+import { EmployeeDetailsComponent } from './pages/employees/employee-details/employee-details.component';
 export const routes: Routes = [  
   { path: 'home', component: GridComponent },
 

@@ -1,0 +1,244 @@
+@use 'variables' as *;
+
+/* PAGE HEADER */
+
+.page-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: $bg-app-shell;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    color: $text-filter-dark;
+    font-weight: 600;
+  }
+}
+
+/* NOTIFICHE E STATI */
+
+.notification {
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: $radius-md;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+
+  &.success {
+    background-color: $bg-notify-success;
+    color: $text-notify-success;
+    border: 1px solid $border-notify-success;
+  }
+
+  &.error {
+    background-color: $bg-notify-error;
+    color: $text-notify-error;
+    border: 1px solid $border-notify-error;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  text-align: center;
+  background-color: $bg-app-shell;
+  border-radius: $radius-lg;
+
+  p {
+    font-size: 1rem;
+    color: $text-filter-muted;
+    margin: 0;
+  }
+}
+
+.error-state {
+  padding: 2rem;
+  background-color: $bg-state-error;
+  border: 1px solid $border-state-error;
+  border-radius: $radius-lg;
+  text-align: center;
+
+  p {
+    color: $text-state-error;
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+  }
+}
+
+/* TABELLA CLIENTI */
+
+.table-container {
+  background-color: $bg-white;
+  border-radius: $radius-lg;
+  border: 1px solid $border-filter-light;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+  margin-bottom: 2rem;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    background-color: $bg-table-header;
+    
+    tr { border-bottom: 2px solid $border-filter-light; }
+    
+    th {
+      padding: 1rem 0.875rem;
+      text-align: left;
+      font-weight: 600;
+      color: $text-filter-dark;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid $border-filter-light;
+      transition: background-color 0.2s;
+
+      &:hover { background-color: $bg-app-shell; }
+      &:last-child { border-bottom: none; }
+    }
+
+    td {
+      padding: 1rem 0.875rem;
+      color: $text-filter-medium;
+      font-size: 0.9375rem;
+    }
+  }
+}
+
+.actions-cell {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.actions-header { text-align: left; }
+
+.empty-message {
+  text-align: center;
+  padding: 2rem !important;
+  color: $text-filter-light;
+  font-style: italic;
+}
+
+.count-footer {
+  margin: 0;
+  padding: 1rem 0.875rem;
+  background-color: $bg-table-header;
+  border-top: 1px solid $border-filter-light;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: $text-filter-muted;
+}
+
+/* BOTTONI E AZIONI */
+
+.btn-primary, .btn-add {
+  padding: 0.75rem 1.5rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+    box-shadow: $shadow-primary;
+  }
+
+  &:active { transform: scale(0.98); }
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover { background-color: $color-primary-hover; }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: $color-primary;
+  border: 1px solid $color-primary;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-lighter;
+    border-color: $color-primary-hover;
+    color: $color-primary-hover;
+  }
+}
+
+.bottom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.tbl-header {
+  padding: 0.6rem 0.8rem;
+  white-space: nowrap;
+  
+  &--actions { text-align: right; }
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* TOAST NOTIFICATION (v2) */
+
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: $radius-lg;
+  color: white;
+  font-weight: 600;
+  box-shadow: $shadow-toast;
+  z-index: 9999;
+  animation: slideUp 0.3s ease-out;
+
+  &.success { background-color: $color-toast-success-alt; }
+  &.error   { background-color: $color-toast-error-alt; }
+}
+
+@keyframes slideUp {
+  from { bottom: -50px; opacity: 0; }
+  to   { bottom: 20px; opacity: 1; }
+}

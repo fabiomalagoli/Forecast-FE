@@ -1,0 +1,112 @@
+@use 'variables' as *;
+
+/* OVERRIDE BOOTSTRAP NAV-PILLS */
+
+.nav-pills {
+  .nav-link.active,
+  .show > .nav-link {
+    color: $bg-white var(--bs-nav-pills-link-active-color);
+    background-color: $color-nav-active var(--bs-nav-pills-link-active-bg);
+  }
+}
+
+/* LAYOUT GENERALE */
+
+.section-title {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* GRIGLIE E SEMESTRI */
+
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gestione-mensile-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem; 
+  justify-content: space-between;
+  align-items: stretch;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.semester-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0; 
+}
+
+/* RIGHE DELLA GRIGLIA */
+
+.grid-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 100px 80px; 
+  gap: 1rem;
+  padding: 0;
+  border-bottom: 1px solid $border-card-divider;
+  align-items: center;
+
+  > * {
+    margin: 0;
+  }
+
+  // &.align-center {
+  //   align-items: center;
+  // }
+}
+
+.header-row {
+  color: $text-light;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 2px solid $border-light; 
+  padding-bottom: 6px;
+}
+
+.vertical-divider {
+  width: 4px;
+  background-color: $border-card-divider;
+  border-radius: 2px;
+}
+
+.checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* BOTTONI */
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: $bg-white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: $color-primary;
+  border: 1px solid $color-primary;
+}

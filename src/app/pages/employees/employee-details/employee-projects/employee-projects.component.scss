@@ -1,0 +1,108 @@
+@use 'variables' as *;
+
+/* HEADER */
+
+h2 {
+  font-size: 24px;
+  color: $text-heading;
+  margin-top: 32px;
+  margin-bottom: 24px;
+  font-weight: 600;
+  font-family: $font-family-base;
+}
+
+.detail-header {
+  button:hover {
+    background-color: $color-primary-dark;
+  }
+}
+
+// btn-small (globalizzare?)
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+}
+
+/* TABELLA E CONTENITORE */
+
+.table-container {
+  background: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  margin-bottom: 40px;
+  overflow-x: auto; /* Permette lo scroll orizzontale se ci sono molte colonne */
+  border: 1px solid $border-light;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th {
+    background-color: $bg-light;
+    color: $text-light;
+    font-weight: 600;
+    padding: 16px 24px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid $border-light;
+  }
+
+  td {
+    padding: 16px 24px;
+    color: $text-medium;
+    font-size: 15px;
+    border-bottom: 1px solid $border-light;
+  }
+
+  tbody {
+    tr {
+      &:hover {
+        background-color: $bg-light;
+        transition: $transition-base;
+      }
+      /* Rimuove il bordo inferiore dall'ultima riga */
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+/* STATI */
+
+.loading-state, 
+.error-state, 
+.empty-state {
+  padding: 16px 24px;
+  border-radius: $radius-md;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.loading-state {
+  background-color: $bg-state-loading;
+  color: $text-state-loading;
+  border-left: 4px solid $border-state-loading;
+}
+
+.error-state {
+  background-color: $bg-state-error-alt;
+  color: $text-state-error-alt;
+  border-left: 4px solid $border-state-error-alt;
+}
+
+.empty-state {
+  background-color: $bg-state-empty;
+  color: $text-state-empty;
+  border-left: 4px solid $border-state-empty;
+}

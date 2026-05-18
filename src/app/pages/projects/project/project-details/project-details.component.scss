@@ -1,0 +1,177 @@
+@use 'variables' as *;
+
+/* HEADER */
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  button:hover {
+    background-color: $color-primary-dark;
+  }
+}
+
+// btn-small (globalizzare?)
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+}
+
+/* CARDS */
+
+// Placeholder per condividere le regole comuni fra le card (risorse e progetto)
+%card-dettaglio {
+  border: 1px solid $border-light;
+  border-radius: $radius-xl;
+  padding: 16px;
+  background: $bg-white;
+  box-shadow: $shadow-card;
+  max-width: 800px;
+}
+
+.card-risorse {
+  @extend %card-dettaglio;
+  max-height: 170px;
+  overflow-y: auto;
+}
+
+.card-progetto {
+  @extend %card-dettaglio;
+}
+
+/* RIGHE E LISTE */
+
+.row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  padding: 10px 0;
+  border-bottom: 1px solid $border-card-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span {
+    color: $text-light;
+    font-weight: 600;
+  }
+}
+
+// Righe interattive
+.col-risorsa,
+.resource-row {
+  padding: 12px 8px;
+  border-bottom: 1px solid $border-lighter;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease; // transizione specifica solo sul background
+  user-select: none;
+}
+
+.resource-row {
+  &:hover {
+    background-color: $bg-select-hover;
+  }
+
+  &:active {
+    background-color: $bg-select-active;
+  }
+
+  &.selected {
+    background-color: $bg-select-selected;
+    color: white;
+    font-weight: bold;
+  }
+}
+
+/* TABELLA RUOLI */
+
+.roles-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+
+  th {
+    text-align: left;
+    color: $text-table-heading;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 8px;
+    border-bottom: 1px solid $border-light-alt;
+  }
+
+  td {
+    padding: 12px 8px;
+    border-bottom: 1px solid $border-lighter;
+    font-size: 0.95rem;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+/* DRAWER LATERALE A COMPARSA*/
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0; // Sostituisce top, left, width, height
+  background-color: rgba(0, 0, 0, 0.4); 
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 900px;
+  height: 100vh;
+  background-color: $bg-layout;
+  z-index: 1001;
+  box-shadow: $shadow-drawer;
+  padding: 3rem 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.drawer-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+  color: $text-filter-muted;
+
+  &:hover {
+    color: $text-dark;
+  }
+}
+
+/* ANIMAZIONI */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}

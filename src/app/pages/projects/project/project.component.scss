@@ -1,0 +1,58 @@
+@use 'variables' as *;
+
+/* HOST (Riga della Tabella) */
+
+:host {
+  display: contents;
+  min-width: 0;
+
+  border-bottom: 1px solid $border-filter-light;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $bg-app-shell;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* CELLE TABELLA */
+
+.tbl-cell {
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+
+  &--right {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--center {
+    text-align: center;
+  }
+
+  &--actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px; 
+    text-align: center;
+    white-space: nowrap;
+
+    .btn {
+      margin: 0 5px;
+    }
+  }
+}
+
+/* BOTTONI */
+
+// btn (globalizzare?)
+.btn {
+  padding: 5px 10px;
+  font-size: 14px;
+}

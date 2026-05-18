@@ -1,0 +1,142 @@
+/* COLORI E FONT */
+
+$font-family-base:       'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+// --- Primary ---
+$color-primary:          #FF9800;
+$color-primary-hover:    #f07d00;
+$color-primary-active:   #e67600;
+$color-primary-dark:     #c2410c; // Hover per dettagli/header
+$color-primary-disabled: #ffc46b;
+$color-primary-light:    #fff9f0; // Hover leggeri
+$color-primary-lighter:  #fff3e0; // Focus/Hover per i menu combo (filtri)
+$color-nav-active:       #0d6efd; // Blu Bootstrap per nav-pills attive
+
+// --- Scala di Grigi (Testi) ---
+$text-black:             #000000; // Nero per heading
+$text-heading:           #1f2937; // Grigio scuro per H2 (Tailwind gray-800)
+$text-dark:              #111827; // Titoli principali
+$text-medium:            #374151; // Label
+$text-muted:             #4b5563; // Paragrafi
+$text-light:             #6b7280; // Placeholder
+$text-filter-dark:       #2c3e50; // Label filtri / Hover icone / Header tabelle
+$text-filter-medium:     #34495e; // Opzioni combo menu / Testo tabelle principali
+$text-filter-muted:      #7f8c8d; // Icone combo / Footer tabelle
+$text-filter-light:      #95a5a6; // Stato empty generico
+$text-table-heading:     #666666; // Intestazioni tabelle secondarie (roles table)
+
+// --- Scala di Grigi (Background e Bordi) ---
+$bg-white:               #ffffff;
+$bg-light:               #f9fafb;
+$bg-hover:               #f3f4f6;
+$bg-app-shell:           #f8f9fa; // Sfondo app shell / Page header / Hover tabelle
+$bg-layout:              #f8fafc; // Sfondo layout principale
+$bg-table-header:        #f0f2f5; // Sfondo header e footer tabelle
+$bg-tooltip:             #1f2937; // Sfondo Tooltip (Scuro)
+
+$border-main:            #d1d5db;
+$border-light:           #e5e7eb;
+$border-light-alt:       #eeeeee; // Bordo leggero (header tabelle secondarie)
+$border-lighter:         #fafafa; // Bordo leggerissimo (righe tabelle secondarie)
+$border-inner-light:     #f0f0f0; // Bordo interno tabelle annidate
+$border-hover:           #9ca3af;
+$border-filter-main:     #bdc3c7; // Input filtri
+$border-filter-light:    #e0e0e0; // Contenitore filtri / Bordi tabelle principali
+$border-card-divider:    #f3f4f6; // Divisori interni card dettagli
+
+// --- Feedback & Stati ---
+// Main
+$color-success:          #2e7d32;
+$color-success-bg:       #dcfce7;
+$color-success-text:     #166534;
+
+$color-error:            #dc2626;
+$color-error-bg:         #fee2e2;
+$color-error-text:       #991b1b;
+$color-error-hover:      #ffcdd2;
+$color-error-toast:      #d32f2f;
+
+$color-info:             #2196f3;
+$color-info-bg:          #e3f2fd;
+$color-info-text:        #0d47a1;
+$color-info-badge-bg:    #e0f2fe;
+$color-info-badge-text:  #075985;
+
+$color-warning:          #ffa500;
+
+// Selezioni interattive (Liste/Righe cliccabili)
+$bg-select-hover:        #f0f8ff; // Azzurro chiarissimo
+$bg-select-active:       #cce5ff; // Azzurro pressato
+$bg-select-selected:     #99ccff; // Azzurro selezionato
+
+// Notifiche Specifiche e Azioni Secondarie
+$bg-notify-success:      #d4edda;
+$text-notify-success:    #155724;
+$border-notify-success:  #c3e6cb;
+
+$bg-notify-error:        #f8d7da;
+$text-notify-error:      #721c24;
+$border-notify-error:    #f5c6cb;
+
+$bg-state-error:         #ffe6e6;
+$border-state-error:     #ff9999;
+$text-state-error:       #c0392b;
+
+// Stati specifici di caricamento e dettaglio
+$bg-state-loading:       #eff6ff;
+$border-state-loading:   #3b82f6;
+$text-state-loading:     #1d4ed8;
+
+$bg-state-error-alt:     #fef2f2;
+$border-state-error-alt: #ef4444;
+$text-state-error-alt:   #b91c1c;
+
+$bg-state-empty:         $bg-hover;
+$text-state-empty:       $text-muted;
+$border-state-empty:     $border-hover;
+
+$color-action-danger:    #e74c3c; // Hover per chiusura pannelli
+
+$color-toast-success-alt:#10b981; 
+$color-toast-error-alt:  #ef4444; 
+
+// --- Badges ---
+$bg-badge-blue:          #e8f4f8;
+$text-badge-blue:        #2980b9;
+
+
+/* SPAZIATURE (Spacing) */
+
+$spacing-xs:             4px;
+$spacing-sm:             8px;  // Sostituisce gap: 8px
+$spacing-md:             12px; // Sostituisce margin-bottom: 12px
+$spacing-lg:             16px;
+$spacing-xl:             24px;
+
+
+/* DIMENSIONI E LAYOUT */
+
+$radius-sm:              4px;
+$radius-md:              6px;
+$radius-lg:              8px;
+$radius-xl:              14px; // Arrotondamento card dettagli
+
+$input-height:           42px;
+
+// Ombre
+$shadow-sm:              0 2px 4px rgba(0, 0, 0, 0.1);
+$shadow-md:              0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
+$shadow-card:            0 10px 25px rgba(0, 0, 0, 0.08); 
+$shadow-primary:         0 2px 8px rgba(255, 152, 0, 0.3);
+$shadow-dialog:          0 24px 64px rgba(15, 23, 42, 0.26);
+$shadow-toast:           0 4px 12px rgba(0, 0, 0, 0.15);
+$shadow-menu:            0 16px 30px rgba(17, 24, 39, 0.16);
+$shadow-filter-menu:     0 8px 20px rgba(0, 0, 0, 0.12);
+$shadow-side-panel:      -4px 0 15px rgba(0, 0, 0, 0.05);
+$shadow-drawer:          -5px 0 25px rgba(0,0,0,0.3); // Ombra pesante per i drawer
+
+/* TRANSIZIONI E ANIMAZIONI */
+$transition-base:        all 0.2s ease;
+$transition-smooth:      all 0.3s ease;
+$transition-layout:      all 0.3s ease-in-out; 
+$transition-bounce:      all 0.2s cubic-bezier(0.16, 1, 0.3, 1);

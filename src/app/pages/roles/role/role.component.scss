@@ -1,0 +1,150 @@
+@use 'variables' as *;
+
+/* HOST (Riga Tabella) */
+
+:host {
+  border-bottom: 1px solid $border-filter-light;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $bg-app-shell;
+  }
+
+  &.selected-row {
+    background-color: $color-primary-lighter !important;
+    border-left: 4px solid $color-primary;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+td {
+  padding: 1rem 0.875rem;
+  color: $text-filter-medium;
+  font-size: 0.9375rem;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* BOTTONI E ICONE */
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: $color-primary;
+  border: 1px solid $color-primary;
+
+  &:hover {
+    background-color: $color-primary-lighter;
+    border-color: $color-primary-hover;
+    color: $color-primary-hover;
+  }
+}
+
+// Icone Material
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.bold-icon {
+  font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: $border-hover; 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+  position: relative; /* Fondamentale per il tooltip */
+  border-radius: 50%;
+
+  &:hover {
+    color: $text-medium;
+    background-color: $bg-hover; /* Leggero sfondo grigio all'hover */
+  }
+}
+
+/* TOOLTIP */
+
+.tooltip-container {
+  // Corpo del Tooltip
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%; /* Lo posiziona sopra */
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px); /* Centrato orizzontalmente */
+    background-color: $bg-tooltip;
+    color: white;
+    padding: 6px 12px;
+    border-radius: $radius-md;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: $transition-bounce;
+    box-shadow: $shadow-md;
+    z-index: 100;
+  }
+
+  // Triangolino
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; /* Si attacca al bordo superiore del bottone */
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    border-width: 6px 5px 0 5px; /* Triangolo che punta in giù */
+    border-style: solid;
+    border-color: $bg-tooltip transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: $transition-bounce;
+    z-index: 100;
+  }
+
+  // Animazioni Hover
+  &:hover {
+    &::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-8px); /* Scivolamento verso l'alto */
+    }
+
+    &::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-2px); /* Scivolamento triangolo */
+    }
+  }
+}

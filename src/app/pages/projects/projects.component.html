@@ -1,0 +1,203 @@
+<div class="page-header">
+  <h2>Progetti</h2>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Azienda</label>
+    <div class="combo-field company-filter-combo">
+      <input
+        type="text"
+        [formControl]="companyFilter"
+        placeholder="Filtra per azienda..."
+        autocomplete="off"
+        (focus)="onCompanyFilterFocus()"
+        (input)="onCompanyFilterInput()">
+      @if (companyFilterValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro azienda"
+          (click)="clearCompanyFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista aziende"
+        (click)="toggleCompanyFilterDropdown()">
+        ▾
+      </button>
+      @if (companyDropdownOpen()) {
+        <div class="combo-menu">
+          @for (azienda of companyFilterOptions(); track (azienda.id || azienda.Id || azienda)) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectCompanyFilter(azienda)">
+              {{ optionName(azienda) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuna azienda trovata</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>Cliente</label>
+    <div class="combo-field customer-filter-combo">
+      <input
+        type="text"
+        [formControl]="customerFilter"
+        placeholder="Filtra per cliente..."
+        autocomplete="off"
+        (focus)="onCustomerFilterFocus()"
+        (input)="onCustomerFilterInput()">
+      @if (customerFilterValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro cliente"
+          (click)="clearCustomerFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista clienti"
+        (click)="toggleCustomerFilterDropdown()">
+        ▾
+      </button>
+      @if (customerDropdownOpen()) {
+        <div class="combo-menu">
+          @for (cliente of customerFilterOptions(); track (cliente.id || cliente.Id || cliente)) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectCustomerFilter(cliente)">
+              {{ optionName(cliente) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun cliente trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>Stato</label>
+    <div class="combo-field status-filter-combo">
+      <input
+        type="text"
+        [formControl]="statusFilter"
+        placeholder="Filtra per stato..."
+        autocomplete="off"
+        (focus)="onStatusFilterFocus()"
+        (input)="onStatusFilterInput()">
+      @if (statusFilterValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro stato"
+          (click)="clearStatusFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista stati"
+        (click)="toggleStatusFilterDropdown()">
+        ▾
+      </button>
+      @if (statusDropdownOpen()) {
+        <div class="combo-menu">
+          @for (stato of statusFilterOptions(); track (stato.id || stato.Id || stato)) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectStatusFilter(stato)">
+              {{ optionName(stato) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuno stato trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (statusMessage()) {
+  <div class="notification" [class]="statusMessage()?.type">
+    {{ statusMessage()?.text }}
+  </div>
+}
+
+@if (isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento progetti in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button appButton (click)="refreshProjects()">Riprova</button>
+  </div>
+} @else {
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          @for (col of columns; track col.header) {
+            <th>{{ col.header }}</th>
+          }
+          <th class="actions-header">Azioni</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of filteredProjects(); track p.id) {
+          <tr>
+            @for (col of columns; track col.header) {
+              <td>{{ col.value(p) }}</td>
+            }
+            <td class="actions-cell">
+              <button appButton class="btn-small" (click)="openProjectDetails(p.id)">Visualizza</button>
+              <button appButton class="btn-small btn-outline" (click)="openEditProject(p)">Modifica</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="projectColumnsCount + 1" class="empty-message">
+              Nessun progetto trovato con i filtri selezionati.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="count-footer">Numero progetti: {{ projects().length }}</p>
+  </div>
+}
+
+<div class="bottom-actions">
+  @if (isAddingProject()) {
+    <app-new-progetto 
+      (cancel)="closeCreateProject()" 
+      (created)="onProjectCreated()">
+    </app-new-progetto>
+  }
+  
+  @if (editingProject()) {
+    <app-modifica-progetto 
+      [selectedProjectToEdit]="editingProject()!" 
+      (cancel)="closeEditProject()" 
+      (saved)="onProjectSaved()">
+    </app-modifica-progetto>
+  }
+  
+  <button appButton class="btn-add" (click)="openCreateProject()">+ Aggiungi Progetto</button>
+</div>

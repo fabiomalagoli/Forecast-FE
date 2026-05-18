@@ -1,0 +1,101 @@
+@use 'variables' as *;
+
+/* HEADER E BOTTONI */
+
+.page-header {
+  h2 {
+    font-size: 28px;
+    color: $text-heading;
+    margin-bottom: 24px;
+    font-weight: 600;
+    font-family: $font-family-base;
+  }
+}
+
+.detail-header {
+  margin-bottom: 32px;
+
+  button:hover {
+    background-color: $color-primary-dark;
+  }
+}
+
+//btn-small (globalizzare?)
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+}
+
+/* LAYOUT E TABELLA PRINCIPALE */
+
+.resource-selected-layout {
+  background: $bg-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  margin-bottom: 40px;
+  overflow: hidden;
+  border: 1px solid $border-light;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  th {
+    background-color: $bg-light;
+    color: $text-muted;
+    font-weight: 600;
+    padding: 16px 24px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid $border-light;
+  }
+
+  td {
+    padding: 16px 24px;
+    color: $text-medium;
+    font-size: 15px;
+    border-bottom: 1px solid $border-light;
+  }
+
+  /* Rimuove il bordo inferiore dall'ultima riga */
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+/* STATI */
+
+.loading-state, 
+.error-state {
+  padding: 16px 24px;
+  border-radius: $radius-md;
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.loading-state {
+  background-color: $bg-state-loading;
+  color: $text-state-loading;
+  border-left: 4px solid $border-state-loading;
+}
+
+.error-state {
+  background-color: $bg-state-error-alt;
+  color: $text-state-error-alt;
+  border-left: 4px solid $border-state-error-alt;
+}

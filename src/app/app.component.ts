@@ -7,7 +7,7 @@ import { Router, RouterOutlet } from '@angular/router';
   selector: 'app-root',
   imports: [SidebarComponent, CommonModule, RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.scss'
 })
 export class AppComponent {
   protected readonly title = signal('Forecast-FE');

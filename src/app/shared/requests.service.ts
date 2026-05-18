@@ -5,7 +5,7 @@ import { Customer } from './models/customer.model';
 import { HttpClient } from '@angular/common/http';
 import { ErrorService } from './error.service';
 import { environment } from '../../environments/environment.development';
-import { CardModel } from '../grid/card-home/card-home.model';
+import { CardModel } from '../pages/grid/card-home/card-home.model';
 import { Employee } from './models/employee.model';
 import { CreateRoleRequest, Role } from './models/role.model';
 

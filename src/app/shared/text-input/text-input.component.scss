@@ -1,0 +1,37 @@
+@use 'variables' as *;
+
+.field {
+  display: flex;
+  flex-direction: column; /* label sopra l'input */
+  align-items: stretch;   /* l'input occupa la larghezza disponibile */
+  gap: 6px;               /* Spazio verticale tra label e input */
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;              
+}
+
+.label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: $text-medium;
+  margin: 0; /* Fondamentale per annullare il margin del tag <p> */
+  line-height: 1;
+}
+
+.control {
+  width: 100%;
+  min-width: 0; 
+  margin: 0; /* Fondamentale per annullare il margin del tag <p> */
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    resize: vertical;
+    max-height: 40vh;
+  }
+}

@@ -1,0 +1,194 @@
+<div class="page-header">
+  <h2>Risorse</h2>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Risorsa</label>
+    <div class="combo-field resource-name-filter-combo">
+      <input
+        type="text"
+        [formControl]="filterEmployeeName"
+        placeholder="Filtra per nome..."
+        autocomplete="off"
+        (focus)="onNameFilterFocus()"
+        (input)="onNameFilterInput()">
+      @if (filterNameValue()) {
+        <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
+      }
+      <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleNameFilterDropdown()">▾</button>
+      @if (nameDropdownOpen()) {
+        <div class="combo-menu">
+          @for (employee of nameFilterOptions(); track employee.id) {
+            <button class="combo-option" type="button" (mousedown)="selectNameFilter(employee)">
+              {{ fullName(employee) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuna risorsa trovata</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>Ruolo</label>
+    <div class="combo-field resource-role-filter-combo">
+      <input
+        type="text"
+        [formControl]="filterRole"
+        placeholder="Filtra per ruolo..."
+        autocomplete="off"
+        (focus)="onRoleFilterFocus()"
+        (input)="onRoleFilterInput()">
+      @if (filterRoleValue()) {
+        <button class="combo-clear" type="button" aria-label="Cancella filtro ruolo" (click)="clearRoleFilter()">×</button>
+      }
+      <button class="combo-toggle" type="button" aria-label="Apri lista ruoli" (click)="toggleRoleFilterDropdown()">▾</button>
+      @if (roleDropdownOpen()) {
+        <div class="combo-menu">
+          @for (role of roleFilterOptions(); track (role.id || role.Id || role)) {
+            <button class="combo-option" type="button" (mousedown)="selectRoleFilter(role)">
+              {{ optionName(role) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun ruolo trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>Livello</label>
+    <div class="combo-field resource-level-filter-combo">
+      <input
+        type="text"
+        [formControl]="filterLevel"
+        placeholder="Filtra per livello..."
+        autocomplete="off"
+        (focus)="onLevelFilterFocus()"
+        (input)="onLevelFilterInput()">
+      @if (filterLevelValue()) {
+        <button class="combo-clear" type="button" aria-label="Cancella filtro livello" (click)="clearLevelFilter()">×</button>
+      }
+      <button class="combo-toggle" type="button" aria-label="Apri lista livelli" (click)="toggleLevelFilterDropdown()">▾</button>
+      @if (levelDropdownOpen()) {
+        <div class="combo-menu">
+          @for (level of levelFilterOptions(); track (level.id || level.Id || level)) {
+            <button class="combo-option" type="button" (mousedown)="selectLevelFilter(level)">
+              {{ optionName(level) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun livello trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>Azienda</label>
+    <div class="combo-field resource-company-filter-combo">
+      <input
+        type="text"
+        [formControl]="filterCompany"
+        placeholder="Filtra per azienda..."
+        autocomplete="off"
+        (focus)="onCompanyFilterFocus()"
+        (input)="onCompanyFilterInput()">
+      @if (filterCompanyValue()) {
+        <button class="combo-clear" type="button" aria-label="Cancella filtro azienda" (click)="clearCompanyFilter()">×</button>
+      }
+      <button class="combo-toggle" type="button" aria-label="Apri lista aziende" (click)="toggleCompanyFilterDropdown()">▾</button>
+      @if (companyDropdownOpen()) {
+        <div class="combo-menu">
+          @for (company of companyFilterOptions(); track (company.id || company.Id || company)) {
+            <button class="combo-option" type="button" (mousedown)="selectCompanyFilter(company)">
+              {{ optionName(company) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuna azienda trovata</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if(isFetching()) {
+  <div class="loading-state">
+    <p>Caricamento risorse in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button appButton (click)="updateEmployees()">Riprova</button>
+  </div>
+} @else {
+    @if (statusMessage()) {
+    <div class="notification" [class]="statusMessage()?.type">
+      {{ statusMessage()?.text }}
+    </div>
+    }
+    <div class="resources-layout" [class.panel-open]="isAddingEmployeeState() || editingEmployee() !== null">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Risorsa</th>
+                        <th>Ruolo</th>
+                        <th>Livello</th>
+                        <th>Azienda</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (r of filteredEmployees(); track r.id) {
+                    <tr
+                      app-employee-row
+                      [employee]="r"
+                      (viewEmployee)="openEmployeeDetails($event)"
+                      (editEmployee)="openEmployeeEdit($event)">
+                    </tr>
+                } @empty {
+                    <tr>
+                        <td colspan="5" class="empty-message">
+                            Nessuna risorsa trovata con i filtri selezionati.
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [showFirstLastButtons]="true"
+    (page) = "onPageChange($event)">
+</mat-paginator>
+
+@if(editingEmployee()) {
+    <app-edit-employee
+        [selectedEmployeeToEdit]="editingEmployee()!"
+        (cancel)="closeEmployeeEdit()"
+        (modified)="safeEdits()"
+    ></app-edit-employee>
+}
+
+@if(isAddingEmployeeState()) {
+    <app-new-employee
+        [selectedEmployeeToAdd]="addingEmployee()"
+        (cancel)="isAddingEmployeeState.set(false)"
+        (added)="addEmployee()"
+    ></app-new-employee>
+}
+
+<div class="bottom-actions">
+    <button appButton class="btn-add" (click)="onAddingEmployee()">+ Aggiungi Risorsa</button>
+</div>

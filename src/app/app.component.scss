@@ -1,0 +1,54 @@
+@use 'variables' as *;
+
+:host {
+  box-sizing: border-box;
+}
+
+/* Resetta i margini di default del browser (andrebbe in styles.scss globale?) */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+h1 {
+  font-size: 3.125rem;
+  color: $text-black;
+  font-weight: 500;
+  line-height: 100%;
+  margin: 0;
+}
+
+/* LAYOUT SHELL */
+
+.app-shell {
+  display: flex;
+  width: 100%;
+  min-height: 100dvh;
+  background-color: $bg-app-shell;
+
+  @media screen and (max-width: 650px) {
+    // Future regole per dispositivi mobile
+  }
+}
+
+.content-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 100dvh;
+  overflow: visible;
+}
+
+/* LAYOUT PRINCIPALE */
+
+.layout-principale {
+  display: flex;
+  min-height: 100vh;
+  background-color: $bg-layout;
+}
+
+.contenuto-principale {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
