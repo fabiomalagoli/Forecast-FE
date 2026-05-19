@@ -14,9 +14,10 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   templateUrl: './edit-customer.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
 })
-export class EditCustomerComponent {
+export class EditCustomerComponent implements OnInit {
 
     private customersService = inject(CustomersService);
+    private fb = inject(FormBuilder);
 
     //Riceviamo dal Padre (Cliente.ts) il cliente da modificare, e definiamo gli output per comunicare al padre le azioni di modifica o cancellazione.
     selectedCustomerToEdit = input.required<Customer>();
@@ -43,7 +44,7 @@ export class EditCustomerComponent {
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({ key, label }));
 
-    constructor(private fb: FormBuilder) {
+    ngOnInit() {
         this.initForm();
     }
 
