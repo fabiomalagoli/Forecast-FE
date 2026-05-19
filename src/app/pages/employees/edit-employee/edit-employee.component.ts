@@ -1,6 +1,6 @@
-import { Component, input, output, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, input, output, OnInit, inject, signal, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
@@ -15,7 +15,7 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-edit-employee',
-  imports: [FormsModule, CommonModule, TextInputComponent],
+  imports: [FormsModule, CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-employee.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
 })
@@ -24,11 +24,14 @@ export class EditEmployeeComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private rolesService = inject(RolesService);
     private lookupsService = inject(LookupsService);
+    private fb = inject(FormBuilder);
     
     selectedEmployeeToEdit = input.required<Employee>();
 
     modified = output<Employee>();
     cancel = output<void>();
+
+    editEmployeeForm!: FormGroup;
 
     attemptedSubmit = false;
     noChangesMessage = false;
@@ -44,11 +47,26 @@ export class EditEmployeeComponent implements OnInit {
     jobRoleDropdownOpen = signal(false);
     showAllJobRoles = signal(false);
 
-    private originalData: string = '';
+    private originalDataToCompare: any = {};
 
     readonly headers = (Object.entries(EMPLOYEES_HEADERS) as [keyof Employee, string][])
         .filter(([key]) => key !== 'id' && key !== 'isActive') 
         .map(([key, label]) => ({ key, label }));
+
+    initForm() {
+        const employee = this.selectedEmployeeToEdit();
+
+        this.originalDataToCompare = {...employee};
+
+        const formControls: { [key: string]: any } = {};
+
+        this.headers.forEach(header => {
+            const initialValue = this.originalDataToCompare[header.key as keyof typeof this.originalDataToCompare] || '';
+            formControls[header.key] = [initialValue, Validators.required];
+        });
+
+        this.editEmployeeForm = this.fb.group(formControls);
+    }
 
     ngOnInit() {
         const loadings = [
@@ -68,22 +86,9 @@ export class EditEmployeeComponent implements OnInit {
             }
         });
 
-        this.formData = { ...this.baseData };
-        this.originalData = JSON.stringify(this.formData);
-    }
+        this.initForm();
 
-    private syncEmployee = effect(() => {
-        const emp = this.selectedEmployeeToEdit();
-        if (!emp) return;
-        
-        this.baseData = JSON.parse(JSON.stringify(emp));
-        const normalized = normalizeEmployeeForForm(this.baseData);
-        
-        console.log('Edit Employee: received data:', emp, '-> normalized:', normalized);
-        
-        this.formData = { ...normalized };
-        this.originalData = JSON.stringify(this.formData);
-    });
+    }
 
     getOptions(key: string): any[] {
         switch (key) {
@@ -101,7 +106,7 @@ export class EditEmployeeComponent implements OnInit {
     getFilteredJobRoles(): any[] {
         const term = this.showAllJobRoles()
             ? ''
-            : (this.formData.jobRole || '').toString().trim().toLowerCase();
+            : (this.editEmployeeForm.get('jobRole')?.value || '').toString().trim().toLowerCase();
 
         if (!term) {
             return this.jobRolesList();
@@ -129,54 +134,66 @@ export class EditEmployeeComponent implements OnInit {
     }
 
     selectJobRole(role: any) {
-        this.formData.jobRole = this.optionName(role);
+        this.editEmployeeForm.get('jobRole')?.setValue(this.optionName(role));
         this.jobRoleDropdownOpen.set(false);
         this.showAllJobRoles.set(false);
         this.onFieldChange();
     }
 
     isChanged(): boolean {
-        return JSON.stringify(this.formData) !== this.originalData;
+        if(!this.editEmployeeForm) return false;
+
+        const currentValues = this.editEmployeeForm.getRawValue();
+
+        for(const key of Object.keys(currentValues)) {
+            const currentValue = currentValues[key] == null ? '' : String(currentValues[key]).trim();
+            const originalValue = this.originalDataToCompare[key] == null ? '' : String(this.originalDataToCompare[key]).trim();
+
+            if(currentValue !== originalValue) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    isSubmitDisabled(form: NgForm): boolean {
-        return form.invalid || !this.isChanged();
+    isSubmitDisabled(): boolean {
+        return this.editEmployeeForm.invalid || !this.isChanged();
     }
 
-    submit(form: NgForm) {
-        if (form.invalid || !this.isChanged()) {
+    submit() {
+        if (this.editEmployeeForm.invalid || !this.isChanged()) {
             return;
         }
 
-        const uiFallback = buildEmployeeUiFallback(this.formData, this.selectedEmployeeToEdit().id);
-        const backendPayload = buildEmployeePayload(this.formData, {
+        const backendPayload = buildEmployeePayload({...this.editEmployeeForm.value}, {
             roles: this.jobRolesList(),
             levels: this.jobRoleLevelsList(),
             companies: this.companiesList(),
         });
 
-        this.employeesService.updateEmployee(this.selectedEmployeeToEdit().id, backendPayload, uiFallback).subscribe({
+        const modifiedEmployee = {...this.editEmployeeForm.value} as Employee;
+
+        this.employeesService.updateEmployee(this.selectedEmployeeToEdit().id, backendPayload, modifiedEmployee).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
-                this.statusMessage = { text: 'Employee successfully updated!', type: 'success' };
-                this.modified.emit(uiFallback);
-                form.resetForm();
-                this.formData = {};
+                this.statusMessage = { text: 'Risorsa aggiunta con successo!', type: 'success' };
+                this.modified.emit(modifiedEmployee);
+                this.editEmployeeForm.reset();
                 this.cancel.emit();
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;
-                let errorMessage = 'Error updating employee.';
+                let errorMessage = 'Errore durante l\'aggiunta della risorsa';
                 
                 if (error.status === 400) {
-                    errorMessage = 'Invalid data. Check the input fields.';
+                    errorMessage = 'Dati non validi. Controlla i campi inseriti.';
                 } else if (error.status === 404) {
-                    errorMessage = 'Employee not found.';
+                    errorMessage = 'Risorsa non trovata.';
                 } else if (error.status === 500) {
-                    errorMessage = 'Server error. Please try again later.';
+                    errorMessage = 'Errore del server. Riprova più tardi.';
                 } else if (error.message) {
-                    errorMessage = `Error: ${error.message}`;
+                    errorMessage = `Errore: ${error.message}`;
                 }
                 
                 this.statusMessage = { text: errorMessage, type: 'error' };
@@ -204,15 +221,16 @@ export class EditEmployeeComponent implements OnInit {
         return messages[key] || 'Field is required';
     }
 
-    onSubmitClick(form: NgForm, event: Event) {
+    onSubmitClick(event: Event) {
         if (!this.isChanged()) {
             event.preventDefault();
             this.noChangesMessage = true;
             return;
         } 
-        if (form.invalid) {
+        if (this.editEmployeeForm.invalid) {
             event.preventDefault();
             this.attemptedSubmit = true;
+            this.editEmployeeForm.markAllAsTouched();
         }
     }
 
@@ -220,5 +238,16 @@ export class EditEmployeeComponent implements OnInit {
         this.attemptedSubmit = false;
         this.noChangesMessage = false;
         this.statusMessage = null;
+    }
+
+    @HostListener('document:mousedown', ['$event'])
+    onDocumentMouseDown(event: MouseEvent) {
+        const target = event.target as Element | null;
+
+        if (!target?.closest('.combo-field')) {
+            this.jobRoleDropdownOpen.set(false);
+            this.showAllJobRoles.set(false);
+        }
+
     }
 }

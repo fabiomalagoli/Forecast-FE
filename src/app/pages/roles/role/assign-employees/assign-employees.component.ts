@@ -31,7 +31,7 @@ export class AssignEmployeeComponent {
     private destroyRef = inject(DestroyRef);
 
 
-    ruoloSelezionato = input.required<Role>();
+    selectedRole = input.required<Role>();
     listaRisorseAsssegnate = signal<Employee[]>([]);
     listaRisorseSelezionate = signal<AssignableEmployee[]>([]);
 
@@ -79,10 +79,7 @@ export class AssignEmployeeComponent {
     statusMessage: { text: string; type: 'success' | 'error' } | null = null;
     dateRangeError = false;
 
-
-    private dataOriginale: string = '';
-    private initialDataObj: any = null; // Ci serve per il CSS (vedi sotto)
-    formData: any = {};
+    private initialEmployeeState: AssignableEmployee[] = [];
 
 
     ngOnInit() {
@@ -90,8 +87,11 @@ export class AssignEmployeeComponent {
 
         const ra = this.listaRisorseAsssegnate();
         const assignedEmployees = JSON.parse(JSON.stringify(ra)) as Employee[];
-        this.listaRisorseSelezionate.set(mapAssignedEmployeesToSelected(assignedEmployees));
-        this.formData = {};
+        const mappedEmployees = mapAssignedEmployeesToSelected(assignedEmployees)
+
+        this.initialEmployeeState = [...mappedEmployees];
+
+        this.listaRisorseSelezionate.set([...mappedEmployees]);
 
         const caricamenti = {
             employees: this.employeesService.loadAllEmployees(),
@@ -113,9 +113,6 @@ export class AssignEmployeeComponent {
                 };
             },
         })
-
-        this.dataOriginale = JSON.stringify(this.formData);
-        this.initialDataObj = JSON.parse(this.dataOriginale);
 
         const filterSubscription = this.filtroNomeRisorsa.valueChanges.pipe(
             debounceTime(250),
@@ -175,15 +172,24 @@ export class AssignEmployeeComponent {
     }
 
     isChanged(): boolean {
-        console.log("Comparing current form data with original:");
-        console.log("Current:", this.formData);
-        console.log("Original:", this.initialDataObj);
-        return JSON.stringify(this.formData) !== this.dataOriginale;
-    }
+        const currentList = this.listaRisorseSelezionate();
+        const initialList = this.initialEmployeeState;
 
-    isFieldChanged(key: string): boolean {
-        if (!this.initialDataObj) return false;
-        return JSON.stringify(this.formData[key]) !== JSON.stringify(this.initialDataObj[key]);
+        if(currentList.length !== initialList.length) {
+            return true;
+        }
+
+        const currentMap = new Map(currentList.map(emp => [emp.id, emp.selectedJobRoleLevel]))
+        for(const initialEmp of initialList) {
+            if(!currentMap.has(initialEmp.id)){
+                return true;
+            }
+            if(currentMap.get(initialEmp.id) !== initialEmp.selectedJobRoleLevel) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
       hasValidResources(): boolean {
@@ -198,7 +204,7 @@ export class AssignEmployeeComponent {
 
     onSubmitClick(form: NgForm, event: Event) {
         // Se non ci sono cambiamenti, blocchiamo il submit e mostriamo un messaggio
-        if (this.listaRisorseSelezionate().length === 0) {
+        if (!this.isChanged()) {
         event.preventDefault();
         this.noChangesMessage = true;
         return;
@@ -224,7 +230,7 @@ export class AssignEmployeeComponent {
             return;
         }
 
-        const selectedRole = this.ruoloSelezionato();
+        const selectedRole = this.selectedRole();
         const updatedEmployees: Employee[] = selectedEmployees.map((employee) => ({
             ...employee,
             jobRole: selectedRole.name,
@@ -251,7 +257,6 @@ export class AssignEmployeeComponent {
                 this.statusMessage = { text: 'Risorse assegnate con successo!', type: 'success' };
                 this.saved.emit(updatedEmployees);
                 form.resetForm();
-                this.formData = {};
                 this.cancel.emit();
             },
             error: (error: any) => {

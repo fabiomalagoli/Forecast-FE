@@ -1,6 +1,6 @@
-import { Component, input, output, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, input, output, OnInit, inject, signal, effect, HostListener, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { Employee } from '../../../shared/models/employee.model'; 
@@ -14,7 +14,7 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-new-employee',
-  imports: [FormsModule, CommonModule, TextInputComponent],
+  imports: [FormsModule, CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-employee.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
 })
@@ -23,6 +23,7 @@ export class NewRisorsaComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private rolesService = inject(RolesService);
     private lookupsService = inject(LookupsService);
+    private fb = inject(FormBuilder);
     
     // Input dal componente padre (RisorseComponent)
     selectedEmployeeToAdd = input.required<Employee | null>();
@@ -30,6 +31,8 @@ export class NewRisorsaComponent implements OnInit {
     // Output verso il componente padre
     added = output<Employee>();
     cancel = output<void>();
+
+    createEmployeeForm!: FormGroup;
 
     // Variabili per gestione stato del form e messaggi
     attemptedSubmit = false;
@@ -41,18 +44,33 @@ export class NewRisorsaComponent implements OnInit {
 
     // Segnali per i menu a tendina
     jobRolesList = signal<any[]>([]);
-    jobRolesLevelsList = signal<any[]>([]);
+    jobRoleLevelsList = signal<any[]>([]);
     companiesList = signal<any[]>([]);
     jobRoleDropdownOpen = signal(false);
     showAllJobRoles = signal(false);
 
     // Variabile per memorizzare i dati originali, utile per verificare se ci sono state modifiche
-    private OriginalData: string = '';
+    private originalDataToCompare: any = {};
 
     // Headers dinamici basati su RISORSE_HEADERS, escludendo campi non editabili come 'id' e 'isActive'
     readonly headers = (Object.entries(EMPLOYEES_HEADERS) as [keyof Employee, string][])
         .filter(([key]) => key !== 'id' && key !== 'isActive') 
         .map(([key, label]) => ({ key, label }));
+
+    initForm() {
+        const employee = this.selectedEmployeeToAdd();
+
+        this.originalDataToCompare = {...employee};
+
+        const formControls: { [key: string]: any } = {};
+
+        this.headers.forEach(header => {
+            const initialValue = this.originalDataToCompare[header.key as keyof typeof this.originalDataToCompare] || '';
+            formControls[header.key] = [initialValue, Validators.required];
+        });
+
+        this.createEmployeeForm = this.fb.group(formControls);
+    }
 
     ngOnInit() {
         const caricamenti = [
@@ -64,7 +82,7 @@ export class NewRisorsaComponent implements OnInit {
         forkJoin(caricamenti).subscribe({
             next: (risultati) => {
                 this.jobRolesList.set(risultati[0]);
-                this.jobRolesLevelsList.set(risultati[1]);
+                this.jobRoleLevelsList.set(risultati[1]);
                 this.companiesList.set(risultati[2]);
             }, 
             error: (error) => {
@@ -72,28 +90,14 @@ export class NewRisorsaComponent implements OnInit {
             }
         });
 
-        this.formData = { ...this.baseData };
-        this.OriginalData = JSON.stringify(this.formData);
-    }
+        this.initForm();
 
-    // Reagiamo ai cambiamenti dell'input `risorsaDaAggiungere`
-    private syncRisorsa = effect(() => {
-        const r = this.selectedEmployeeToAdd();
-        if (!r) return;
-        
-        this.baseData = JSON.parse(JSON.stringify(r));
-        const normalized = normalizeEmployeeForForm(this.baseData);
-        
-        console.log('Nuova Risorsa: dati ricevuti:', r, '-> normalizzati:', normalized);
-        
-        this.formData = { ...normalized };
-        this.OriginalData = JSON.stringify(this.formData);
-    });
+    }
 
     getOptions(key: string): any[] {
         switch (key) {
             case 'jobRole': return this.jobRolesList();
-            case 'jobRoleLevel': return this.jobRolesLevelsList();
+            case 'jobRoleLevel': return this.jobRoleLevelsList();
             case 'company': return this.companiesList();
             default: return [];
         }
@@ -134,40 +138,52 @@ export class NewRisorsaComponent implements OnInit {
     }
 
     selectJobRole(role: any) {
-        this.formData.jobRole = this.optionName(role);
+        this.createEmployeeForm.get('jobRole')?.setValue(this.optionName(role));
         this.jobRoleDropdownOpen.set(false);
         this.showAllJobRoles.set(false);
         this.onFieldChange();
     }
 
     isChanged(): boolean {
-        return JSON.stringify(this.formData) !== this.OriginalData;
+        if(!this.createEmployeeForm) return false;
+
+        const currentValues = this.createEmployeeForm.getRawValue();
+
+        for(const key of Object.keys(currentValues)) {
+            const currentValue = currentValues[key] == null ? '' : String(currentValues[key]).trim();
+            const originalValue = this.originalDataToCompare[key] == null ? '' : String(this.originalDataToCompare[key]).trim();
+
+            if(currentValue != originalValue) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    isSubmitDisabled(form: NgForm): boolean {
-        return form.invalid || !this.isChanged();
+    isSubmitDisabled(): boolean {
+        return this.createEmployeeForm.invalid || !this.isChanged();
     }
 
-    submit(form: NgForm) {
-        if (form.invalid || !this.isChanged()) {
+    submit() {
+        if (this.createEmployeeForm.invalid || !this.isChanged()) {
             return;
         }
 
-        const uiFallback = buildEmployeeUiFallback({ ...this.formData, ...form.value }, this.formData.id);
-        const backendPayload = buildEmployeePayload(uiFallback, {
+        const backendPayload = buildEmployeePayload({...this.createEmployeeForm.value}, {
             roles: this.jobRolesList(),
-            levels: this.jobRolesLevelsList(),
+            levels: this.jobRoleLevelsList(),
             companies: this.companiesList(),
         });
+
+        const createdEmployee = {...this.createEmployeeForm.value} as Employee;
 
         this.employeesService.addEmployee(backendPayload).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.statusMessage = { text: 'Risorsa aggiunta con successo!', type: 'success' };
-                this.added.emit(uiFallback);
-                form.resetForm();
-                this.formData = {};
+                this.added.emit(createdEmployee);
+                this.createEmployeeForm.reset();
                 this.cancel.emit();
             },
             error: (error: any) => {
@@ -209,15 +225,16 @@ export class NewRisorsaComponent implements OnInit {
         return messages[key] || 'Campo obbligatorio';
     }
 
-    onSubmitClick(form: NgForm, event: Event) {
+    onSubmitClick(event: Event) {
         if (!this.isChanged()) {
             event.preventDefault();
             this.noChangesMessage = true;
             return;
         } 
-        if (form.invalid) {
+        if (this.createEmployeeForm.invalid) {
             event.preventDefault();
             this.attemptedSubmit = true;
+            this.createEmployeeForm.markAllAsTouched();
         }
     }
 
@@ -225,5 +242,16 @@ export class NewRisorsaComponent implements OnInit {
         this.attemptedSubmit = false;
         this.noChangesMessage = false;
         this.statusMessage = null;
+    }
+
+    @HostListener('document:mousedown', ['$event'])
+    onDocumentMouseDown(event: MouseEvent) {
+        const target = event.target as Element | null;
+
+        if (!target?.closest('.combo-field')) {
+            this.jobRoleDropdownOpen.set(false);
+            this.showAllJobRoles.set(false);
+        }
+
     }
 }

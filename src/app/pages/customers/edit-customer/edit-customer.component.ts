@@ -1,7 +1,7 @@
 import { Component, input, output, OnInit, inject } from '@angular/core';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { CUSTOMER_HEADERS } from '../customer/customer.headers';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Customer } from '../../../shared/models/customer.model';
 import { CommonModule } from '@angular/common';
 import { CustomersService } from '../../../shared/services/customers.service';
@@ -10,15 +10,18 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-edit-customer',
-  imports: [FormsModule, CommonModule, TextInputComponent],
+  imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-customer.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
 })
-export class EditCustomerComponent implements OnInit {
+export class EditCustomerComponent {
 
     private customersService = inject(CustomersService);
+
     //Riceviamo dal Padre (Cliente.ts) il cliente da modificare, e definiamo gli output per comunicare al padre le azioni di modifica o cancellazione.
     selectedCustomerToEdit = input.required<Customer>();
+
+    editCustomerForm!: FormGroup;
 
     //modified è l'output che emette il cliente modificato al padre, cancel è l'output che emette un evento di cancellazione al padre.
     modified = output<Customer>();
@@ -33,49 +36,97 @@ export class EditCustomerComponent implements OnInit {
     baseData : any = {};
 
     // Variabile per memorizzare i dati originali del cliente, utile per verificare se ci sono state modifiche
-    private OriginalData: string = '';
+    private originalDataToCompare: any = {};
 
     // Headers dinamici basati su CLIENTE_HEADERS, escludendo campi non editabili come 'id'
     readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
     .filter(([key]) => key !== 'id')
     .map(([key, label]) => ({ key, label }));
 
-    ngOnInit() {
-        const c = this.selectedCustomerToEdit();
-        // Inizializza formData con i dati del cliente da modificare
-        this.baseData = JSON.parse(JSON.stringify(c));
+    constructor(private fb: FormBuilder) {
+        this.initForm();
+    }
 
-        const separatedAddress = parseCustomerAddress(c.fullAddress || '');
+    private initForm() {
+        const customer = this.selectedCustomerToEdit();
+        const separateAddress = parseCustomerAddress(customer.fullAddress || '');
 
-        this.formData = {
-            ...this.baseData,
-            ...separatedAddress
+        const initialData = {
+            ...customer,
+            ...separateAddress
         };
 
-        this.OriginalData = JSON.stringify(this.formData);
+        this.originalDataToCompare = {...initialData};
+
+        const formControls: { [key: string]: any } = {};
+
+        this.headers.forEach(header => {
+            const validators = [Validators.required];
+            const key = header.key;
+
+            const initialValue = initialData[key as keyof typeof initialData] || ''; //indirizziamo la chiave del tipo corrispondente a quello dell'header in questione
+
+            if(this.isRequiredField(key)) {
+                validators.push(Validators.required);
+            }
+
+            const maxLength = this.getMaxLength(key);
+            if(maxLength) {
+                validators.push(Validators.maxLength(maxLength));
+            }
+
+            if(this.isNumericField(key)) {
+                validators.push(Validators.pattern('^[0-9]+$'));
+            }
+
+            formControls[key] = [initialValue, validators];
+        });
+
+        this.editCustomerForm = this.fb.group(formControls);
+
     }
 
     isChanged(): boolean {
-        return JSON.stringify(this.formData) !== this.OriginalData;
+        if(!this.editCustomerForm) return false;
+
+        // Confrontiamo i JSON
+        const currentValues = this.editCustomerForm.getRawValue();
+
+       // Controlliamo chiave per chiave
+        for (const key of Object.keys(currentValues)) {
+        // Normalizziamo i valori convertendoli tutti in stringa e gestendo i null/undefined
+        const currentValue = currentValues[key] == null ? '' : String(currentValues[key]).trim();
+        const originalValue = this.originalDataToCompare[key] == null ? '' : String(this.originalDataToCompare[key]).trim();
+        
+        // Se troviamo anche solo un valore diverso, il form è stato modificato
+        if (currentValue !== originalValue) {
+            return true; 
+        }
+        }
+
+        return false;
     }
 
-    isSubmitDisabled(form: NgForm): boolean {
-        return form.invalid || !this.isChanged();
+    isSubmitDisabled(): boolean {
+        return this.editCustomerForm.invalid || !this.isChanged();
     }
 
-    submit(form: NgForm) {
-        if (form.invalid || !this.isChanged()) {
+    submit() {
+        if (this.editCustomerForm.invalid || !this.isChanged()) {
             return;
         }
 
-        this.customersService.updateCustomer(this.formData).subscribe({
+        const updateCustomerData = {
+            ...this.originalDataToCompare,
+            ...this.editCustomerForm.value
+        };
+
+        this.customersService.updateCustomer(updateCustomerData).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.statusMessage = { text: 'Cliente modificato con successo!', type: 'success' };
                 this.modified.emit(this.formData);
-                form.resetForm();
-                this.formData = {};
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;
@@ -152,15 +203,16 @@ export class EditCustomerComponent implements OnInit {
         return messages[key] || `Massimo ${maxLength} caratteri`;
     }
 
-    onSubmitClick(form: NgForm, event: Event) {
+    onSubmitClick(event: Event) {
     if (!this.isChanged()) {
-    event.preventDefault();
-    this.noChangesMessage = true;
-    return;
-    } 
-    if (form.invalid) {
-      event.preventDefault();
-      this.attemptedSubmit = true;
+        event.preventDefault();
+        this.noChangesMessage = true;
+        return;
+        } 
+    if (this.editCustomerForm.invalid) {
+        event.preventDefault();
+        this.attemptedSubmit = true;
+        this.editCustomerForm.markAllAsTouched();
     }
     }
 

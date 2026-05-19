@@ -1,6 +1,6 @@
 import { Component, input, output, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { RolesService } from '../../../shared/services/roles.service';
@@ -10,20 +10,22 @@ import { createEmptyRoleFormData, normalizeRoleForForm } from '../../../shared/u
 
 @Component({
   selector: 'app-new-role',
-  imports: [FormsModule, CommonModule, TextInputComponent],
+  imports: [FormsModule, CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-role.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
 })
-export class NewRoleComponent implements OnInit {
+export class NewRoleComponent {
 
     private rolesService = inject(RolesService);
     
     // Input dal componente padre (RolesComponent)
-    ruoloDaAggiungere = input.required<Role | null>();
+    roleToAdd = input.required<Role | null>();
 
     // Output verso il componente padre
     added = output<void>();
     cancel = output<void>();
+
+    roleCreateForm! : FormGroup;
 
     // Variabili per gestione stato del form e messaggi
     attemptedSubmit = false;
@@ -39,9 +41,17 @@ export class NewRoleComponent implements OnInit {
         { key: 'name', label: 'Nome Ruolo' }
     ];
 
-    ngOnInit() {
-        this.formData = createEmptyRoleFormData();
-        this.OriginalData = JSON.stringify(this.formData);
+    constructor(private fb: FormBuilder) {
+        this.initForm();
+    }
+
+    initForm() {
+        const formControls: { [key: string]: any } = {};
+        this.headers.forEach(header => {
+            formControls[header.key] = ['', Validators.required];
+        });
+
+        this.roleCreateForm = this.fb.group(formControls);
     }
 
     onCancel() {
@@ -50,7 +60,7 @@ export class NewRoleComponent implements OnInit {
 
     // Reagiamo ai cambiamenti dell'input `ruoloDaAggiungere`
     private syncRuolo = effect(() => {
-        const r = this.ruoloDaAggiungere();
+        const r = this.roleToAdd();
         if (!r) return;
         
         this.baseData = JSON.parse(JSON.stringify(r));
@@ -85,21 +95,21 @@ export class NewRoleComponent implements OnInit {
         return JSON.stringify(this.formData) !== this.OriginalData;
     }
 
-    isSubmitDisabled(form: NgForm): boolean {
-        return form.invalid || !this.isChanged();
+    isSubmitDisabled(): boolean {
+        return this.roleCreateForm.invalid || !this.isChanged();
     }
 
-    submit(form: NgForm) {
-        console.log("1. Pulsante premuto! Form valido?", form.valid, "| Dati cambiati?", this.isChanged());
-        console.log("Valori attuali del form:", form.value);
+    submit() {
+        console.log("1. Pulsante premuto! Form valido?", this.roleCreateForm.valid, "| Dati cambiati?", this.isChanged());
+        console.log("Valori attuali del form:", this.roleCreateForm.value);
 
         // Se il form non è valido o non ci sono modifiche, blocca tutto
-        if (form.invalid || !this.isChanged()) {
+        if (this.roleCreateForm.invalid || !this.isChanged()) {
             console.warn("BLOCCATO: Il form non è valido o non è stato modificato.");
             return;
         }
 
-        const payload = buildCreateRolePayload({ ...this.formData, ...form.value });
+        const payload = buildCreateRolePayload({ ...this.formData, ...this.roleCreateForm.value });
 
         console.log("2. Nessun blocco. Chiamo il service con il payload:", payload);
 
@@ -109,8 +119,7 @@ export class NewRoleComponent implements OnInit {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.added.emit();
-                form.resetForm();
-                this.formData = {};
+                this.roleCreateForm.reset();
                 this.cancel.emit();
             },
             error: (error: any) => {
@@ -134,15 +143,16 @@ export class NewRoleComponent implements OnInit {
         return messages[key] || 'Campo obbligatorio';
     }
 
-    onSubmitClick(form: NgForm, event: Event) {
+    onSubmitClick(event: Event) {
         if (!this.isChanged()) {
             event.preventDefault();
             this.noChangesMessage = true;
             return;
         } 
-        if (form.invalid) {
+        if (this.roleCreateForm.invalid) {
             event.preventDefault();
             this.attemptedSubmit = true;
+            this.roleCreateForm.markAllAsTouched();
         }
     }
 

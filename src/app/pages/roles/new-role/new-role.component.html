@@ -10,7 +10,7 @@
       </div>
     }
 
-    <form class="np-form np-form--grid" #f="ngForm" (ngSubmit)="submit(f)">
+    <form class="np-form np-form--grid" [formGroup]="roleCreateForm" (ngSubmit)="submit()">
       @for (header of headers; track header.key; let i = $index) {
         <div class="np-field np-field--grid">
           <app-text-input>
@@ -21,18 +21,16 @@
               class="np-input"
               type="text"
               [attr.id]="toId(header.key, i)"
-              [name]="header.key"
-              [(ngModel)]="formData[header.key]"
-              [required]="isRequiredField(header.key)"
+              [formControlName]="header.key"
               (input)="onFieldChange()"
             />
           </app-text-input>
 
           @if (
-            f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
+            roleCreateForm.get(header.key)?.invalid && (roleCreateForm.get(header.key)?.touched || attemptedSubmit)
           ) {
             <p class="error">
-              @if (f.controls[header.key]?.errors?.['required']) {
+              @if (roleCreateForm.get(header.key)?.errors?.['required']) {
                 *{{ getRequiredErrorMessage(header.key) }}
               }
             </p>
@@ -41,7 +39,7 @@
       }
 
       <div class="actions">
-        <button type="submit" [disabled]="isSubmitDisabled(f)" (click)="onSubmitClick(f, $event)">Crea ruolo</button>
+        <button type="submit" [disabled]="isSubmitDisabled()" (click)="onSubmitClick($event)">Crea ruolo</button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
     </form>

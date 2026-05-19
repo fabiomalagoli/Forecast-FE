@@ -10,46 +10,55 @@
       </div>
     }
 
-    <form class="np-form np-form--grid" #f="ngForm" (ngSubmit)="submit(f)">
-      @for (header of headers; track header.key; let i = $index) {
-        @if(header.label !== 'Progetti Attivi'){
-        <div class="np-field np-field--grid">
-          <app-text-input>
-            <label class="np-label" [attr.for]="toId(header.key, i)">
-              {{ header.label }}
-            </label>
-            <input
-              class="np-input"
-              type="text"
-              [attr.id]="toId(header.key, i)"
-              [name]="header.key"
-              [(ngModel)]="formData[header.key]"
-              [required]="isRequiredField(header.key)"
-              [maxlength]="getMaxLength(header.key)"
-              (input)="onFieldChange()"
-            />
-          </app-text-input>
+    @if (editCustomerForm) {
+      <form class="np-form np-form--grid" [formGroup]="editCustomerForm" (ngSubmit)="submit()">
+        @for (header of headers; track header.key; let i = $index) {
+          @if(header.label !== 'Progetti Attivi') {
+            <div class="np-field np-field--grid">
+              <app-text-input>
+                <label class="np-label" [attr.for]="toId(header.key, i)">
+                  {{ header.label }}
+                </label>
+                
+                <input
+                  class="np-input"
+                  type="text"
+                  [attr.id]="toId(header.key, i)"
+                  [formControlName]="header.key"
+                  [maxlength]="getMaxLength(header.key)"
+                />
+              </app-text-input>
 
-          @if (
-            f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
-          ) {
-            <p class="error">
-              @if (f.controls[header.key]?.errors?.['required']) {
-                *{{ getRequiredErrorMessage(header.key) }}
+              @if (
+                editCustomerForm.get(header.key)?.invalid && 
+                (editCustomerForm.get(header.key)?.touched || attemptedSubmit)
+              ) {
+                <p class="error">
+                  @if (editCustomerForm.get(header.key)?.hasError('required')) {
+                    *{{ getRequiredErrorMessage(header.key) }}
+                  }
+                  @if (editCustomerForm.get(header.key)?.hasError('maxlength')) {
+                    *{{ getMaxLengthErrorMessage(header.key) }}
+                  }
+                  @if (editCustomerForm.get(header.key)?.hasError('pattern')) {
+                    *sono accettati solo numeri
+                  }
+                </p>
               }
-              @if (f.controls[header.key]?.errors?.['maxlength']) {
-                *{{ getMaxLengthErrorMessage(header.key) }}
-              }
-            </p>
+            </div>
           }
-        </div>
         }
-      }
 
-      <div class="actions">
-        <button type="submit" [disabled]="isSubmitDisabled(f)">Modifica cliente</button>
-        <button type="button" (click)="onCancel()">Annulla</button>
-      </div>
-    </form>
+        <div class="actions">
+          <button 
+            type="submit" 
+            [disabled]="isSubmitDisabled()" 
+            (click)="onSubmitClick($event)">
+            Modifica cliente
+          </button>
+          <button type="button" (click)="onCancel()">Annulla</button>
+        </div>
+      </form>
+    }
   </div>
 </dialog>

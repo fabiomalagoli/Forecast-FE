@@ -117,7 +117,7 @@
 
 @if(isAddingRoleState()) {
     <app-new-role
-        [ruoloDaAggiungere]="addingRole()"
+        [roleToAdd]="addingRole()"
         (added)="aggiungiRuolo()"
         (cancel)="isAddingRoleState.set(false)"
     ></app-new-role>
@@ -125,7 +125,7 @@
 
 @if(editingRole()) {
     <app-modifica-role
-        [ruoloDaModificare]="editingRole()!"
+        [roleToEdit]="editingRole()!"
         (cancel)="chiudiModifica()"
         (modified)="salvaModifica()"
     ></app-modifica-role>
@@ -133,7 +133,7 @@
 
 @if(assigningRole()) {
     <app-assegna-risorse
-        [ruoloSelezionato]="assigningRole()!"
+        [selectedRole]="assigningRole()!"
         (cancel)="chiudiAssegnaRisorse()"
         (saved)="salvaAssegnazioneRisorse()"
     ></app-assegna-risorse>

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, effect, inject, input, output } from '@angular/core';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { Role } from '../../../shared/models/role.model';
@@ -9,40 +9,59 @@ import { buildUpdateRolePayload } from '../../../shared/payloads/role.payloads';
 
 @Component({
   selector: 'app-modifica-role',
-  imports: [CommonModule, FormsModule, TextInputComponent],
+  imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-role.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class ModificaRoleComponent {
-  ruoloDaModificare = input.required<Role>();
+  roleToEdit = input.required<Role>();
 
   private rolesService = inject(RolesService);
 
   modified = output<Role>();
   cancel = output<void>();
 
+  roleEditForm! : FormGroup;
+
   attemptedSubmit = false;
   noChangesMessage = false;
   statusMessage: { text: string; type: 'success' | 'error' } | null = null;
 
   formData: Record<string, string> = {};
-  private originalData = '';
+  private originalDataToCompare: any = {};
 
   readonly headers = [
     { key: 'name', label: 'Nome Ruolo' },
   ];
 
-  private syncRuolo = effect(() => {
-    const role = this.ruoloDaModificare();
-    if (!role) return;
+  constructor(private fb: FormBuilder) {
+    effect(() => {
+      const role = this.roleToEdit();
+      if(!role) return;
 
-    this.formData = {
-      id: role.id,
-      name: role.name || '',
-    };
-    this.originalData = JSON.stringify(this.formData);
-    this.resetMessages();
-  });
+      this.originalDataToCompare = {
+        id: role.id,
+        name: role.name || ''
+      };
+
+      if(this.roleEditForm) {
+        this.roleEditForm.patchValue({name: role.name || ''});
+      }
+      else {
+        this.initForm(role)
+      }
+    })
+  } 
+
+  initForm(role: Role) {
+      this.roleEditForm = this.fb.group({
+        name: [role.name || '', [Validators.required]]
+      })
+
+      this.roleEditForm.valueChanges.subscribe(() => {
+        this.resetMessages();
+      })
+  }
 
   onCancel() {
     this.cancel.emit();
@@ -66,21 +85,34 @@ export class ModificaRoleComponent {
   }
 
   isChanged(): boolean {
-    return JSON.stringify(this.formData) !== this.originalData;
+    if(!this.roleEditForm) return false;
+
+    const currentValues = this.roleEditForm.getRawValue();
+
+    for(const key of Object.keys(currentValues)) {
+      const currentValue = currentValues[key] == null ? '' : String(currentValues[key]).trim();
+      const originalValue = this.originalDataToCompare[key] == null ? '' : String(this.originalDataToCompare[key]).trim();
+
+      if(currentValue !== originalValue) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  isSubmitDisabled(form: NgForm): boolean {
-    return form.invalid || !this.isChanged();
+  isSubmitDisabled(): boolean {
+    return this.roleEditForm.invalid || !this.isChanged();
   }
 
-  submit(form: NgForm) {
-    if (form.invalid || !this.isChanged()) {
-      this.attemptedSubmit = !!form.invalid;
+  submit() {
+    if (this.roleEditForm.invalid || !this.isChanged()) {
+      this.attemptedSubmit = !!this.roleEditForm.invalid;
       this.noChangesMessage = !this.isChanged();
       return;
     }
 
-    const updatedRole = buildUpdateRolePayload({ ...this.formData, ...form.value }, this.ruoloDaModificare().id);
+    const updatedRole = buildUpdateRolePayload({ ...this.formData, ...this.roleEditForm.value }, this.roleToEdit().id);
 
     this.rolesService.updateJobRole(updatedRole).subscribe({
         next: () => {
@@ -88,8 +120,7 @@ export class ModificaRoleComponent {
             this.noChangesMessage = false;
             this.statusMessage = { text: 'Risorsa modificata con successo!', type: 'success' };
             this.modified.emit(updatedRole);
-            form.resetForm();
-            this.formData = {};
+            this.roleEditForm.reset();
             this.cancel.emit();
         },
         error: (error: any) => {
@@ -119,16 +150,17 @@ export class ModificaRoleComponent {
     return messages[key] || 'Campo obbligatorio';
   }
 
-  onSubmitClick(form: NgForm, event: Event) {
+  onSubmitClick(event: Event) {
     if (!this.isChanged()) {
       event.preventDefault();
       this.noChangesMessage = true;
       return;
     }
 
-    if (form.invalid) {
+    if (this.roleEditForm.invalid) {
       event.preventDefault();
       this.attemptedSubmit = true;
+      this.roleEditForm.markAllAsTouched();
     }
   }
 

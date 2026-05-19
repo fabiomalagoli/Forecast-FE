@@ -1,13 +1,13 @@
 import { Component, ViewEncapsulation, output } from '@angular/core';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { CUSTOMER_HEADERS } from '../customer/customer.headers';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Customer } from '../../../shared/models/customer.model';
 import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-new-customer',
-  imports: [FormsModule, TextInputComponent],
+  imports: [FormsModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-customer.component.html',
   styleUrls: ['../../../shared/form-styles.scss'],
   encapsulation: ViewEncapsulation.None
@@ -20,22 +20,32 @@ export class NewCustomerComponent {
   cancel = output<void>();
   formData: any = {};
 
-  submit(form: NgForm) {
-    if (form.invalid) {
-      form.control.markAllAsTouched();
+  customerForm!: FormGroup;
+
+  constructor(private fb: FormBuilder) {
+    this.initForm();
+  }
+
+  private initForm() {
+    const formControls: { [key: string]: any } = {};
+    
+    this.headers.forEach(header => {
+      formControls[header.key] = ['', Validators.required];
+    });
+
+    this.customerForm = this.fb.group(formControls);
+  }
+
+  submit() {
+    if(this.customerForm.invalid) {
+      this.customerForm.markAllAsTouched();
       return;
     }
 
-    // const totalDays = Number(this.formData.totalDays);
-    // if (isNaN(totalDays)) {
-    //   console.error('Il campo totalDays deve essere un numero.');
-    //   return;
-    // }
-
-    const createdCustomer = { ...this.formData } as Customer;
+    const createdCustomer = { ...this.customerForm.value } as Customer;
     this.created.emit(createdCustomer);
-    form.resetForm();
-    this.formData = {};
+
+    this.customerForm.reset();
   }
 
   onCancel() {

@@ -4,7 +4,7 @@
   <div class="np-panel">
     <h2 class="np-title">Nuovo cliente</h2>
 
-    <form class="np-form np-form--grid" #f="ngForm" (ngSubmit)="submit(f)">
+    <form class="np-form np-form--grid" [formGroup]="customerForm" (ngSubmit)="submit()">
       @for (header of headers; track header.key; let i = $index) {
         @if(header.label !== 'Progetti Attivi'){
         <div class="np-field np-field--grid">
@@ -17,21 +17,18 @@
               class="np-input"
               type="text"
               [attr.id]="toId(header.key, i)"
-              [name]="header.key"
-              [(ngModel)]="formData[header.key]"
-              required
-              [pattern]="isNumericField(header.key) ? '^[0-9]+$' : ''"
+              [formControlName]="header.key"
             />
           </app-text-input>
 
           @if (
-            f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
+            customerForm.get(header.key)?.invalid && customerForm.get(header.key)?.touched
           ) {
             <p class="error">
-              @if (f.controls[header.key]?.errors?.['required']) {
+              @if (customerForm.get(header.key)?.hasError('required')) {
                 *campo obbligatorio
               }
-              @if (f.controls[header.key]?.errors?.['pattern']) {
+              @if (customerForm.get(header.key)?.hasError('pattern')) {
                 *sono accettati solo numeri
               }
             </p>
@@ -41,7 +38,7 @@
       }
 
       <div class="actions">
-        <button type="submit" [disabled]="f.invalid">Aggiungi cliente</button>
+        <button type="submit" [disabled]="customerForm.invalid">Aggiungi cliente</button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
     </form>

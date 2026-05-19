@@ -10,7 +10,7 @@
       </div>
     }
 
-    <form class="np-form np-form--grid" #f="ngForm" (ngSubmit)="submit(f)">
+    <form class="np-form np-form--grid" [formGroup]="createEmployeeForm" (ngSubmit)="submit()">
       @for (header of headers; track header.key; let i = $index) {
         @if(header.key === 'name' || header.key === 'surname') {
           <div class="np-field np-field--grid">
@@ -23,17 +23,15 @@
                 type="text"
                 [attr.id]="toId(header.key, i)"
                 [name]="header.key"
-                [(ngModel)]="formData[header.key]"
-                [required]="isRequiredField(header.key)"
-                (input)="onFieldChange()"
+                [formControlName]="header.key"
               />
             </app-text-input>
 
             @if (
-              f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
+              createEmployeeForm.get(header.key)?.invalid && (createEmployeeForm.get(header.key)?.touched || attemptedSubmit)
             ) {
               <p class="error">
-                @if (f.controls[header.key]?.errors?.['required']) {
+                @if (createEmployeeForm.get(header.key)?.errors?.['required']) {
                   *{{ getRequiredErrorMessage(header.key) }}
                   }
               </p>
@@ -52,14 +50,13 @@
                 type="text"
                 [attr.id]="toId(header.key, i)"
                 [name]="header.key"
-                [(ngModel)]="formData[header.key]"
+                [formControlName]="header.key"
                 autocomplete="off"
                 (focus)="onJobRoleFocus()"
                 (input)="onJobRoleInput()"
-                required
               />
               
-              @if (formData[header.key]) {
+              @if (createEmployeeForm.get(header.key)) {
                 <button
                   class="combo-clear"
                   type="button"
@@ -99,9 +96,8 @@
               <select
                 [id]="header.key"
                 [name]="header.key"
-                [(ngModel)]="formData[header.key]"
-                (ngModelChange)="onFieldChange()"
-                required>
+                [formControlName]="header.key"
+              >
                 @for (opt of getOptions(header.key); track (opt.id || opt.Id || opt)) {
                   <option [value]="opt.name || opt.Name || opt">
                     {{ (opt.name ) || (opt.Name) || opt }}
@@ -112,10 +108,10 @@
             }
 
           @if (
-            f.controls[header.key]?.invalid && (f.controls[header.key]?.touched || f.submitted)
+            createEmployeeForm.get(header.key)?.invalid && (createEmployeeForm.get(header.key)?.touched || attemptedSubmit)
           ) {
             <p class="error">
-              @if (f.controls[header.key]?.errors?.['required']) {
+              @if (createEmployeeForm.get(header.key)?.errors?.['required']) {
                 *{{ getRequiredErrorMessage(header.key) }}
                 }
             </p>
@@ -125,7 +121,7 @@
     }
 
       <div class="actions">
-        <button type="submit" [disabled]="isSubmitDisabled(f)">Crea risorsa</button>
+        <button type="submit" [disabled]="isSubmitDisabled()">Crea risorsa</button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
     </form>
