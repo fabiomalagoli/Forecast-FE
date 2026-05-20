@@ -138,7 +138,9 @@
   align-items: center;
 }
 
-.actions-header { text-align: left; }
+.favorites-header { 
+  text-align: center; 
+}
 
 .empty-message {
   text-align: center;
@@ -203,6 +205,27 @@
     background-color: $color-primary-lighter;
     border-color: $color-primary-hover;
     color: $color-primary-hover;
+  }
+}
+
+.btn-favorite {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #ffc107;
+  }
+
+  &.favorite {
+    color: #ffc107;
   }
 }
 

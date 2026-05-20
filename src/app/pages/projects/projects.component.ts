@@ -299,6 +299,10 @@ export class ProjectsComponent {
     return option?.name || option?.Name || option || '';
   }
 
+  toggleFavorite(project: Project): void {
+    project.isFavorite = !project.isFavorite;
+  }
+
   onCompanyFilterFocus() {
     this.showAllCompanyOptions.set(true);
     this.companyDropdownOpen.set(true);

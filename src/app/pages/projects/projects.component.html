@@ -156,7 +156,7 @@
           @for (col of columns; track col.header) {
             <th>{{ col.header }}</th>
           }
-          <th class="actions-header">Azioni</th>
+          <th class="favorites-header">Preferiti</th>
         </tr>
       </thead>
       <tbody>
@@ -166,6 +166,14 @@
               <td>{{ col.value(p) }}</td>
             }
             <td class="actions-cell">
+              <button 
+                class="btn-favorite"
+                [class.favorite]="p.isFavorite"
+                (click)="toggleFavorite(p)"
+                aria-label="Aggiungi ai preferiti"
+                title="Aggiungi ai preferiti">
+                ★
+              </button>
               <button appButton class="btn-small" (click)="openProjectDetails(p.id)">Visualizza</button>
               <button appButton class="btn-small btn-outline" (click)="openEditProject(p)">Modifica</button>
             </td>

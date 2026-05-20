@@ -1,20 +1,16 @@
 <div class="card">
-  <div class="col-sx">
-    <h2>{{ cards().customer }}</h2>
-    <h3>{{ cards().activity }}</h3>
+  <div class="card-header">
+    <h2 class="customer-name">{{ cards().customer }}</h2>
+    <div class="header-meta">
+      <div class="activity">{{ cards().activity }}</div>
+      <div class="status">{{ cards().projectStatus }}</div>
+    </div>
   </div>
-  <div class="col-dx">
-    <div class="info-g">
-      <h4>Stato</h4>
-      <p>{{ cards().projectStatus }}</p>
-    </div>
-    <div class="info-g">
-      <h4>Persone</h4>
-      <p>{{ cards().employeeCount }}</p>
-    </div>
-    <div class="info-g">
-      <h4>Totale (€)</h4>
-      <p>{{ cards().totalBudget }}</p>
-    </div>
+
+  <div class="project-name">{{ cards().projectName }}</div>
+
+  <div class="card-body">
+    <div class="meta-line">Persone allocate: <span class="meta-value">{{ cards().employeeCount }}</span></div>
+    <div class="meta-line">Totale (€): <span class="meta-value">{{ cards().totalBudget }}</span></div>
   </div>
 </div>

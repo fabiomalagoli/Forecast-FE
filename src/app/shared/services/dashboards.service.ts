@@ -17,6 +17,7 @@ export class DashboardService {
         customer: card.customer,
         activity: card.activity,
         projectStatus: card.projectStatus,
+        projectName: card.projectName || card.name || card.title || card.progetto || '',
         employeeCount: card.assignmentSummary?.employeesCount,
         totalBudget: card.totalBudget,
       }))),
