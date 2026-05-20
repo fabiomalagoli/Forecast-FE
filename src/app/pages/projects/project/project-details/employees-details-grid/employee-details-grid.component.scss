@@ -10,6 +10,18 @@
   }
 }
 
+h3.section-title {
+  margin-bottom: 20px;
+  color: #212529;
+  font-weight: 600;
+
+  // Applica un margine maggiore solo al secondo titolo
+  &:nth-of-type(2) {
+    margin-top: 50px; // Sposta in basso il blocco
+    text-align: center;
+  }
+}
+
 /* LAYOUT GENERALE */
 
 .section-title {
@@ -56,8 +68,9 @@
 
 .grid-row {
   display: grid;
+  margin-bottom: 14px;
   grid-template-columns: 1fr 90px 100px 80px; 
-  gap: 1rem;
+  gap: 16px;
   padding: 0;
   border-bottom: 1px solid $border-card-divider;
   align-items: center;
@@ -69,6 +82,11 @@
   // &.align-center {
   //   align-items: center;
   // }
+}
+
+.month-label {
+  font-size: 14px;
+  color: #495057;
 }
 
 .header-row {
@@ -91,6 +109,37 @@
   align-items: center;
 }
 
+app-text-input {
+  display: block;
+  width: 100%;
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #f39200;
+      box-shadow: 0 0 0 3px rgba(243, 146, 0, 0.25);
+    }
+
+    // Stile quando il campo è bloccato (!isEditMode)
+    &[readonly] {
+      background-color: #f8f9fa;
+      border-color: #e9ecef;
+      color: #6c757d; // Testo attenuato
+      cursor: not-allowed; // Cambia il cursore per far capire che è bloccato
+    }
+  }
+}
+
 /* BOTTONI */
 
 .btn-small {
@@ -109,4 +158,47 @@
   background-color: transparent;
   color: $color-primary;
   border: 1px solid $color-primary;
+}
+
+.year-spinner-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-spinner {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.year-picker-container {
+  display: flex;
+  justify-content: center; // Centra il blocco orizzontalmente nel side panel
+  align-items: center; // Allinea verticalmente le freccette al centro dell'input box
+  gap: 12px;
+  margin: 20px 0; // Distanzia il componente dal titolo sopra e dalla tabella sotto
+}
+
+.year-picker-field {
+  width: 140px;
+  margin-bottom: 0 !important; /* Rimuove i margini che disallineano le frecce */
+
+  input {
+    text-align: center;
+  }
 }

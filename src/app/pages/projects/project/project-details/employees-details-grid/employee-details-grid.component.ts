@@ -1,18 +1,47 @@
-import { Component, EventEmitter, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, input, output, ViewChild } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AppButtonComponent } from '../../../../../shared/button/button';
 import { signal } from '@angular/core';
 import { ProjectEmployee } from '../../../../../shared/models/project.model';
 import { TextInputComponent } from "../../../../../shared/text-input/text-input.component";
 import { EMPLOYEES_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatDatepicker, MatDatepickerModule } from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormField } from "@angular/material/select";
+import { MAT_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+
+export const YEAR_FORMATS = {
+  parse: {
+    dateInput: { year: 'numeric' }
+  },
+  display: {
+    dateInput: { year: 'numeric' },
+    monthYearLabel: { year: 'numeric' },
+    dateA11yLabel: { year: 'numeric' },
+    monthYearA11yLabel: { year: 'numeric' },
+  },
+}
 
 @Component({
   selector: 'app-resource-details-grid',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, AppButtonComponent, FormsModule],
+  imports: [
+    CommonModule,
+    TextInputComponent,
+    AppButtonComponent,
+    FormsModule,
+    MatDatepickerModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule
+  ],
+  providers: [provideNativeDateAdapter(),
+    {provide: MAT_DATE_FORMATS, useValue: YEAR_FORMATS }
+  ],
   templateUrl: './employee-details-grid.component.html',
-  styleUrl: './employee-details-grid.component.scss'
+  styleUrl: './employee-details-grid.component.scss',
 })
 export class ResourceDetailsGridComponent {
   
@@ -20,6 +49,8 @@ export class ResourceDetailsGridComponent {
   resourceDetailsHeaders = EMPLOYEES_DETAILS_RECAP_HEADERS;
 
   savingComplete = output<ProjectEmployee>();
+
+  yearSelected = new FormControl(new Date());
 
   firstSemester = signal([
     { name: 'Gennaio', days: 10, tariffs: 50, confirm: false },
@@ -44,6 +75,20 @@ export class ResourceDetailsGridComponent {
   confirmed = signal<boolean>(false);
   totalDaysSpent = signal<number>((projectEmployee => projectEmployee ? projectEmployee.daysSpent : 0)(this.resource()));
   dailyTariff = signal<number>(0);
+
+  chosenYearHandler(normalizedYear: Date, datepicker: any) {
+    this.yearSelected.setValue(normalizedYear);
+    datepicker.close();
+  }
+
+  changeYear(offset: number){
+    const currentZone = this.yearSelected.value;
+    if(currentZone) {
+      const newDate = new Date(currentZone);
+      newDate.setFullYear(newDate.getFullYear() + offset);
+      this.yearSelected.setValue(newDate);
+    }
+  }
 
   toggleEditMode(){
     this.isEditMode.update(value => !value);

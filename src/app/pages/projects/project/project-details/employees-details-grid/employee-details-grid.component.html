@@ -32,6 +32,27 @@
         </div>
         <h3 class="section-title">Gestione Mensile</h3>
 
+
+        <div class="year-picker-container">
+            <button type="button" class="btn-spinner" [disabled]="!isEditMode()" (click)="changeYear(-1)">◀</button>
+            <mat-form-field appearance="outline" class="year-picker-field" subscriptSizing="dynamic">
+                <input matInput 
+                    [formControl]="yearSelected"
+                    [matDatepicker]="releasedAtPicker"
+                    [readonly]="!isEditMode()"
+                    (click)="releasedAtPicker.open()">
+                    
+                
+                <mat-datepicker-toggle matSuffix [for]="releasedAtPicker"></mat-datepicker-toggle>
+                
+                <mat-datepicker #releasedAtPicker 
+                                startView="multi-year"
+                                (yearSelected)="chosenYearHandler($event, releasedAtPicker)">
+                </mat-datepicker>
+            </mat-form-field>
+            <button type="button" class="btn-spinner" [disabled]="!isEditMode()" (click)="changeYear(1)">▶</button>
+        </div>
+
         <div class="gestione-mensile-wrapper">
             
             <div class="semester-block">
