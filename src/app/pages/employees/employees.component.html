@@ -118,19 +118,21 @@
 
 @if(isFetching()) {
   <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
     <p>Caricamento risorse in corso...</p>
   </div>
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton (click)="updateEmployees()">Riprova</button>
+    <button appButton class="btn-primary" (click)="reloadEmployees()">Riprova</button>
   </div>
 } @else {
     @if (statusMessage()) {
-    <div class="notification" [class]="statusMessage()?.type">
-      {{ statusMessage()?.text }}
-    </div>
+      <div class="notification" [class]="statusMessage()?.type">
+        {{ statusMessage()?.text }}
+      </div>
     }
+
     <div class="resources-layout" [class.panel-open]="isAddingEmployeeState() || editingEmployee() !== null">
         <div class="table-container">
             <table>

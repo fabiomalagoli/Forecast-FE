@@ -4,6 +4,7 @@ import { catchError, map, tap, throwError, of } from 'rxjs';
 import { CreateRoleRequest, Role } from '../models/role.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
+import { buildEntityError } from '../utils/http-error-message.utils';
 
 @Injectable({ providedIn: 'root' })
 export class RolesService {
@@ -46,7 +47,7 @@ export class RolesService {
         this.jobRoles.set(response.body || []);
       }),
       map(response => response.body || []),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );
   }
 
@@ -54,7 +55,7 @@ export class RolesService {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobroles?PageNumber=1&PageSize=1000`, { observe: 'response' }).pipe(
       tap(response => this.allJobRoles.set(response.body || [])),
       map(response => response.body || []),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );
   }
 
@@ -74,8 +75,8 @@ export class RolesService {
         }
       }),
       catchError(error => {
-        this.errorService.showError('Failed to create job role.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiunta del ruolo.');
+        return throwError(() => buildEntityError(error, 'ruolo', 'creazione'));
       })
     );
   }
@@ -87,8 +88,8 @@ export class RolesService {
         this.allJobRoles.update(prev => prev.map(r => r.id === role.id ? { ...r, ...role } : r));
       }),
       catchError(error => {
-        this.errorService.showError('Failed to update job role.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiornamento del ruolo.');
+        return throwError(() => buildEntityError(error, 'ruolo', 'aggiornamento'));
       })
     );
   }
@@ -98,7 +99,7 @@ export class RolesService {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobrolelevels`).pipe(
       map(levels => levels.map(level => ({ id: level.id, name: level.name, isDefault: level.isDefault }))),
       tap(levels => this.jobRoleLevels.set(levels)),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );
   }
 }

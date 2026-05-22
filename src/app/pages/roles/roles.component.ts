@@ -12,12 +12,24 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModificaRoleComponent } from './edit-role/edit-role.component';
 import { AssignEmployeeComponent } from './role/assign-employees/assign-employees.component';
 import { EmployeesService } from '../../shared/services/employees.service';
+import { AppButtonComponent } from '../../shared/button/button';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.component.html',
   styleUrls: ['../../shared/filter-styles.scss', './roles.component.scss'],
-  imports: [RoleResourcesComponent, NewRoleComponent, RoleRowComponent, MatPaginatorModule, ReactiveFormsModule, ModificaRoleComponent, AssignEmployeeComponent],
+  imports: [
+        RoleResourcesComponent,
+        NewRoleComponent,
+        RoleRowComponent,
+        MatPaginatorModule,
+        ReactiveFormsModule,
+        ModificaRoleComponent,
+        AssignEmployeeComponent,
+        AppButtonComponent,
+        MatProgressSpinnerModule
+    ],
 })
 export class RolesComponent {
     isFetching = signal(false);

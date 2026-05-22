@@ -133,22 +133,23 @@
   </div>
 </div>
 
-@if (statusMessage()) {
-  <div class="notification" [class]="statusMessage()?.type">
-    {{ statusMessage()?.text }}
-  </div>
-}
-
 @if (isFetching()) {
   <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
     <p>Caricamento progetti in corso...</p>
   </div>
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton (click)="refreshProjects()">Riprova</button>
+    <button appButton class="btn-primary" (click)="refreshProjects()">Riprova</button>
   </div>
 } @else {
+  @if (statusMessage()) {
+    <div class="notification" [class]="statusMessage()?.type">
+      {{ statusMessage()?.text }}
+    </div>
+  }
+
   <div class="table-container">
     <table>
       <thead>

@@ -6,6 +6,7 @@ import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { toBackendDate, toNumber, normalizeWinProbability } from '../utils/shared-utils';
 import { LookupsService } from './lookups.service';
+import { buildEntityError } from '../utils/http-error-message.utils';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
@@ -69,7 +70,7 @@ export class ProjectsService {
       tap(projects => this.projects.set(projects)),
       catchError(error => {
         console.error(error);
-        return throwError(() => new Error('Something went wrong. Please try again later.'));
+        return throwError(() => buildEntityError(error, 'progetto', 'caricamento'));
       })
     );
   }
@@ -85,7 +86,7 @@ export class ProjectsService {
         const next = prev.some(x => x.id === p.id) ? prev.map(x => (x.id === p.id ? p : x)) : [...prev, p];
         this.projects.set(next);
       }),
-      catchError(error => throwError(() => new Error('Something went wrong. Please try again later.')))
+      catchError(error => throwError(() => buildEntityError(error, 'progetto', 'caricamento')))
     );
   }
 
@@ -98,8 +99,8 @@ export class ProjectsService {
         }
       }),
       catchError(error => {
-        this.errorService.showError('Insertion failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante la creazione del progetto.');
+        return throwError(() => buildEntityError(error, 'progetto', 'creazione'));
       })
     );
   }
@@ -110,8 +111,8 @@ export class ProjectsService {
         this.projects.update(prev => prev.map(p => p.id === project.id ? { ...p, ...project } : p));
       }),
       catchError(error => {
-        this.errorService.showError('Update failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiornamento del progetto.');
+        return throwError(() => buildEntityError(error, 'progetto', 'aggiornamento'));
       })
     );
   }
@@ -166,7 +167,7 @@ export class ProjectsService {
         winProbability: role.winProbability || 0,
       }))),
       tap(roles => this.projectJobRoles.set(roles)),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );
   }
 
@@ -177,7 +178,10 @@ export class ProjectsService {
           this.projectJobRoles.update(prev => [...prev, { ...created, project: this.projects().find(p => p.id === projectId)?.name || 'N/A' }]);
         }
       }),
-      catchError(error => throwError(() => error))
+      catchError(error => {
+        this.errorService.showError('Errore durante l\'inserimento del ruolo di progetto.');
+        return throwError(() => buildEntityError(error, 'ruolo', 'assegnazione'));
+      })
     );
   }
 
@@ -186,14 +190,20 @@ export class ProjectsService {
       tap(() => {
         this.projectJobRoles.update(prev => prev.map(role => role.id === roleId ? { ...role, ...data } : role));
       }),
-      catchError(error => throwError(() => error))
+      catchError(error => {
+        this.errorService.showError('Errore durante l\'aggiornamento del ruolo di progetto.');
+        return throwError(() => buildEntityError(error, 'ruolo', 'aggiornamento'));
+      })
     );
   }
 
   deleteProjectJobRole(projectId: string, roleId: string) {
     return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/jobRoles/${encodeURIComponent(roleId)}`).pipe(
       tap(() => this.projectJobRoles.update(prev => prev.filter(r => r.id !== roleId))),
-      catchError(error => throwError(() => error))
+      catchError(error => {
+        this.errorService.showError('Errore durante l\'eliminazione del ruolo di progetto.');
+        return throwError(() => buildEntityError(error, 'ruolo', 'rimozione'));
+      })
     );
   }
 
@@ -214,7 +224,7 @@ export class ProjectsService {
         monthlyManagements: emp.monthlyManagements || [],
       }))),
       tap(employees => this.projectEmployees.set(employees)),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 
@@ -225,7 +235,10 @@ export class ProjectsService {
             this.projectEmployees.update(prev => [...prev, { ...created, employee: `${created.name} ${created.surname}` }]);
         }
       }),
-      catchError(error => throwError(() => error))
+      catchError(error => {
+        this.errorService.showError('Errore durante l\'aggiunta della risorsa al progetto.');
+        return throwError(() => buildEntityError(error, 'risorsa', 'assegnazione'));
+      })
     );
   }
 
@@ -234,7 +247,10 @@ export class ProjectsService {
       tap(() => {
         this.projectEmployees.update(prev => prev.map(employee => employee.id === employeeId ? { ...employee, ...data } : employee));
       }),
-      catchError(error => throwError(() => error))
+      catchError(error => {
+        this.errorService.showError('Errore durante l\'aggiornamento della risorsa di progetto.');
+        return throwError(() => buildEntityError(error, 'risorsa', 'aggiornamento'));
+      })
     );
   }
 
@@ -247,7 +263,10 @@ export class ProjectsService {
   deleteProjectEmployee(projectId: string, employeeId: string) {
     return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(employeeId)}`).pipe(
       tap(() => this.projectEmployees.update(prev => prev.filter(e => e.id !== employeeId))),
-      catchError(error => throwError(() => error))
+      catchError(error => {
+        this.errorService.showError('Errore durante la rimozione della risorsa dal progetto.');
+        return throwError(() => buildEntityError(error, 'risorsa', 'rimozione'));
+      })
     );
   }
 }

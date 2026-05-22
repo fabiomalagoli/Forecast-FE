@@ -47,27 +47,23 @@
   </div>
 </div>
 
-<!-- @if (statusMessage()) {
-  <div class="notification" [class]="statusMessage()?.type">
-    {{ statusMessage()?.text }}
-  </div>
-} -->
-
 @if (isFetching()) {
   <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
     <p>Caricamento ruoli in corso...</p>
   </div>
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton (click)="aggiornaRuoli()">Riprova</button>
+    <button appButton class="btn-primary" (click)="ricaricaRuoli()">Riprova</button>
   </div>
 } @else {
-      @if (statusMessage()) {
-    <div class="notification" [class]="statusMessage()?.type">
-      {{ statusMessage()?.text }}
-    </div>
+    @if (statusMessage()) {
+      <div class="notification" [class]="statusMessage()?.type">
+        {{ statusMessage()?.text }}
+      </div>
     }
+
     <div class="roles-layout" [class.panel-open]="selectedRoleId() !== null">
         
         <div class="table-container">

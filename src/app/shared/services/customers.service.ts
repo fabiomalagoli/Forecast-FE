@@ -4,6 +4,7 @@ import { catchError, map, tap, throwError, of, Observable } from 'rxjs';
 import { Customer } from '../models/customer.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
+import { buildEntityError } from '../utils/http-error-message.utils';
 
 @Injectable({ providedIn: 'root' })
 export class CustomersService {
@@ -41,7 +42,7 @@ export class CustomersService {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/customers`).pipe(
       map(customers => customers.map(c => this.mapToCustomer(c))),
       tap(customers => this.customers.set(customers)),
-      catchError(error => throwError(() => new Error('Something went wrong. Please try again later.')))
+      catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
     );
   }
 
@@ -56,7 +57,7 @@ export class CustomersService {
         const next = prev.some(x => x.id === c.id) ? prev.map(x => (x.id === c.id ? c : x)) : [...prev, c];
         this.customers.set(next);
       }),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
     );
   }
 
@@ -69,8 +70,8 @@ export class CustomersService {
         }
       }),
       catchError(error => {
-        this.errorService.showError('Insertion failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiunta del cliente.');
+        return throwError(() => buildEntityError(error, 'cliente', 'creazione'));
       })
     );
   }
@@ -82,15 +83,15 @@ export class CustomersService {
         this.customers.update(prev => prev.map(c => c.id === customer.id ? { ...c, ...customer } : c));
       }),
       catchError(error => {
-        this.errorService.showError('Update failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiornamento del cliente.');
+        return throwError(() => buildEntityError(error, 'cliente', 'aggiornamento'));
       })
     );
   }
 
   loadActiveProjectsForCustomer(customerId: string) {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/projects`).pipe(
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'progetto', 'caricamento')))
     );
   }
 

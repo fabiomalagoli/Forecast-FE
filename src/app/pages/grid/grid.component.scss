@@ -1,6 +1,97 @@
+@use 'variables' as *;
+
 .griglia {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   width: 100%;
   box-sizing: border-box;
+}
+
+.notification {
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: $radius-md;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+
+  &.success {
+    background-color: $bg-notify-success;
+    color: $text-notify-success;
+    border: 1px solid $border-notify-success;
+  }
+
+  &.error {
+    background-color: $bg-notify-error;
+    color: $text-notify-error;
+    border: 1px solid $border-notify-error;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  text-align: center;
+  background-color: $bg-app-shell;
+  border-radius: $radius-lg;
+
+  p {
+    font-size: 1rem;
+    color: $text-filter-muted;
+    margin: 0;
+  }
+}
+
+.error-state {
+  padding: 2rem;
+  background-color: $bg-state-error;
+  border: 1px solid $border-state-error;
+  border-radius: $radius-lg;
+  text-align: center;
+
+  p {
+    color: $text-state-error;
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+  }
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+    box-shadow: $shadow-primary;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  padding: 2rem;
+  color: $text-filter-light;
+  font-style: italic;
+  text-align: center;
+  background-color: $bg-white;
+  border: 1px solid $border-filter-light;
+  border-radius: $radius-lg;
 }

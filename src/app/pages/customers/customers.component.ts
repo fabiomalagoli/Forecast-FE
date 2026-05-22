@@ -11,10 +11,11 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, Subject, switchMap, tap, timer } from 'rxjs';
 import { CustomersService } from '../../shared/services/customers.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-customers',
-  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewCustomerComponent, EditCustomerComponent],
+  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewCustomerComponent, EditCustomerComponent, MatProgressSpinnerModule],
   templateUrl: './customers.component.html',
   styleUrls: ['./customers.component.scss', '../../shared/filter-styles.scss'],
 })
@@ -34,6 +35,10 @@ export class CustomersComponent {
 
   private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
+
+  private buildLoadCustomersErrorMessage(error: Error): string {
+    return `Errore durante il caricamento dei clienti: ${error.message}`;
+  }
 
 
   isAddingCustomerState = false;
@@ -103,7 +108,8 @@ export class CustomersComponent {
       finalize(() => this.isFetching.set(false))
     ).subscribe({
       error: (error: Error) => {
-        this.error.set(error.message);
+        this.error.set(this.buildLoadCustomersErrorMessage(error));
+        this.showNotification('Errore durante il caricamento dei clienti', 'error');
       },
     });
 
@@ -125,7 +131,8 @@ export class CustomersComponent {
         finalize(() => this.isFetching.set(false))
       ).subscribe({
         error: (error: Error) => {
-          this.error.set(error.message);
+          this.error.set(this.buildLoadCustomersErrorMessage(error));
+          this.showNotification('Errore durante l\'aggiornamento dei clienti', 'error');
         },
       });
 
@@ -145,8 +152,8 @@ export class CustomersComponent {
       finalize(() => this.isFetching.set(false))
     ).subscribe({
       error: (error: Error) => {
-        this.error.set(error.message);
-        this.showNotification('Errore nel caricamento dei clienti', 'error');
+        this.error.set(this.buildLoadCustomersErrorMessage(error));
+        this.showNotification('Errore durante il caricamento dei clienti', 'error');
       },
     });
 

@@ -1,9 +1,27 @@
-@if (Cards()) {
+@if (isFetching()) {
+  <div class="loading-state">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+    <p>Caricamento Home in corso...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+    <button appButton class="btn-primary" (click)="reloadCards()">Riprova</button>
+  </div>
+} @else {
+  @if (statusMessage()) {
+    <div class="notification" [class]="statusMessage()?.type">
+      {{ statusMessage()?.text }}
+    </div>
+  }
+
   <div class="griglia">
     @for (card of Cards(); track $index) {
       <app-card-home [cards]="card"></app-card-home>
+    } @empty {
+      <div class="empty-state">
+        Nessun dato disponibile per la Home.
+      </div>
     }
   </div>
-} @else {
-  <p>Caricamento in corso...</p>
 }

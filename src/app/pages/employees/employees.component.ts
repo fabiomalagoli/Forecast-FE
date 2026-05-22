@@ -13,12 +13,14 @@ import { EmployeeRowComponent } from './employee/employee.component';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap, switchMap, Subject, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+
 
 @Component({
   selector: 'app-employees',
   templateUrl: './employees.component.html',
   styleUrls: ['../../shared/filter-styles.scss', './employees.component.scss'],
-  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, EditEmployeeComponent, NewRisorsaComponent, EmployeeRowComponent, MatPaginatorModule],
+  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, EditEmployeeComponent, NewRisorsaComponent, EmployeeRowComponent, MatPaginatorModule, MatProgressSpinnerModule],
   standalone: true 
 })
 export class EmployeesComponent implements OnInit {

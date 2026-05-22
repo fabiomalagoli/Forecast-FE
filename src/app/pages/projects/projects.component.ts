@@ -15,11 +15,12 @@ import { ProjectsService } from '../../shared/services/projects.service';
 import { LookupsService } from '../../shared/services/lookups.service';
 import { CustomersService } from '../../shared/services/customers.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 
 @Component({
   selector: 'app-projects',
-  imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule],
+  imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule, MatProgressSpinnerModule],
   templateUrl: './projects.component.html',
   styleUrls: ['../../shared/filter-styles.scss', './projects.component.scss'],
   
@@ -36,6 +37,10 @@ export class ProjectsComponent {
   private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   projects = this.projectsService.loadedProjects;
+
+  private buildLoadProjectsErrorMessage(error: Error): string {
+    return `Errore durante il caricamento dei progetti: ${error.message}`;
+  }
 
   isAddingProject = signal<boolean | null>(null);
 
@@ -150,7 +155,8 @@ export class ProjectsComponent {
       .subscribe({
         // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
         error: (error: Error) => {
-          this.error.set(error.message);
+          this.error.set(this.buildLoadProjectsErrorMessage(error));
+          this.showNotification('Errore durante il caricamento dei progetti', 'error');
         },
       });
 
@@ -259,7 +265,8 @@ export class ProjectsComponent {
         )
         .subscribe({ // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
           error: (error: Error) => {
-            this.error.set(error.message);
+            this.error.set(this.buildLoadProjectsErrorMessage(error));
+            this.showNotification('Errore durante l\'aggiornamento dei progetti', 'error');
           },
         });
 

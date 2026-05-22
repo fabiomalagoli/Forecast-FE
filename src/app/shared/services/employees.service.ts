@@ -4,6 +4,7 @@ import { catchError, map, tap, throwError, of } from 'rxjs';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
+import { buildEntityError } from '../utils/http-error-message.utils';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeesService {
@@ -51,7 +52,7 @@ export class EmployeesService {
         this.employees.set(emps);
       }),
       map(response => (response.body || []).map(e => this.normalizeEmployee(e))),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 
@@ -63,7 +64,7 @@ export class EmployeesService {
         this.allEmployees.set(emps);
       }),
       map(response => (response.body || []).map(e => this.normalizeEmployee(e))),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 
@@ -80,7 +81,7 @@ export class EmployeesService {
       tap(e => {
         this.upsertEmployee(e);
       }),
-      catchError(error => throwError(() => new Error('Something went wrong.')))
+      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 
@@ -111,8 +112,8 @@ export class EmployeesService {
         }
       }),
       catchError(error => {
-        this.errorService.showError('Employee creation failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiunta della risorsa.');
+        return throwError(() => buildEntityError(error, 'risorsa', 'creazione'));
       })
     );
   }
@@ -123,8 +124,8 @@ export class EmployeesService {
         this.employees.update(prev => prev.map(e => e.id === id ? { ...e, ...uiFallback } : e));
       }),
       catchError(error => {
-        this.errorService.showError('Employee update failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'aggiornamento della risorsa.');
+        return throwError(() => buildEntityError(error, 'risorsa', 'aggiornamento'));
       })
     );
   }
@@ -133,8 +134,8 @@ export class EmployeesService {
     return this.httpClient.delete(`${environment.apiUrl}/employees/${encodeURIComponent(employeeId)}`).pipe(
       tap(() => this.employees.update(prev => prev.filter(e => e.id !== employeeId))),
       catchError(error => {
-        this.errorService.showError('Deletion failed.');
-        return throwError(() => error);
+        this.errorService.showError('Errore durante l\'eliminazione della risorsa.');
+        return throwError(() => buildEntityError(error, 'risorsa', 'eliminazione'));
       })
     );
   }

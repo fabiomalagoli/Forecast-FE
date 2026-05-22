@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { catchError, map, tap, throwError } from 'rxjs';
 import { CardModel } from '../../pages/grid/card-home/card-home.model';
 import { environment } from '../../../environments/environment.development';
+import { buildEntityError } from '../utils/http-error-message.utils';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
@@ -24,7 +25,7 @@ export class DashboardService {
       tap(cards => this.dashboardCards.set(cards)),
       catchError(error => {
         console.error(error);
-        return throwError(() => new Error('Something went wrong. Please try again later.'));
+        return throwError(() => buildEntityError(error, 'progetto', 'caricamento'));
       })
     );
   }
