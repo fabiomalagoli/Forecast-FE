@@ -9,7 +9,6 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   selector: 'app-new-customer',
   imports: [FormsModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-customer.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class NewCustomerComponent {

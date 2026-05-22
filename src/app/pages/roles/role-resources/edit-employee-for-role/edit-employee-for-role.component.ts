@@ -16,7 +16,6 @@ import { toElementId } from '../../../../shared/utils/project-form.utils';
   selector: 'app-edit-employee-for-role',
   imports: [FormsModule, CommonModule, TextInputComponent],
   templateUrl: './edit-employee-for-role.component.html',
-  styleUrls: ['../../../../shared/form-styles.scss'],
 })
 export class EditEmployeeForRoleComponent {
 

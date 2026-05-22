@@ -14,7 +14,7 @@ import { ProjectsService } from '../../../../shared/services/projects.service';
   standalone: true,
   imports: [AppButtonComponent, ResourceDetailsGridComponent],
   templateUrl: './project-details.component.html',
-  styleUrls: ['./project-details.component.scss', '../../../../shared/form-styles.scss'],
+  styleUrls: ['./project-details.component.scss'],
 })
 export class ProjectDetailsComponent {
   // Leggiamo l’ID dalla route (es. /progetti/:id)

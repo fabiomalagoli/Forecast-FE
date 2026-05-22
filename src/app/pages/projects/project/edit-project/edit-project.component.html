@@ -22,19 +22,34 @@
               </select>
             }
             @else if (h.key === 'pmId') {
-              <select
-                [id]="h.key"
-                [name]="h.key"
-                [formControlName]="h.key"
-                (change)="onFieldChange()"
-                >
-                <option [ngValue]="null">Nessun PM</option>
-                @for (opt of getOptions(h.key); track (opt.id || opt.Id || opt)) {
-                  <option [value]="opt.id || opt.Id || opt">
-                    {{ (opt.name || opt.Name) }} {{ (opt.surname || opt.Surname || '') }}
-                  </option>
+              <div class="combo-field pm-combo-field">
+                <input
+                  class="np-input combo-input"
+                  type="text"
+                  [id]="h.key"
+                  [name]="h.key"
+                  [value]="pmInputValue()"
+                  autocomplete="off"
+                  (focus)="onPmFocus()"
+                  (input)="onPmInput($event)"
+                />
+                @if (editProjectForm.get(h.key)?.value) {
+                  <button class="combo-clear" type="button" aria-label="Cancella PM" (click)="clearPm()">×</button>
                 }
-              </select>
+                <button class="combo-toggle" type="button" aria-label="Apri lista PM" (click)="togglePmDropdown()">▾</button>
+                @if (pmDropdownOpen()) {
+                  <div class="combo-menu">
+                    <button class="combo-option" type="button" (mousedown)="selectPm(null)">Nessun PM</button>
+                    @for (opt of filteredPmOptions(); track (opt.id || opt.Id || opt)) {
+                      <button class="combo-option" type="button" (mousedown)="selectPm(opt)">
+                        {{ employeeName(opt) }}
+                      </button>
+                    } @empty {
+                      <div class="combo-empty">Nessun PM trovato</div>
+                    }
+                  </div>
+                }
+              </div>
             }
             @else {
               <input

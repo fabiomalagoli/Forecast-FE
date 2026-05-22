@@ -16,7 +16,6 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   selector: 'app-new-employee',
   imports: [FormsModule, CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-employee.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class NewRisorsaComponent implements OnInit {
 
@@ -110,7 +109,7 @@ export class NewRisorsaComponent implements OnInit {
     getFilteredJobRoles(): any[] {
         const term = this.showAllJobRoles()
             ? ''
-            : (this.formData.jobRole || '').toString().trim().toLowerCase();
+            : (this.createEmployeeForm.get('jobRole')?.value || '').toString().trim().toLowerCase();
 
         if (!term) {
             return this.jobRolesList();
@@ -139,6 +138,13 @@ export class NewRisorsaComponent implements OnInit {
 
     selectJobRole(role: any) {
         this.createEmployeeForm.get('jobRole')?.setValue(this.optionName(role));
+        this.jobRoleDropdownOpen.set(false);
+        this.showAllJobRoles.set(false);
+        this.onFieldChange();
+    }
+
+    clearJobRole() {
+        this.createEmployeeForm.get('jobRole')?.setValue('');
         this.jobRoleDropdownOpen.set(false);
         this.showAllJobRoles.set(false);
         this.onFieldChange();

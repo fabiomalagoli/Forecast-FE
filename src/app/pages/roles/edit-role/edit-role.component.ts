@@ -11,7 +11,6 @@ import { buildUpdateRolePayload } from '../../../shared/payloads/role.payloads';
   selector: 'app-modifica-role',
   imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-role.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class ModificaRoleComponent {
   roleToEdit = input.required<Role>();

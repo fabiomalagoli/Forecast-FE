@@ -17,7 +17,6 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   selector: 'app-edit-employee',
   imports: [FormsModule, CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-employee.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class EditEmployeeComponent implements OnInit {
 
@@ -135,6 +134,13 @@ export class EditEmployeeComponent implements OnInit {
 
     selectJobRole(role: any) {
         this.editEmployeeForm.get('jobRole')?.setValue(this.optionName(role));
+        this.jobRoleDropdownOpen.set(false);
+        this.showAllJobRoles.set(false);
+        this.onFieldChange();
+    }
+
+    clearJobRole() {
+        this.editEmployeeForm.get('jobRole')?.setValue('');
         this.jobRoleDropdownOpen.set(false);
         this.showAllJobRoles.set(false);
         this.onFieldChange();

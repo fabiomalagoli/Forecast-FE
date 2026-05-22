@@ -1,3 +1,5 @@
+import { MonthlyManagement } from "./monthly-management.model";
+
 export interface Project {
   id: string;
   description: string;
@@ -34,6 +36,7 @@ export interface ProjectEmployee {
   daysSpent: number;
   effort: number;   
   winProbability: number;
+  monthlyManagements?: MonthlyManagement[];
 }
 
 

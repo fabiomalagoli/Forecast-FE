@@ -12,7 +12,6 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   selector: 'app-edit-customer',
   imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-customer.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class EditCustomerComponent implements OnInit {
 

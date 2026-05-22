@@ -12,7 +12,6 @@ import { createEmptyRoleFormData, normalizeRoleForForm } from '../../../shared/u
   selector: 'app-new-role',
   imports: [FormsModule, CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-role.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class NewRoleComponent {
 

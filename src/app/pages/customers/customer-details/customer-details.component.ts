@@ -13,7 +13,7 @@ import { CustomersService } from '../../../shared/services/customers.service';
   standalone: true,
   imports: [AppButtonComponent, RouterModule],
   templateUrl: './customer-details.component.html',
-  styleUrls: ['./customer-details.component.scss', '../../../shared/progetto-form.css'],
+  styleUrls: ['./customer-details.component.scss'],
 })
 export class CustomerDetailsComponent {
   // Leggiamo l'ID dalla route (es. /clienti/:id)

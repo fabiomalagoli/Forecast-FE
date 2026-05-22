@@ -12,7 +12,7 @@ import { CustomersService } from '../../../../shared/services/customers.service'
   standalone: true,
   imports: [AppButtonComponent],
   templateUrl: './customer-projects.component.html',
-  styleUrls: ['customer-projects.component.scss', '../../../../shared/progetto-form.css'],
+  styleUrls: ['customer-projects.component.scss'],
 })
 export class CustomerProjectsComponent implements OnInit {
   // Leggiamo l’ID dalla route (es. /progetti/:id)

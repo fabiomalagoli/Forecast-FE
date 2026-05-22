@@ -19,7 +19,6 @@ import { toElementId } from '../../../../shared/utils/project-form.utils';
 @Component({
   selector: 'app-assegna-risorse',
   templateUrl: './assign-employees.component.html',
-  styleUrls: ['../../../../shared/form-styles.scss',],
   imports: [FormsModule, ReactiveFormsModule, CommonModule],
   standalone: true,
 })

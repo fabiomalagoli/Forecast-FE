@@ -73,21 +73,21 @@ dialog {
   ::ng-deep per entrare nel template di app-text-input.
    Questo forza .field a colonna: label sopra, control sotto.
 */
-:host ::ng-deep app-text-input .field {
+app-text-input .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: stretch;
 }
 
-:host ::ng-deep app-text-input .label,
-:host ::ng-deep app-text-input .control {
+app-text-input .label,
+app-text-input .control {
   margin: 0;
   width: 100%;
 }
 
 /* stile label (quella proiettata) */
-:host ::ng-deep app-text-input label {
+app-text-input label {
   display: block;
   font-weight: 700;
   font-size: 0.85rem;
@@ -100,13 +100,14 @@ dialog {
   font-weight: 700;
   font-size: 0.85rem;
   color: #374151;
+  min-height: 20px;
   margin: 0 0 6px;
 }
 
 /* campi proiettati */
-:host ::ng-deep app-text-input input,
-:host ::ng-deep app-text-input textarea,
-:host ::ng-deep app-text-input select {
+app-text-input input,
+app-text-input textarea,
+app-text-input select {
   width: 100%; /* full width */
   height: 36px;
   padding: 0 10px;
@@ -121,7 +122,7 @@ dialog {
 }
 
 /* textarea */
-:host ::ng-deep app-text-input textarea {
+app-text-input textarea {
   height: auto;
   min-height: 36px;
   line-height: 1.4;
@@ -129,17 +130,18 @@ dialog {
   resize: vertical;
 }
 
-:host ::ng-deep app-text-input select {
+app-text-input select {
   appearance: none;
+  -webkit-appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%),
     linear-gradient(135deg, #6b7280 50%, transparent 50%);
-  background-position: calc(100% - 16px) 50%, calc(100% - 10px) 50%;
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
-  padding-right: 32px;
+  padding-right: 42px;
 }
 
-:host ::ng-deep app-text-input .np-input--currency {
+app-text-input .np-input--currency {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='6' y='17' font-size='14' font-family='Arial' fill='%236b7280'%3E%E2%82%AC%3C/text%3E%3C/svg%3E");
   background-position: 8px 50%;
   background-repeat: no-repeat;
@@ -147,18 +149,18 @@ dialog {
   padding-left: 28px;
 }
 
-:host ::ng-deep app-text-input .np-input--date {
+app-text-input .np-input--date {
   background-image: none;
 }
 
-.combo-field {
+.np-panel .combo-field {
   position: relative;
 }
 
-.combo-input {
+.np-panel .combo-input {
   width: 100%;
   height: 36px;
-  padding: 0 36px 0 10px;
+  padding: 0 72px 0 10px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   outline: none;
@@ -167,33 +169,48 @@ dialog {
   font: inherit;
 }
 
-.combo-input:focus {
+.np-panel .combo-input:focus {
   border-color: #ff9800;
   box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16);
 }
 
-.combo-toggle[type="button"] {
+.np-panel .combo-toggle[type="button"],
+.np-panel .combo-clear[type="button"] {
   position: absolute;
-  top: 1px;
-  right: 1px;
-  width: 34px;
-  height: 34px;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   padding: 0;
   min-height: 0;
+  transform: translateY(-50%);
   border: 0;
-  border-radius: 0 5px 5px 0;
+  border-radius: 6px;
   color: #6b7280;
   background: transparent;
   box-shadow: none;
+  line-height: 1;
 }
 
-.combo-toggle[type="button"]:hover,
-.combo-toggle[type="button"]:active {
+.np-panel .combo-toggle[type="button"] {
+  right: 4px;
+}
+
+.np-panel .combo-clear[type="button"] {
+  right: 36px;
+}
+
+.np-panel .combo-toggle[type="button"]:hover,
+.np-panel .combo-toggle[type="button"]:active,
+.np-panel .combo-clear[type="button"]:hover,
+.np-panel .combo-clear[type="button"]:active {
   color: #111827;
   background: #f3f4f6;
 }
 
-.combo-menu {
+.np-panel .combo-menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -207,7 +224,7 @@ dialog {
   box-shadow: 0 16px 30px rgba(17, 24, 39, 0.16);
 }
 
-.combo-option[type="button"] {
+.np-panel .combo-option[type="button"] {
   display: block;
   width: 100%;
   padding: 8px 12px;
@@ -217,22 +234,22 @@ dialog {
   background: #fff;
 }
 
-.combo-option[type="button"]:hover,
-.combo-option[type="button"]:focus {
+.np-panel .combo-option[type="button"]:hover,
+.np-panel .combo-option[type="button"]:focus {
   color: #111827;
   background: #f7a205;
 }
 
-.combo-empty {
+.np-panel .combo-empty {
   padding: 8px 12px;
   color: #6b7280;
   font-size: 0.9rem;
 }
 
 /* focus */
-:host ::ng-deep app-text-input input:focus,
-:host ::ng-deep app-text-input textarea:focus,
-:host ::ng-deep app-text-input select:focus {
+app-text-input input:focus,
+app-text-input textarea:focus,
+app-text-input select:focus {
   border-color: #ff9800;
   box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16);
 }
@@ -389,6 +406,17 @@ button[type="submit"]:disabled {
   font: inherit;
   box-sizing: border-box;
   outline: none;
+}
+
+select.np-input-direct {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%),
+    linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
 }
 
 .role-grid-row .np-input--currency,

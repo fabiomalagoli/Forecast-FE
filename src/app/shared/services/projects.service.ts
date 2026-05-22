@@ -211,6 +211,7 @@ export class ProjectsService {
         daysSpent: emp.daysSpent || 0,
         effort: emp.effort || 0,
         winProbability: emp.winProbability || 0,
+        monthlyManagements: emp.monthlyManagements || [],
       }))),
       tap(employees => this.projectEmployees.set(employees)),
       catchError(error => throwError(() => new Error('Something went wrong.')))

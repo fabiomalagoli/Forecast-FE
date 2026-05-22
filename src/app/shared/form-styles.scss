@@ -84,6 +84,7 @@ dialog {
     font-size: 0.85rem;
     line-height: 1;
     color: $text-medium;
+    min-height: 20px;
     margin: 0 0 6px 0;      
   }
 }
@@ -123,11 +124,15 @@ dialog {
 
     select {
       appearance: none;
+      -webkit-appearance: none;
       background-image:
         linear-gradient(45deg, transparent 50%, $text-light 50%),
         linear-gradient(135deg, $text-light 50%, transparent 50%);
-      background-position: calc(100% - 16px) 50%, calc(100% - 10px) 50%;
-      background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right: 36px;
+      background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 42px;
+      color: $text-dark;
     }
 
     .np-input--currency {
@@ -144,6 +149,19 @@ dialog {
   background: $bg-white; box-sizing: border-box; font: inherit; line-height: 1.2;
 
   &:focus { border-color: $color-primary; box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16); }
+}
+
+select.np-input-direct {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  color: $text-dark;
+  background-image:
+    linear-gradient(45deg, transparent 50%, $text-light 50%),
+    linear-gradient(135deg, $text-light 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
 }
 
 .np-input--currency {
@@ -275,14 +293,33 @@ dialog {
 .level-field {
   display: flex; flex-direction: column; gap: 6px; color: $text-medium; font-size: 0.82rem; font-weight: 600;
   
-  select { padding: 0 10px; }
+  select { padding: 0 42px 0 10px; }
 
   @media (max-width: 760px) { grid-column: 1 / -1; grid-row: 2; }
 }
 
-.combo-field {
-  position: relative; display: flex; align-items: center;
-  input { padding: 0 72px 0 12px; }
+.np-panel .combo-field {
+  position: relative;
+  display: block;
+  width: 100%;
+
+  input {
+    width: 100%;
+    height: $input-height;
+    padding: 0 72px 0 12px;
+    border: 1px solid $border-main;
+    border-radius: $radius-md;
+    outline: none;
+    background: $bg-white;
+    box-sizing: border-box;
+    font: inherit;
+    line-height: 1.2;
+  }
+
+  input:focus {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.16);
+  }
 }
 
 .filter-group {
@@ -290,16 +327,44 @@ dialog {
   label { color: $text-medium; font-size: 0.9rem; font-weight: 700; }
 }
 
-.remove-resource, .combo-clear, .combo-toggle { border: 0; background: transparent; color: $text-muted; cursor: pointer; }
+.remove-resource { border: 0; background: transparent; color: $text-muted; cursor: pointer; }
 
 .remove-resource {
   width: 36px; height: 36px; border-radius: $radius-md; font-size: 1.25rem;
   &:hover { background: $color-error-bg; color: $color-error-text; }
 }
 
-.combo-clear, .combo-toggle { position: absolute; top: 50%; width: 32px; height: 32px; transform: translateY(-50%); }
-.combo-clear { right: 34px; }
-.combo-toggle { right: 2px; }
+.np-panel .combo-clear,
+.np-panel .combo-toggle {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: $radius-md;
+  background: transparent;
+  box-shadow: none;
+  color: $text-muted;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+
+  &:hover,
+  &:focus {
+    background: $bg-light;
+    color: $text-dark;
+    outline: none;
+  }
+}
+
+.np-panel .combo-clear { right: 36px; }
+.np-panel .combo-toggle { right: 4px; font-size: 0.9rem; }
 
 .resource-results { margin-top: 4px; padding: 8px; border: 1px solid $border-light; border-radius: $radius-lg; background: $bg-white; }
 
@@ -328,12 +393,12 @@ dialog {
 
 .role-grid-header span, .resource-grid-header span { font-size: 0.75rem; font-weight: 700; color: $text-medium; text-transform: uppercase; letter-spacing: 0.5px; }
 
-.combo-menu {
+.np-panel .combo-menu {
   position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; max-height: 210px; overflow-y: auto;
   border: 1px solid $border-main; border-radius: $radius-lg; background: $bg-white; box-shadow: $shadow-menu; padding: 6px 0;
 }
 
-.combo-option[type="button"] {
+.np-panel .combo-option[type="button"] {
   display: block; width: 100%; padding: 10px 16px; border: none; border-radius: 0; color: $text-dark;
   text-align: left; background: $bg-white; cursor: pointer; font: inherit;
   &:hover, &:focus { background-color: $color-primary-light; outline: none; }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, output, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, output, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Project } from '../../../shared/models/project.model';
@@ -34,7 +34,6 @@ import {
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, TextInputComponent], // Rimosso FormsModule, inserito ReactiveFormsModule
   templateUrl: './new-project.component.html',
-  styleUrls: ['../../../shared/form-styles.scss'],
 })
 export class NewProgettoComponent implements OnInit {
   private projectsService = inject(ProjectsService);
@@ -50,6 +49,9 @@ export class NewProgettoComponent implements OnInit {
   employeesList = signal<any[]>([]);
   jobRolesList = signal<any[]>([]);
   jobRoleLevelsList = signal<any[]>([]);
+  pmDropdownOpen = signal(false);
+  showAllPmOptions = signal(false);
+  pmFilterValue = signal('');
 
   created = output<Project>();
   cancel = output<void>();
@@ -294,6 +296,57 @@ export class NewProgettoComponent implements OnInit {
     }
   }
 
+  employeeName(employee: any): string {
+    return `${employee?.name || employee?.Name || ''} ${employee?.surname || employee?.Surname || ''}`.trim();
+  }
+
+  pmInputValue(): string {
+    if (this.pmDropdownOpen() && !this.showAllPmOptions()) {
+      return this.pmFilterValue();
+    }
+
+    const pmId = this.newProjectForm.get('pmId')?.value;
+    return this.employeeName(this.employeesList().find((employee) => (employee.id || employee.Id) === pmId));
+  }
+
+  filteredPmOptions(): any[] {
+    const term = this.showAllPmOptions() ? '' : this.pmFilterValue().trim().toLowerCase();
+
+    if (!term) {
+      return this.employeesList();
+    }
+
+    return this.employeesList().filter((employee) => this.employeeName(employee).toLowerCase().includes(term));
+  }
+
+  onPmFocus() {
+    this.showAllPmOptions.set(true);
+    this.pmDropdownOpen.set(true);
+  }
+
+  onPmInput(event: Event) {
+    this.pmFilterValue.set((event.target as HTMLInputElement).value);
+    this.showAllPmOptions.set(false);
+    this.pmDropdownOpen.set(true);
+  }
+
+  togglePmDropdown() {
+    this.showAllPmOptions.set(true);
+    this.pmDropdownOpen.update((open) => !open);
+  }
+
+  selectPm(employee: any | null) {
+    this.newProjectForm.get('pmId')?.setValue(employee ? (employee.id || employee.Id) : null);
+    this.pmFilterValue.set('');
+    this.pmDropdownOpen.set(false);
+    this.showAllPmOptions.set(false);
+    this.onFieldChange();
+  }
+
+  clearPm() {
+    this.selectPm(null);
+  }
+
   toId(key: string, index: number): string {
     return toElementId('progetto', key, index);
   }
@@ -307,5 +360,16 @@ export class NewProgettoComponent implements OnInit {
     setTimeout(() => {
       this.statusMessage = null;
     }, 3000);
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+  onDocumentMouseDown(event: MouseEvent) {
+    const target = event.target as Element | null;
+
+    if (!target?.closest('.pm-combo-field')) {
+      this.pmDropdownOpen.set(false);
+      this.showAllPmOptions.set(false);
+      this.pmFilterValue.set('');
+    }
   }
 }

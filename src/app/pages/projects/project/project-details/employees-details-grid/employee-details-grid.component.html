@@ -2,139 +2,139 @@
     <header class="d-flex align-items-center py-3 mb-4">
         <h1 class="m-0 text-dark"><strong>{{resource()?.employee}}</strong></h1>
     </header>
-    <div>
-        <h3 class="section-title">Recap</h3>
-        <div class="recap-grid">
-            <app-text-input>
-                <label>{{resourceDetailsHeaders.BudgetTotale}}</label>
-                <input type="text" [value]="((resource()?.dailyCost ?? 0) * (resource()?.daysSpent ?? 0))" [readonly] = "!isEditMode()">
-            </app-text-input>
-            <app-text-input>
-                <label>{{resourceDetailsHeaders.TotaleRicavi}}</label>
-                <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
-            </app-text-input>
-            <app-text-input>
-                <label>{{resourceDetailsHeaders.BudgetWin}}</label>
-                <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
-            </app-text-input>
-            <app-text-input>
-                <label>{{resourceDetailsHeaders.TotaleConsuntivate}}</label>
-                <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
-            </app-text-input>
-            <app-text-input>
-                <label>{{resourceDetailsHeaders.Delta}}</label>
-                <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
-            </app-text-input>
-            <app-text-input>
-                <label>{{resourceDetailsHeaders.CostoGiornaliero}}</label>
-                <input type="text" [value]="((resource()?.dailyCost ?? 0))" [readonly] = "!isEditMode()">
-            </app-text-input>
-        </div>
-        <h3 class="section-title">Gestione Mensile</h3>
+    <form class="form" [formGroup]="editMonthlyManagementsForm" (ngSubmit)="saveData()">
+        <div>
+            <h3 class="section-title">Recap</h3>
+            <div class="recap-grid">
+                <app-text-input>
+                    <label>{{resourceDetailsHeaders.BudgetTotale}}</label>
+                    <input type="text" [value]="((resource()?.dailyCost ?? 0) * (resource()?.daysSpent ?? 0))" [readonly] = "!isEditMode()">
+                </app-text-input>
+                <app-text-input>
+                    <label>{{resourceDetailsHeaders.TotaleRicavi}}</label>
+                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                </app-text-input>
+                <app-text-input>
+                    <label>{{resourceDetailsHeaders.BudgetWin}}</label>
+                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                </app-text-input>
+                <app-text-input>
+                    <label>{{resourceDetailsHeaders.TotaleConsuntivate}}</label>
+                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                </app-text-input>
+                <app-text-input>
+                    <label>{{resourceDetailsHeaders.Delta}}</label>
+                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                </app-text-input>
+                <app-text-input>
+                    <label>{{resourceDetailsHeaders.CostoGiornaliero}}</label>
+                    <input type="text" [value]="((resource()?.dailyCost ?? 0))" [readonly] = "!isEditMode()">
+                </app-text-input>
+            </div>
+            <h3 class="section-title">Gestione Mensile</h3>
 
 
-        <div class="year-picker-container">
-            <button type="button" class="btn-spinner" [disabled]="!isEditMode()" (click)="changeYear(-1)">◀</button>
-            <mat-form-field appearance="outline" class="year-picker-field" subscriptSizing="dynamic">
-                <input matInput 
-                    [formControl]="yearSelected"
-                    [matDatepicker]="releasedAtPicker"
-                    [readonly]="!isEditMode()"
-                    (click)="releasedAtPicker.open()">
+            <div class="year-picker-container">
+                <button type="button" class="btn-spinner" (click)="changeYear(-1)">◀</button>
+                <mat-form-field appearance="outline" class="year-picker-field" subscriptSizing="dynamic">
+                    <input matInput 
+                        [formControl]="yearSelected"
+                        [matDatepicker]="releasedAtPicker"
+                        readonly
+                        (click)="releasedAtPicker.open()">
+                        
                     
-                
-                <mat-datepicker-toggle matSuffix [for]="releasedAtPicker"></mat-datepicker-toggle>
-                
-                <mat-datepicker #releasedAtPicker 
-                                startView="multi-year"
-                                (yearSelected)="chosenYearHandler($event, releasedAtPicker)">
-                </mat-datepicker>
-            </mat-form-field>
-            <button type="button" class="btn-spinner" [disabled]="!isEditMode()" (click)="changeYear(1)">▶</button>
-        </div>
-
-        <div class="gestione-mensile-wrapper">
-            
-            <div class="semester-block">
-                <div class="grid-row header-row">
-                    <span>Mese</span>
-                    <span class="text-center">Giorni Occupati</span>
-                    <span class="text-center">Tariffa</span>
-                    <span class="text-center">Conferma</span>
-                </div>
-
-                @for (mese of firstSemester(); track mese.name) {
-                    <div class="grid-row align-center">
-                        <strong class="month-label">{{ mese.name }}</strong>
-                        
-                        <app-text-input>
-                            <input type="number" 
-                                [(ngModel)]="mese.days" 
-                                [readonly]="!isEditMode()">
-                        </app-text-input>
-                        
-                        <app-text-input>
-                            <input type="number" 
-                                [(ngModel)]="mese.tariffs" 
-                                [readonly]="!isEditMode()">
-                        </app-text-input>
-                        
-                        <div class="checkbox-container">
-                            <input type="checkbox" 
-                                [(ngModel)]="mese.confirm" 
-                                [disabled]="!isEditMode()">
-                        </div>
-                    </div>
-                }
-            </div> 
-            
-            <div class="vertical-divider"></div>
-
-            <div class="semester-block">
-                <div class="grid-row header-row">
-                    <span>Mese</span>
-                    <span class="text-center">Giorni Occupati</span>
-                    <span class="text-center">Tariffa</span>
-                    <span class="text-center">Conferma</span>
-                </div>
-
-                @for (mese of secondSemester(); track mese.name) {
-                    <div class="grid-row align-center">
-                        <strong class="month-label">{{ mese.name }}</strong>
-                        
-                        <app-text-input>
-                            <input type="number" 
-                                [(ngModel)]="mese.days" 
-                                [readonly]="!isEditMode()">
-                        </app-text-input>
-                        
-                        <app-text-input>
-                            <input type="number" 
-                                [(ngModel)]="mese.tariffs" 
-                                [readonly]="!isEditMode()">
-                        </app-text-input>
-                        
-                        <div class="checkbox-container">
-                            <input type="checkbox" 
-                                [(ngModel)]="mese.confirm" 
-                                [disabled]="!isEditMode()">
-                        </div>
-                    </div>
-                }
-            </div> 
-
-        </div>
-
-        @if(isEditMode()) {
-            <div class="actions">
-                <button appButton class="btn-small" (click)="saveData()">Salva</button>
-                <button appButton class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>
+                    <mat-datepicker-toggle matSuffix [for]="releasedAtPicker"></mat-datepicker-toggle>
+                    
+                    <mat-datepicker #releasedAtPicker 
+                                    startView="multi-year"
+                                    (yearSelected)="chosenYearHandler($event, releasedAtPicker)">
+                    </mat-datepicker>
+                </mat-form-field>
+                <button type="button" class="btn-spinner" (click)="changeYear(1)">▶</button>
             </div>
-        } 
-        @else {
-            <div class="actions">
-                <button appButton class="btn-small" (click)="toggleEditMode()">Modifica</button>
+
+            <div class="gestione-mensile-wrapper">
+                
+                <div class="semester-block">
+                    <div class="grid-row header-row">
+                        <span>Mese</span>
+                        <span class="text-center">Giorni Occupati</span>
+                        <span class="text-center">Tariffa</span>
+                        <span class="text-center">Conferma</span>
+                    </div>
+
+                    @for (mese of firstSemester(); track mese.name) {
+                        <div class="grid-row align-center">
+                            <strong class="month-label">{{ mese.name }}</strong>
+                            
+                            <app-text-input>
+                                <input type="number" 
+                                    [formControlName]="'month_' + mese.month + '_days'" 
+                                    [readonly]="!isEditMode()">
+                            </app-text-input>
+                            
+                            <app-text-input>
+                                <input type="number" 
+                                    [formControlName]="'month_' + mese.month + '_tariffs'" 
+                                    [readonly]="!isEditMode()">
+                            </app-text-input>
+                            
+                            <div class="checkbox-container">
+                                <input type="checkbox" 
+                                    [formControlName]="'month_' + mese.month + '_confirm'">
+                            </div>
+                        </div>
+                    }
+                </div> 
+                
+                <div class="vertical-divider"></div>
+
+                <div class="semester-block">
+                    <div class="grid-row header-row">
+                        <span>Mese</span>
+                        <span class="text-center">Giorni Occupati</span>
+                        <span class="text-center">Tariffa</span>
+                        <span class="text-center">Conferma</span>
+                    </div>
+
+                    @for (mese of secondSemester(); track mese.name) {
+                        <div class="grid-row align-center">
+                            <strong class="month-label">{{ mese.name }}</strong>
+                            
+                            <app-text-input>
+                                <input type="number" 
+                                    [formControlName]="'month_' + mese.month + '_days'" 
+                                    [readonly]="!isEditMode()">
+                            </app-text-input>
+                            
+                            <app-text-input>
+                                <input type="number" 
+                                    [formControlName]="'month_' + mese.month + '_tariffs'" 
+                                    [readonly]="!isEditMode()">
+                            </app-text-input>
+                            
+                            <div class="checkbox-container">
+                                <input type="checkbox" 
+                                    [formControlName]="'month_' + mese.month + '_confirm'">
+                            </div>
+                        </div>
+                    }
+                </div> 
+
             </div>
-        }           
-    </div>
+
+            @if(isEditMode()) {
+                <div class="actions">
+                    <button appButton type="submit" class="btn-small">Salva</button>
+                    <button appButton type="button" class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>
+                </div>
+            } 
+            @else {
+                <div class="actions">
+                    <button appButton type="button" class="btn-small" (click)="toggleEditMode()">Modifica</button>
+                </div>
+            }           
+        </div>
+    </form>
 </section>

@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { EMPTY, catchError, map, tap, throwError, of, Observable } from 'rxjs';
+import { EMPTY, catchError, map, tap, throwError, of, Observable, forkJoin } from 'rxjs';
 import { Project } from './models/project.model';
 import { Customer } from './models/customer.model';
 import { HttpClient } from '@angular/common/http';
@@ -41,6 +41,8 @@ export class RequestsService {
 
   private ProjectEmployees = signal<{ id: string; project: string; isActive: boolean; employee: string; jobRole: string; jobRoleLevel: string; dailyCost: number; daysSpent: number; effort: number; winProbability: number }[]>([]);
 
+  private MonthlyManagements = signal<{ id: string; year: number; month: number; days: number; tariff: number; ProjectEmployeeId: string }[]>([]);
+
   private lastSelectedRole = signal<Role | null>(null);
 
   projectJobRolesCaricati = this.ProjectJobRoles.asReadonly();
@@ -64,6 +66,8 @@ export class RequestsService {
   employeesCaricati = this.Employees.asReadonly();
 
   allEmployeesCaricati = this.AllEmployees.asReadonly();
+
+  MonthlyManagementsCaricati = this.MonthlyManagements.asReadonly();
 
   ultimoRuoloSelezionato = this.lastSelectedRole.asReadonly();
 
@@ -1341,6 +1345,66 @@ export class RequestsService {
     return this.deleteProjectEmployee(projectId, employeeId);
   }
 
+
+// ========== MONTHLY MANAGEMENT METHODS ==========
+
+  private fetchMonthsForEmployee(projectEmployeeId: string, year: number) {
+    const url = `${environment.apiUrl}/projectemployees/${encodeURIComponent(projectEmployeeId)}/monthlymanagement/${year}`;
+    
+    return this.httpClient.get<any[]>(url).pipe(
+      tap((resData) => console.log('Risposta dal backend (monthly management):', resData)),
+      map((data) =>
+        data.map((item) => ({
+          id: item.id || item.Id,
+          year: item.year || item.Year,
+          month: item.month || item.Month,
+          days: item.days || item.Days,
+          tariff: item.tariff || item.Tariff,
+          isConfirmed: item.isConfirmed || item.IsConfirmed || false,
+          ProjectEmployeeId: item.projectEmployeeId || item.ProjectEmployeeId,
+        }))
+      ),
+      catchError((error) => {
+        console.error(error);
+        return throwError(() => new Error('Qualcosa è andato storto nel caricamento dei mesi.'));
+      })
+    );
+  }
+
+  caricaMonthsForEmployee(projectEmployeeId: string, year: number) {
+    return this.fetchMonthsForEmployee(projectEmployeeId, year).pipe(
+      tap({
+        next: (managements) => this.MonthlyManagements.set(managements),
+      })
+    );
+  }
+
+  salvaMonthsForEmployee(projectEmployeeId: string, year: number, monthsToSave: any[]) {
+    const url = `${environment.apiUrl}/projectemployees/${encodeURIComponent(projectEmployeeId)}/monthlymanagement/${year}`;
+
+    const payload = monthsToSave.map(m => ({
+      month: m.month,
+      days: m.days,
+      tariff: m.tariff,
+      isConfirmed: m.isConfirmed ?? false
+    }));
+
+    return this.httpClient.put(url, payload).pipe(
+      tap(() => {
+        // Aggiorniamo il segnale locale con i nuovi dati salvati
+        this.MonthlyManagements.update(prev =>
+          prev.map(item => {
+            const updated = monthsToSave.find(m => m.month === item.month);
+            return updated ? { ...item, ...updated } : item;
+          })
+        );
+      }),
+      catchError((error) => {
+        this.errorService.showError('Errore durante il salvataggio della gestione mensile.');
+        return throwError(() => error);
+      })
+    );
+  }
 
 
   //TODO: aggiungere metodo per eliminazione cliente (DELETE) e chiedere se è necessario un metodo per eliminazione progetto (DELETE)
