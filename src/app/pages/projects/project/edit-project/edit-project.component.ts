@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, input, output, signal, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Project, ProjectEmployee, ProjectRole } from '../../../../shared/models/project.model';
@@ -52,6 +52,7 @@ export class EditProjectComponent implements OnInit {
   private lookupsService = inject(LookupsService);
   private employeesService = inject(EmployeesService);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
 
   companiesList = signal<any[]>([]);
   customersList = signal<any[]>([]);
@@ -112,27 +113,29 @@ export class EditProjectComponent implements OnInit {
     };
 
     forkJoin(lookupRequests).subscribe((lookups) => {
-      this.companiesList.set(lookups.companies);
-      this.customersList.set(lookups.customers);
-      this.projectStatusesList.set(lookups.statuses);
-      this.employeesList.set(lookups.employees);
-      this.jobRolesList.set(lookups.roles);
-      this.jobRoleLevelsList.set(lookups.levels);
+      setTimeout(() => {
+        this.companiesList.set(lookups.companies);
+        this.customersList.set(lookups.customers);
+        this.projectStatusesList.set(lookups.statuses);
+        this.employeesList.set(lookups.employees);
+        this.jobRolesList.set(lookups.roles);
+        this.jobRoleLevelsList.set(lookups.levels);
 
-      // Normalizziamo i dati (ID ecc.) grazie ai lookups
-      normalizeProjectFormData(clonedProject, lookups);
-      normalizeProjectBudgetForForm(clonedProject);
+        // Normalizziamo i dati (ID ecc.) grazie ai lookups
+        normalizeProjectFormData(clonedProject, lookups);
+        normalizeProjectBudgetForForm(clonedProject);
 
-      // Salviamo una copia pura per i controlli successivi
-      this.initialFormData = JSON.parse(JSON.stringify(clonedProject));
+        // Salviamo una copia pura per i controlli successivi
+        this.initialFormData = JSON.parse(JSON.stringify(clonedProject));
 
-      // Popoliamo il form
-      this.populateForm(clonedProject);
+        // Popoliamo il form
+        this.populateForm(clonedProject);
 
-      // Attiviamo i ricalcoli reattivi solo dopo aver popolato il form
-      this.setupReactiveCalculations();
+        // Attiviamo i ricalcoli reattivi solo dopo aver popolato il form
+        this.setupReactiveCalculations();
 
-      this.saveInitialSnapshot();
+        this.saveInitialSnapshot();
+      });
     });
   }
 
@@ -241,6 +244,7 @@ export class EditProjectComponent implements OnInit {
   }
 
   isSubmitDisabled(): boolean {
+    if(!this.initialFormData) return true;
     return this.isSaving() || this.editProjectForm.invalid || !this.hasValidRoles() || !this.hasValidResources() || !this.isChanged();
   }
 

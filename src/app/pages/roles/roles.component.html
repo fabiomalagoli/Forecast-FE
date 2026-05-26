@@ -47,15 +47,13 @@
   </div>
 </div>
 
-@if (isFetching()) {
-  <div class="loading-state">
-    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-    <p>Caricamento ruoli in corso...</p>
+@if (isInitialLoading()) {
+  <div class="loading-overlay">
+    <mat-progress-spinner mode="indeterminate" diameter="120"></mat-progress-spinner>
   </div>
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton class="btn-primary" (click)="ricaricaRuoli()">Riprova</button>
   </div>
 } @else {
     @if (statusMessage()) {
@@ -74,7 +72,7 @@
                       app-role-row
                       [role]="r"
                       [selected]="selectedRoleId() === r.id"
-                      [class.selected-row]="selectedRoleId() === r.id"
+                      [class.active-role-highlight]="selectedRoleId() === r.id"
                       (showResources)="mostraRisorsePerRuolo($event)"
                       (editRole)="apriModifica($event)"
                       (assignResourcesToRoles)="apriAssegnaRisorse($event)">
@@ -100,41 +98,42 @@
         }
     </div>
     </div>
+
+
+  <mat-paginator
+      [length]="pagination()?.totalCount || 0"
+      [pageSize]="pageSize"
+      [pageIndex]="currentPage() - 1"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [showFirstLastButtons]="true"
+      (page) = "onPageChange($event)">
+  </mat-paginator>
+
+  @if(isAddingRoleState()) {
+      <app-new-role
+          [roleToAdd]="addingRole()"
+          (added)="aggiungiRuolo()"
+          (cancel)="isAddingRoleState.set(false)"
+      ></app-new-role>
+  }
+
+  @if(editingRole()) {
+      <app-modifica-role
+          [roleToEdit]="editingRole()!"
+          (cancel)="chiudiModifica()"
+          (modified)="salvaModifica()"
+      ></app-modifica-role>
+  }
+
+  @if(assigningRole()) {
+      <app-assegna-risorse
+          [selectedRole]="assigningRole()!"
+          (cancel)="chiudiAssegnaRisorse()"
+          (saved)="salvaAssegnazioneRisorse()"
+      ></app-assegna-risorse>
+  }
+
+  <div class="bottom-actions">
+      <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
+  </div>
 }
-
-<mat-paginator
-    [length]="pagination()?.totalCount || 0"
-    [pageSize]="pageSize"
-    [pageIndex]="currentPage() - 1"
-    [pageSizeOptions]="[5, 10, 20, 50]"
-    [showFirstLastButtons]="true"
-    (page) = "onPageChange($event)">
-</mat-paginator>
-
-@if(isAddingRoleState()) {
-    <app-new-role
-        [roleToAdd]="addingRole()"
-        (added)="aggiungiRuolo()"
-        (cancel)="isAddingRoleState.set(false)"
-    ></app-new-role>
-}
-
-@if(editingRole()) {
-    <app-modifica-role
-        [roleToEdit]="editingRole()!"
-        (cancel)="chiudiModifica()"
-        (modified)="salvaModifica()"
-    ></app-modifica-role>
-}
-
-@if(assigningRole()) {
-    <app-assegna-risorse
-        [selectedRole]="assigningRole()!"
-        (cancel)="chiudiAssegnaRisorse()"
-        (saved)="salvaAssegnazioneRisorse()"
-    ></app-assegna-risorse>
-}
-
-<div class="bottom-actions">
-    <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
-</div>

@@ -92,17 +92,31 @@
   background-color: $bg-white;
   border-radius: $radius-lg;
   border: 1px solid $border-filter-light;
-  overflow: hidden;
   box-shadow: $shadow-sm;
   margin-bottom: 2rem;
+  max-height: calc(100vh - 360px);
+  min-height: 280px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
 
-  table {
+.table-scroll {
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.table-scroll table {
     width: 100%;
     border-collapse: collapse;
-  }
+    border-spacing: 0;
 
   thead {
-    background-color: $bg-table-header;
+    // background-color: $bg-table-header;
+    position: sticky;
+    top: 0;
+    z-index: 10;
     
     tr { border-bottom: 2px solid $border-filter-light; }
     
@@ -113,12 +127,13 @@
       color: $text-filter-dark;
       font-size: 0.9rem;
       white-space: nowrap;
+      background-color: $bg-table-header;
     }
   }
 
   tbody {
     tr {
-      border-bottom: 1px solid $border-filter-light;
+      &:not(:last-child) td { border-bottom: 1px solid $border-filter-light; }
       transition: background-color 0.2s;
 
       &:hover { background-color: $bg-app-shell; }
@@ -129,6 +144,7 @@
       padding: 1rem 0.875rem;
       color: $text-filter-medium;
       font-size: 0.9375rem;
+      white-space: nowrap;
     }
   }
 }
@@ -159,94 +175,22 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: $text-filter-muted;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* BOTTONI E AZIONI */
-
-.btn-primary, .btn-add {
-  padding: 0.75rem 1.5rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover {
-    background-color: $color-primary-hover;
-    box-shadow: $shadow-primary;
-  }
-
-  &:active { transform: scale(0.98); }
-}
-
-.btn-small {
-  padding: 0.5rem 1rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover { background-color: $color-primary-hover; }
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: $color-primary;
-  border: 1px solid $color-primary;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover {
-    background-color: $color-primary-lighter;
-    border-color: $color-primary-hover;
-    color: $color-primary-hover;
-  }
-}
-
-.btn-favorite {
-  background: none;
-  border: none;
-  color: #ccc;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0.25rem;
-  transition: color 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    color: #ffc107;
-  }
-
-  &.favorite {
-    color: #ffc107;
-  }
-}
-
-button[type="submit"]:not(.btn--disabled) {
-  color: $text-black !important;
-  font-weight: 700;
-}
-
-.bottom-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+.loading-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(31, 41, 55, 0.55) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 999999 !important;
+  backdrop-filter: blur(3px) !important;
 }
 
 /* STILI LEGACY */

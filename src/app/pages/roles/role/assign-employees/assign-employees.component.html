@@ -86,10 +86,10 @@
             @if (employeeDropdownOpen()) {
               <div class="resource-results">
                 @for (employee of nameFilterOptions(); track employee.id) {
-                  <button class="resource-option" type="button" (mousedown)="selectEmployeeFilter(employee)">
+                  <div class="resource-option" role="button" (mousedown)="selectEmployeeFilter(employee)">
                     <span>{{ fullName(employee) }}</span>
                     <small>{{ employee.company }} · {{ employee.jobRoleLevel }}</small>
-                  </button>
+                  </div>
                 } @empty {
                   <div class="combo-empty">Nessuna risorsa trovata</div>
                 }

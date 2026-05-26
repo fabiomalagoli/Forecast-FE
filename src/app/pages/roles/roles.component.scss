@@ -60,23 +60,6 @@
   animation: slideInRight 0.3s ease-out;
 }
 
-.btn-close-panel {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: transparent;
-  border: none;
-  font-size: 0.9rem;
-  color: $text-filter-muted;
-  cursor: pointer;
-  font-weight: 600;
-  transition: color 0.2s;
-
-  &:hover {
-    color: $color-action-danger;
-  }
-}
-
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(30px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -181,8 +164,7 @@
       &:last-child { border-bottom: none; }
 
       &.selected-row {
-        background-color: $color-primary-lighter !important;
-        border-left: 4px solid $color-primary;
+        display: table-row !important;
       }
     }
 
@@ -190,7 +172,9 @@
       padding: 1rem 0.875rem;
       color: $text-filter-medium;
       font-size: 0.9375rem;
+      white-space: nowrap;
     }
+
   }
 }
 
@@ -220,71 +204,18 @@
   color: $text-filter-muted;
 }
 
-/* BOTTONI E AZIONI */
-
-.btn-primary, .btn-add {
-  padding: 0.75rem 1.5rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover {
-    background-color: $color-primary-hover;
-    box-shadow: $shadow-primary;
-  }
-
-  &:active { transform: scale(0.98); }
-}
-
-.btn-small {
-  padding: 0.5rem 1rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover { background-color: $color-primary-hover; }
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: $color-primary;
-  border: 1px solid $color-primary;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover {
-    background-color: $color-primary-lighter;
-    border-color: $color-primary-hover;
-    color: $color-primary-hover;
-  }
-}
-
-button[type="submit"]:not(.btn--disabled) {
-  color: $text-black !important;
-  font-weight: 700;
-}
-
-.bottom-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+.loading-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(31, 41, 55, 0.55) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 999999 !important;
+  backdrop-filter: blur(3px) !important;
 }
 
 .tbl-header {

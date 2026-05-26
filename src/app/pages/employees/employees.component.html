@@ -116,15 +116,13 @@
   </div>
 </div>
 
-@if(isFetching()) {
-  <div class="loading-state">
-    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-    <p>Caricamento risorse in corso...</p>
+@if(isInitialLoading()) {
+  <div class="loading-overlay">
+    <mat-progress-spinner mode="indeterminate" diameter="120"></mat-progress-spinner>
   </div>
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton class="btn-primary" (click)="reloadEmployees()">Riprova</button>
   </div>
 } @else {
     @if (statusMessage()) {
@@ -164,33 +162,34 @@
             </table>
         </div>
     </div>
+
+
+  <mat-paginator
+      [length]="pagination()?.totalCount || 0"
+      [pageSize]="pageSize"
+      [pageIndex]="currentPage() - 1"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [showFirstLastButtons]="true"
+      (page) = "onPageChange($event)">
+  </mat-paginator>
+
+  @if(editingEmployee()) {
+      <app-edit-employee
+          [selectedEmployeeToEdit]="editingEmployee()!"
+          (cancel)="closeEmployeeEdit()"
+          (modified)="safeEdits()"
+      ></app-edit-employee>
+  }
+
+  @if(isAddingEmployeeState()) {
+      <app-new-employee
+          [selectedEmployeeToAdd]="addingEmployee()"
+          (cancel)="isAddingEmployeeState.set(false)"
+          (added)="addEmployee()"
+      ></app-new-employee>
+  }
+
+  <div class="bottom-actions">
+      <button appButton class="btn-add" (click)="onAddingEmployee()">+ Aggiungi Risorsa</button>
+  </div>
 }
-
-<mat-paginator
-    [length]="pagination()?.totalCount || 0"
-    [pageSize]="pageSize"
-    [pageIndex]="currentPage() - 1"
-    [pageSizeOptions]="[5, 10, 20, 50]"
-    [showFirstLastButtons]="true"
-    (page) = "onPageChange($event)">
-</mat-paginator>
-
-@if(editingEmployee()) {
-    <app-edit-employee
-        [selectedEmployeeToEdit]="editingEmployee()!"
-        (cancel)="closeEmployeeEdit()"
-        (modified)="safeEdits()"
-    ></app-edit-employee>
-}
-
-@if(isAddingEmployeeState()) {
-    <app-new-employee
-        [selectedEmployeeToAdd]="addingEmployee()"
-        (cancel)="isAddingEmployeeState.set(false)"
-        (added)="addEmployee()"
-    ></app-new-employee>
-}
-
-<div class="bottom-actions">
-    <button appButton class="btn-add" (click)="onAddingEmployee()">+ Aggiungi Risorsa</button>
-</div>

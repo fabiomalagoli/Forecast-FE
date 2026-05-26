@@ -1,14 +1,9 @@
-@if (isFetching()) {
-  <div class="loading-state">
-    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-    <p>Caricamento Home in corso...</p>
+@if (isInitialLoading()) {
+  <div class="loading-overlay">
+    <mat-progress-spinner mode="indeterminate" diameter="120"></mat-progress-spinner>
   </div>
-} @else if (error()) {
-  <div class="error-state">
-    <p>{{ error() }}</p>
-    <button appButton class="btn-primary" (click)="reloadCards()">Riprova</button>
-  </div>
-} @else {
+} 
+@else if(!error()){
   @if (statusMessage()) {
     <div class="notification" [class]="statusMessage()?.type">
       {{ statusMessage()?.text }}

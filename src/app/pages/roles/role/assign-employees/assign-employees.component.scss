@@ -150,7 +150,7 @@ dialog {
   }
 }
 
-/* INPUT, COMBO E FILTRI */
+/* INPUT, COMBO BOX E FILTRI */
 
 .level-field {
   display: flex;
@@ -205,7 +205,7 @@ dialog {
   }
 }
 
-/* PULSANTI E ICONE COMBO */
+/* PULSANTI E ICONE COMBO BOX */
 
 .remove-resource,
 .combo-clear,
@@ -250,32 +250,36 @@ dialog {
 
 .resource-option {
   display: flex;
-  width: 100%;
   flex-direction: column;
-  gap: 4px;
+  flex-shrink: 0;
+  width: 100%;
+  gap: 4px;        
   padding: 10px;
-  border: 0;
   border-radius: $radius-md;
   background: transparent;
   text-align: left;
   cursor: pointer;
+  user-select: none; /* Impedisce la selezione del testo invece dell'opzione al click */
 
   &:hover {
     background: $bg-hover;
   }
 
   span {
-    overflow: hidden;
+    display: block;
+    width: 100%;
     color: $text-dark;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 600;
+    white-space: normal; 
+    line-height: 1.2;
   }
 
   small {
-    overflow: hidden;
+    display: block;
+    width: 100%;
     color: $text-light;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    line-height: 1.2;
   }
 }
 

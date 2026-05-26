@@ -47,15 +47,13 @@
   </div>
 </div>
 
-@if (isFetching()) {
-  <div class="loading-state">
-    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-    <p>Caricamento clienti in corso...</p>
+@if (isInitialLoading()) {
+  <div class="loading-overlay">
+    <mat-progress-spinner mode="indeterminate" diameter="120"></mat-progress-spinner>
   </div>
 } @else if (error()) {
   <div class="error-state">
     <p>{{ error() }}</p>
-    <button appButton class="btn-primary" (click)="reloadCustomers()">Riprova</button>
   </div>
 } @else {
   @if (statusMessage()) {
@@ -96,23 +94,24 @@
     </table>
     <p class="count-footer">Numero clienti: {{ filteredCustomers().length }}</p>
   </div>
-}
 
-<div class="bottom-actions">
-  @if (editingCustomer()) {
-    <app-edit-customer 
-      [selectedCustomerToEdit]="editingCustomer()!" 
-      (cancel)="closeCustomerEditing()" 
-      (modified)="saveEdits()" />
-  }
-  
-  @if (isAddingCustomerState) {
-    <app-new-customer 
-      (cancel)="cancelCustomerAddition()" 
-      (created)="addCustomer()" />
-  }
-  
-  <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>
-</div>
+
+  <div class="bottom-actions">
+    @if (editingCustomer()) {
+      <app-edit-customer 
+        [selectedCustomerToEdit]="editingCustomer()!" 
+        (cancel)="closeCustomerEditing()" 
+        (modified)="saveEdits()" />
+    }
+    
+    @if (isAddingCustomerState) {
+      <app-new-customer 
+        (cancel)="cancelCustomerAddition()" 
+        (created)="addCustomer()" />
+    }
+    
+    <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>
+  </div>
+}
 
 

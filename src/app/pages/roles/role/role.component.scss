@@ -1,8 +1,6 @@
 @use 'variables' as *;
 
-/* HOST (Riga Tabella) */
-
-:host {
+tr[app-role-row] {
   border-bottom: 1px solid $border-filter-light;
   transition: $transition-base;
 
@@ -10,13 +8,16 @@
     background-color: $bg-app-shell;
   }
 
-  &.selected-row {
-    background-color: $color-primary-lighter !important;
-    border-left: 4px solid $color-primary;
-  }
-
   &:last-child {
     border-bottom: none;
+  }
+}
+
+tr.active-role-highlight td {
+  background-color: $color-primary-lighter !important;
+
+  &:first-child {
+    border-left: 4px solid $color-primary !important;
   }
 }
 
@@ -24,6 +25,7 @@ td {
   padding: 1rem 0.875rem;
   color: $text-filter-medium;
   font-size: 0.9375rem;
+  white-space: nowrap;
 }
 
 .actions-cell {
@@ -31,39 +33,9 @@ td {
   gap: 12px;
   justify-content: flex-start;
   align-items: center;
+  white-space: nowrap;
 }
 
-/* BOTTONI E ICONE */
-
-.btn-small {
-  padding: 0.5rem 1rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: $transition-base;
-
-  &:hover {
-    background-color: $color-primary-hover;
-  }
-}
-
-.btn-outline {
-  background-color: transparent;
-  color: $color-primary;
-  border: 1px solid $color-primary;
-
-  &:hover {
-    background-color: $color-primary-lighter;
-    border-color: $color-primary-hover;
-    color: $color-primary-hover;
-  }
-}
-
-// Icone Material
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
@@ -82,25 +54,22 @@ td {
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease, transform 0.2s ease;
-  position: relative; /* Fondamentale per il tooltip */
+  position: relative;
   border-radius: 50%;
 
   &:hover {
     color: $text-medium;
-    background-color: $bg-hover; /* Leggero sfondo grigio all'hover */
+    background-color: $bg-hover;
   }
 }
 
-/* TOOLTIP */
-
 .tooltip-container {
-  // Corpo del Tooltip
   &::after {
     content: attr(data-tooltip);
     position: absolute;
-    bottom: 100%; /* Lo posiziona sopra */
+    bottom: 100%;
     left: 50%;
-    transform: translateX(-50%) translateY(-4px); /* Centrato orizzontalmente */
+    transform: translateX(-50%) translateY(-4px);
     background-color: $bg-tooltip;
     color: white;
     padding: 6px 12px;
@@ -116,14 +85,13 @@ td {
     z-index: 100;
   }
 
-  // Triangolino
   &::before {
     content: '';
     position: absolute;
-    top: 0; /* Si attacca al bordo superiore del bottone */
+    top: 0;
     left: 50%;
     transform: translateX(-50%) translateY(-4px);
-    border-width: 6px 5px 0 5px; /* Triangolo che punta in giù */
+    border-width: 6px 5px 0 5px;
     border-style: solid;
     border-color: $bg-tooltip transparent transparent transparent;
     opacity: 0;
@@ -133,18 +101,17 @@ td {
     z-index: 100;
   }
 
-  // Animazioni Hover
   &:hover {
     &::after {
       opacity: 1;
       visibility: visible;
-      transform: translateX(-50%) translateY(-8px); /* Scivolamento verso l'alto */
+      transform: translateX(-50%) translateY(-8px);
     }
 
     &::before {
       opacity: 1;
       visibility: visible;
-      transform: translateX(-50%) translateY(-2px); /* Scivolamento triangolo */
+      transform: translateX(-50%) translateY(-2px);
     }
   }
 }

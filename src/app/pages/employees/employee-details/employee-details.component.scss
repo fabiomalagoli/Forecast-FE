@@ -20,19 +20,6 @@
   }
 }
 
-//btn-small (globalizzare?)
-.btn-small {
-  padding: 0.5rem 1rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: $transition-base;
-}
-
 /* LAYOUT E TABELLA PRINCIPALE */
 
 .resource-selected-layout {

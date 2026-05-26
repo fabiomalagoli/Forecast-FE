@@ -13,19 +13,6 @@
   }
 }
 
-// btn-small (globalizzare?)
-.btn-small {
-  padding: 0.5rem 1rem;
-  background-color: $color-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-sm;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: $transition-base;
-}
-
 /* CARDS */
 
 // Placeholder per condividere le regole comuni fra le card (risorse e progetto)

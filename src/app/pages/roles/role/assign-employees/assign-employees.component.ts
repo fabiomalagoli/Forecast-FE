@@ -19,6 +19,7 @@ import { toElementId } from '../../../../shared/utils/project-form.utils';
 @Component({
   selector: 'app-assegna-risorse',
   templateUrl: './assign-employees.component.html',
+  styleUrl: './assign-employees.component.scss',
   imports: [FormsModule, ReactiveFormsModule, CommonModule],
   standalone: true,
 })
@@ -334,7 +335,7 @@ export class AssignEmployeeComponent {
     onDocumentMouseDown(event: MouseEvent) {
         const target = event.target as Element | null;
 
-        if (!target?.closest('.resource-name-filter-combo')) {
+        if (!target?.closest('.resource-name-filter-combo') && !target?.closest('.resource-dropdown') && !target?.closest('.resource-results')) {
             this.employeeDropdownOpen.set(false);
             this.showAllEmployeeOptions.set(false);
         }

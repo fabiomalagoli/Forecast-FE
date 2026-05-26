@@ -1,0 +1,214 @@
+@use 'variables' as *;
+
+/* PRIMARY BUTTON - LARGE */
+.btn-primary,
+.btn-add {
+  padding: 0.75rem 1.5rem;
+  background-color: $color-primary;
+  color: white;
+  border: 1px solid $color-primary;
+  border-radius: $radius-sm;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+    border-color: $color-primary-hover;
+    box-shadow: $shadow-primary;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* SMALL BUTTON */
+.btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: 1px solid $color-primary;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+    border-color: $color-primary-hover;
+  }
+}
+
+/* OUTLINE BUTTON */
+.btn-outline {
+  background-color: transparent;
+  color: $color-primary;
+  border: 1px solid $color-primary;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-lighter;
+    border-color: $color-primary-hover;
+    color: $color-primary-hover;
+  }
+}
+
+/* FAVORITE BUTTON */
+.btn-favorite {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #ffc107;
+  }
+
+  &.favorite {
+    color: #ffc107;
+  }
+}
+
+/* DISABLED STATE */
+.btn--disabled {
+  border-color: $color-primary-disabled;
+  background: $color-primary-disabled;
+  color: rgba($text-dark, 0.55) !important;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* ADD BUTTON VARIANTS */
+.btn-add-role,
+.btn-add-resource {
+  padding: 0.75rem 1.5rem;
+  background-color: $color-primary;
+  color: white;
+  border: 1px solid $color-primary;
+  border-radius: $radius-sm;
+  font-weight: 700;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+    border-color: $color-primary-hover;
+  }
+}
+
+/* REMOVE / ERROR BUTTON */
+.btn-remove {
+  border: none;
+  background: $color-error-bg;
+  color: $color-error;
+  border-radius: $radius-md;
+  height: 36px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: $color-error-hover;
+    color: $color-error-text;
+  }
+}
+
+/* CLOSE PANEL BUTTON */
+.btn-close-panel {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  color: $text-filter-muted;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s;
+
+  &:hover {
+    color: $color-action-danger;
+  }
+}
+
+/* ACTION CONTAINERS */
+.bottom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* SUBMIT BUTTON OVERRIDE */
+button[type="submit"]:not(.btn--disabled) {
+  color: $text-black !important;
+  font-weight: 700;
+}
+
+button[appButton].btn-primary,
+button[appButton].btn-add {
+  padding: 0.75rem 1.5rem;
+  background-color: $color-primary;
+  color: white;
+  border: 1px solid $color-primary;
+  border-radius: $radius-sm;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-hover;
+    border-color: $color-primary-hover;
+    box-shadow: $shadow-primary;
+  }
+
+  &:active { transform: scale(0.98); }
+}
+
+button[appButton].btn-small {
+  padding: 0.5rem 1rem;
+  background-color: $color-primary;
+  color: white;
+  border: 1px solid $color-primary;
+  border-radius: $radius-sm;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover { background-color: $color-primary-hover; border-color: $color-primary-hover; }
+}
+
+button[appButton].btn-outline {
+  background-color: transparent;
+  color: $color-primary;
+  border: 1px solid $color-primary;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $color-primary-lighter;
+    border-color: $color-primary-hover;
+    color: $color-primary-hover;
+  }
+}

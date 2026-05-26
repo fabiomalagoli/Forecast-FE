@@ -12,25 +12,29 @@ import { debounceTime, distinctUntilChanged, finalize, Subject, switchMap, tap, 
 import { CustomersService } from '../../shared/services/customers.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SnackbarService } from '../../shared/services/snackbar.service';
+import { NotifyAction } from '../../shared/enums/notify.enum';
 
 @Component({
   selector: 'app-customers',
   imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewCustomerComponent, EditCustomerComponent, MatProgressSpinnerModule],
   templateUrl: './customers.component.html',
-  styleUrls: ['./customers.component.scss', '../../shared/filter-styles.scss'],
+  styleUrls: ['./customers.component.scss'],
 })
 export class CustomersComponent {
 
   private customersService = inject(CustomersService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private snackbarService = inject(SnackbarService);
 
 
   customers = this.customersService.loadedCustomers;
 
 
+  isInitialLoading = signal(this.customersService.loadedCustomers().length === 0);
   isFetching = signal(false);
-  error = signal('');
+  error = signal<string | null>(null);
 
 
   private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
@@ -102,20 +106,26 @@ export class CustomersComponent {
     });
   }
 
-  ngOnInit() {
+  loadInitialData() {
     this.isFetching.set(true);
-    const subscription = this.customersService.loadAvailableCustomers().pipe(
-      finalize(() => this.isFetching.set(false))
+    this.error.set(null);
+
+    this.customersService.loadAvailableCustomers().pipe(
+      finalize(() => {timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       error: (error: Error) => {
         this.error.set(this.buildLoadCustomersErrorMessage(error));
-        this.showNotification('Errore durante il caricamento dei clienti', 'error');
-      },
+        this.snackbarService.error(NotifyAction.Caricamento, 'clienti', 'Riprova')
+        .onAction().subscribe(() => {
+          this.loadInitialData(); //TO-DO: impaginazione 
+        });
+      }
     });
+  }
 
-    this.destroyRef.onDestroy(() => {
-      subscription.unsubscribe();
-    });
+  ngOnInit() {
+    this.loadInitialData();
 
     this.filterCustomerName.valueChanges.pipe(
       debounceTime(300),
@@ -127,17 +137,14 @@ export class CustomersComponent {
   updateCustomers() {
     this.isFetching.set(true);
     const timeoutId = setTimeout(() => {
-      const subscription = this.customersService.loadAvailableCustomers().pipe(
-        finalize(() => this.isFetching.set(false))
+      this.customersService.loadAvailableCustomers().pipe(
+        finalize(() => this.isFetching.set(false)),
+        takeUntilDestroyed(this.destroyRef)
       ).subscribe({
         error: (error: Error) => {
           this.error.set(this.buildLoadCustomersErrorMessage(error));
-          this.showNotification('Errore durante l\'aggiornamento dei clienti', 'error');
+          this.showNotification('error', NotifyAction.Aggiornamento, 'clienti');
         },
-      });
-
-      this.destroyRef.onDestroy(() => {
-        subscription.unsubscribe();
       });
     }, 3000); //Ritardo di 3 secondi prima della richiesta.
 
@@ -148,17 +155,14 @@ export class CustomersComponent {
 
   reloadCustomers() {
     this.isFetching.set(true);
-    const subscription = this.customersService.loadAvailableCustomers().pipe(
-      finalize(() => this.isFetching.set(false))
+    this.customersService.loadAvailableCustomers().pipe(
+      finalize(() => this.isFetching.set(false)),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       error: (error: Error) => {
         this.error.set(this.buildLoadCustomersErrorMessage(error));
-        this.showNotification('Errore durante il caricamento dei clienti', 'error');
+        this.showNotification('error', NotifyAction.Ricaricamento, 'clienti');
       },
-    });
-
-    this.destroyRef.onDestroy(() => {
-      subscription.unsubscribe();
     });
   }
 
@@ -178,7 +182,7 @@ export class CustomersComponent {
     // Invece di aggiornare localmente, ricarica i dati dal backend
     this.reloadCustomers();
     this.isAddingCustomerState = false;
-    this.showNotification('Cliente creato con successo!', 'success');
+    this.showNotification('success', NotifyAction.Creazione, 'cliente');
   }
 
   openCustomerDetails(id: string) {
@@ -197,11 +201,15 @@ export class CustomersComponent {
     // Ricarica i dati dal backend per riflettere le modifiche effettive
     this.reloadCustomers();
     this.closeCustomerEditing();
-    this.showNotification('Modifiche salvate correttamente!', 'success');
+    this.showNotification('success', NotifyAction.Aggiornamento, 'cliente');
   }
 
-  showNotification(text: string, type: 'success' | 'error') {
-      this.showMessage$.next({ text, type });
+  showNotification(type: 'success' | 'error', action: NotifyAction, params?: string | string[]) {
+    if (type === 'success') {
+      this.snackbarService.success(action, params);
+    } else {
+      this.snackbarService.error(action, params ?? []);
+    }
   }
   
   optionName(option: any): string {

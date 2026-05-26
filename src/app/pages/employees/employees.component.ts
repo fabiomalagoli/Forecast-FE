@@ -14,27 +14,31 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap, switchMap, Subject, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { SnackbarService } from '../../shared/services/snackbar.service';
+import { NotifyAction } from '../../shared/enums/notify.enum';
 
 
 @Component({
   selector: 'app-employees',
   templateUrl: './employees.component.html',
-  styleUrls: ['../../shared/filter-styles.scss', './employees.component.scss'],
+  styleUrls: ['./employees.component.scss'],
   imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, EditEmployeeComponent, NewRisorsaComponent, EmployeeRowComponent, MatPaginatorModule, MatProgressSpinnerModule],
   standalone: true 
 })
 export class EmployeesComponent implements OnInit {
     isFetching = signal(false);
-    error = signal('');
+    error = signal<string | null>(null);
 
     private rolesService = inject(RolesService);
     private employeesService = inject(EmployeesService);
     private lookupsService = inject(LookupsService)
     private destroyRef = inject(DestroyRef);
     private router = inject(Router);
+    private snackbarService = inject(SnackbarService);
 
     private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
 
+    isInitialLoading = signal(this.employeesService.loadedEmployees().length === 0);
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
     
     employees = this.employeesService.loadedEmployees;
@@ -170,6 +174,7 @@ export class EmployeesComponent implements OnInit {
         this.isFetching.set(true);
         this.currentPage.set(page);
         this.closePanel();
+        this.error.set(null);
 
         this.employeesService.loadEmployees(page, this.pageSize).pipe(
             finalize(() => this.isFetching.set(false))
@@ -182,8 +187,10 @@ export class EmployeesComponent implements OnInit {
                 }
             },
             error: (err) => {
-                this.error.set('Errore durante il caricamento delle risorse: ' + err.message);
-                this.showMessage$.next({text: 'Errore durante il caricamento delle risorse', type: 'error'});
+                if(this.error() === null){
+                    this.error.set('Errore durante il caricamento delle risorse: ' + err.message);
+                    this.showNotification('error', NotifyAction.Caricamento, 'risorse');
+                }
             },
         });
     }
@@ -202,13 +209,27 @@ export class EmployeesComponent implements OnInit {
         }
     }
 
-    ngOnInit() {
+    loadInitialData() {
         this.isFetching.set(true);
-        
-        const subscription = this.employeesService.loadEmployees(this.currentPage(), this.pageSize).pipe(
-            finalize(() => this.isFetching.set(false))
+        this.error.set(null);
+
+        const initRequests = [
+            this.employeesService.loadEmployees(this.currentPage(), this.pageSize),
+            this.employeesService.loadAllEmployees(),
+            this.rolesService.loadAllJobRoles(),
+            this.rolesService.loadJobRoleLevels(),
+            this.lookupsService.loadAvailableCompanies()
+        ];
+
+        forkJoin(initRequests).pipe(
+            finalize(() => { timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
+            takeUntilDestroyed(this.destroyRef)
         ).subscribe({
-            next: (data) => {
+            next: ([_, _allEmps, roles, levels, companies]) => {
+                this.jobRolesList.set(roles);
+                this.jobRoleLevelsList.set(levels);
+                this.companiesList.set(companies);
+
                 const meta = this.pagination();
                 if (meta) {
                     this.currentPage.set(meta.currentPage);
@@ -216,82 +237,66 @@ export class EmployeesComponent implements OnInit {
                 }
             },
             error: (err) => {
-                this.error.set('Errore durante il caricamento delle risorse: ' + err.message);
-                this.showMessage$.next({text: 'Errore durante il caricamento delle risorse', type: 'error'});
-            },
+                this.error.set('Errore durante il caricamento delle risorse: ' + err.message);               
+                this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
+                .onAction()
+                .subscribe(() => {
+                    this.loadInitialData();
+                });
+            }
         });
+    }
 
-        this.destroyRef.onDestroy(() => {
-            subscription.unsubscribe();
-        });
-
-        const filterDataSubscription = forkJoin([
-            this.employeesService.loadAllEmployees(),
-            this.rolesService.loadAllJobRoles(),
-            this.rolesService.loadJobRoleLevels(),
-            this.lookupsService.loadAvailableCompanies(),
-        ]).subscribe({
-            next: ([employees, roles, levels, companies]) => {
-                this.jobRolesList.set(roles);
-                this.jobRoleLevelsList.set(levels);
-                this.companiesList.set(companies);
-            },
-            error: (err) => {
-                this.error.set('Errore durante il caricamento dei filtri risorse: ' + err.message);
-                this.showMessage$.next({text: 'Errore durante il caricamento dei filtri', type: 'error'});
-            },
-        });
-
-        this.destroyRef.onDestroy(() => {
-            filterDataSubscription.unsubscribe();
-        });
+    ngOnInit() {
+        this.loadInitialData();
 
         const nameFilterSubscription = this.filterEmployeeName.valueChanges.pipe(
-            debounceTime(300),
-            distinctUntilChanged(),
-            tap(value => {
-                this.filterNameValue.set((value || '').toLowerCase());
-                this.showAllNameOptions.set(false);
-            })
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(value => {
+            this.filterNameValue.set((value || '').toLowerCase());
+            this.showAllNameOptions.set(false);
+        })
         ).subscribe();
 
         const roleFilterSubscription = this.filterRole.valueChanges.pipe(
-            debounceTime(300),
-            distinctUntilChanged(),
-            tap(value => {
-                this.filterRoleValue.set((value || '').toLowerCase());
-                this.showAllRoleOptions.set(false);
-            })
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(value => {
+            this.filterRoleValue.set((value || '').toLowerCase());
+            this.showAllRoleOptions.set(false);
+        })
         ).subscribe();
 
         const levelFilterSubscription = this.filterLevel.valueChanges.pipe(
-            debounceTime(300),
-            distinctUntilChanged(),
-            tap(value => {
-                this.filterLevelValue.set((value || '').toLowerCase());
-                this.showAllLevelOptions.set(false);
-            })
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(value => {
+            this.filterLevelValue.set((value || '').toLowerCase());
+            this.showAllLevelOptions.set(false);
+        })
         ).subscribe();
 
         const companyFilterSubscription = this.filterCompany.valueChanges.pipe(
-            debounceTime(300),
-            distinctUntilChanged(),
-            tap(value => {
-                this.filterCompanyValue.set((value || '').toLowerCase());
-                this.showAllCompanyOptions.set(false);
-            })
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(value => {
+            this.filterCompanyValue.set((value || '').toLowerCase());
+            this.showAllCompanyOptions.set(false);
+        })
         ).subscribe();
 
         this.destroyRef.onDestroy(() => {
-            nameFilterSubscription.unsubscribe();
-            roleFilterSubscription.unsubscribe();
-            levelFilterSubscription.unsubscribe();
-            companyFilterSubscription.unsubscribe();
+        nameFilterSubscription.unsubscribe();
+        roleFilterSubscription.unsubscribe();
+        levelFilterSubscription.unsubscribe();
+        companyFilterSubscription.unsubscribe();
         });
     }
 
     reloadEmployees() {
         this.isFetching.set(true);
+        this.error.set(null);
         const subscription = this.employeesService.loadEmployees().pipe(
             finalize(() => this.isFetching.set(false))
         ).subscribe({
@@ -304,8 +309,10 @@ export class EmployeesComponent implements OnInit {
                 }
             },
             error: (err) => {
-                this.error.set('Errore durante il ricaricamento delle risorse: ' + err.message);
-                this.showMessage$.next({text: 'Errore durante il ricaricamento delle risorse', type: 'error'});
+                if(this.error() === null){
+                    this.error.set('Errore durante il ricaricamento delle risorse: ' + err.message);
+                    this.showNotification('error', NotifyAction.Ricaricamento, 'risorse');
+                }
             },
         });
 
@@ -316,17 +323,20 @@ export class EmployeesComponent implements OnInit {
 
     updateEmployees(){
         this.isFetching.set(true);
+        this.error.set(null);
         const timeoutId = setTimeout(() => {
             const subscription = this.employeesService.loadEmployees().pipe(
                 finalize(() => this.isFetching.set(false))
             )
             .subscribe({
                 next: () => {
-                    this.showNotification('Risorse aggiornate con successo!', 'success');
+                    this.showNotification('success', NotifyAction.Aggiornamento, 'risorse');
                 },
                 error: (err) => {
-                    this.error.set('Errore durante l\'aggiornamento delle risorse: ' + err.message);
-                    this.showNotification('Errore durante l\'aggiornamento delle risorse', 'error');
+                    if(this.error() === null){
+                        this.error.set('Errore durante l\'aggiornamento delle risorse: ' + err.message);
+                        this.showNotification('error', NotifyAction.Aggiornamento, 'risorse');
+                    }
                 },
             });
 
@@ -351,7 +361,7 @@ export class EmployeesComponent implements OnInit {
 
     addEmployee() {
         this.isAddingEmployeeState.set(false);
-        this.showMessage$.next({text: 'Risorsa aggiunta con successo!', type: 'success'});
+        this.showNotification('success', NotifyAction.AddEmployee, 'risorse');
         this.currentPage.set(1); 
         this.loadPage(1); 
     }
@@ -365,14 +375,18 @@ export class EmployeesComponent implements OnInit {
     }
 
     // Funzione ponte perfetta per il Subject
-    showNotification(text: string, type: 'success' | 'error') {
-        this.showMessage$.next({ text, type });
+    showNotification(type: 'success' | 'error', action: NotifyAction, params?: string | string[]) {
+    if (type === 'success') {
+        this.snackbarService.success(action, params);
+    } else {
+        this.snackbarService.error(action, params ?? []);
+    }
     }
 
     safeEdits() {
         this.reloadEmployees(); 
         this.editingEmployee.set(null);
-        this.showNotification('Risorsa aggiornata con successo!', 'success');
+        this.showNotification('success', NotifyAction.Salvataggio, 'risorse');
     }
 
     openEmployeeDetails(r: Employee){

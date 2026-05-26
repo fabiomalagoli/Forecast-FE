@@ -196,12 +196,13 @@
       <div class="actions">
         <button
           type="submit"
+          class="btn-primary"
           [attr.aria-disabled]="isSubmitDisabled()"
           [class.btn--disabled]="isSubmitDisabled()"
           (click)="onSubmitClick($event)">
           Crea Progetto
         </button>
-        <button type="button" (click)="onCancel()">Annulla</button>
+        <button type="button" class="btn-secondary" (click)="onCancel()">Annulla</button>
       </div>
       @if (noChangesMessage) {
         <div class="no-changes-msg">Nessuna modifica rilevata: inserisci i nuovi dati.</div>
@@ -216,5 +217,4 @@
   </div>
 }
 
-<pre>Form valido: {{ newProjectForm.valid }}</pre>
 <pre>Errori Base: {{ newProjectForm.errors | json }}</pre>

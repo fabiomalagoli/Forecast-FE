@@ -15,28 +15,31 @@ import { ProjectsService } from '../../shared/services/projects.service';
 import { LookupsService } from '../../shared/services/lookups.service';
 import { CustomersService } from '../../shared/services/customers.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SnackbarService } from '../../shared/services/snackbar.service';
+import { NotifyAction } from '../../shared/enums/notify.enum';
 
 
 @Component({
   selector: 'app-projects',
   imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule, MatProgressSpinnerModule],
   templateUrl: './projects.component.html',
-  styleUrls: ['../../shared/filter-styles.scss', './projects.component.scss'],
+  styleUrls: ['./projects.component.scss'],
   
 })
 
 export class ProjectsComponent {
-
   isFetching = signal(false);
-  error = signal('');
+  error = signal<string | null>(null);
   private projectsService = inject(ProjectsService);
   private lookupsService = inject(LookupsService);
   private customersService = inject(CustomersService);
   private destroyRef = inject(DestroyRef);
   private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
+  private snackbarService = inject(SnackbarService);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   projects = this.projectsService.loadedProjects;
+  isInitialLoading = signal(this.projectsService.loadedProjects().length === 0);
 
   private buildLoadProjectsErrorMessage(error: Error): string {
     return `Errore durante il caricamento dei progetti: ${error.message}`;
@@ -54,9 +57,7 @@ export class ProjectsComponent {
 
   readonly projectHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
 
-  // Router per spostarci tra pagine/viste dei progetti
   constructor(private router: Router) {
-    // Questo log scatterà ogni singola volta che il segnale del service cambia
     effect(() => {
       console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.projects());
     });
@@ -147,24 +148,42 @@ export class ProjectsComponent {
 
   filterData: any = {};
 
-  ngOnInit() {
+  loadInitialData() {
     this.isFetching.set(true);
-    const subscription = this.projectsService.loadAvailableProjects().pipe(
-        finalize(() => this.isFetching.set(false))
-      )
-      .subscribe({
-        // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
-        error: (error: Error) => {
-          this.error.set(this.buildLoadProjectsErrorMessage(error));
-          this.showNotification('Errore durante il caricamento dei progetti', 'error');
+    this.error.set(null);
+    const initRequests = [
+      this.projectsService.loadAvailableProjects(),
+      this.lookupsService.loadAvailableCompanies(),
+      this.lookupsService.loadProjectStatuses(),
+      this.customersService.loadAvailableCustomers()
+    ];
+    forkJoin(initRequests).pipe(
+      finalize(() => { timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ([_, companies, statuses, customers]) => { // Il primo elemento dell'array è il risultato di loadAvailableProjects, che non ci serve qui perché il service aggiorna già il segnale internamente
+                                                       // gli altri tre sono le liste per i dropdown, che invece dobbiamo settare nei segnali locali
+        this.companiesList.set(companies);
+        this.statusesList.set(statuses);
+        this.customersList.set(customers);
+        this.filterData.companyId = companies.find((c: any) => c.name === this.filterData.company)?.id || null;
+        this.filterData.customerId = customers.find((c: any) => c.name === this.filterData.customer)?.id || null;
+        this.filterData.projectStatusId = statuses.find((s: any) => s.name === this.filterData.projectStatus)?.id || null;
         },
-      });
+      error: (error: Error) => {
+        this.error.set(this.buildLoadProjectsErrorMessage(error));
+        this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
+        .onAction().subscribe(() => {
+          this.loadInitialData();
+        });
+      }
+    });
+  }
 
-      this.destroyRef.onDestroy(() => {
-        subscription.unsubscribe();
-      });
+  ngOnInit() {
+    this.loadInitialData();
 
-    // Imposta i listener per i filtri
+    // Imposto i listener per i filtri
     this.companyFilter.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -173,12 +192,9 @@ export class ProjectsComponent {
         this.companyFilterValue.set(filterValue.toLowerCase());
         this.showAllCompanyOptions.set(false);
         this.projectsService.setCompanyFilter(filterValue);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe();
-
-    this.destroyRef.onDestroy(() => {
-      subscription.unsubscribe();
-    });
 
     this.customerFilter.valueChanges.pipe(
       debounceTime(300),
@@ -188,12 +204,9 @@ export class ProjectsComponent {
         this.customerFilterValue.set(filterValue.toLowerCase());
         this.showAllCustomerOptions.set(false);
         this.projectsService.setCustomerFilter(filterValue);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe();
-
-    this.destroyRef.onDestroy(() => {
-      subscription.unsubscribe();
-    });
 
     this.statusFilter.valueChanges.pipe(
       debounceTime(300),
@@ -201,29 +214,9 @@ export class ProjectsComponent {
       tap(value => {
         this.statusFilterValue.set((value || '').toLowerCase());
         this.showAllStatusOptions.set(false);
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe();
-
-    this.destroyRef.onDestroy(() => {
-      subscription.unsubscribe();
-    });
-
-    const loadingRequests = [
-      this.lookupsService.loadAvailableCompanies(),
-      this.lookupsService.loadProjectStatuses(),
-      this.customersService.loadAvailableCustomers(),
-    ];
-    // Carica tutte le liste necessarie per i dropdown in parallelo
-    forkJoin(loadingRequests).subscribe(results => {
-      this.companiesList.set(results[0]);
-      this.statusesList.set(results[1]);
-      this.customersList.set(results[2]);
-      this.filterData.companyId = results[0].find(a => a.name === this.filterData.company)?.id || null;
-      this.filterData.customerId = results[2].find(c => c.name === this.filterData.customer)?.id || null;
-      this.filterData.projectStatusId = results[1].find(s => s.name === this.filterData.projectStatus)?.name || null;
-    });
-
-
 
   }
 
@@ -248,7 +241,7 @@ export class ProjectsComponent {
     this.isAddingProject.set(false);
     this.projectsService.loadAvailableProjects().subscribe({
       next: () => {
-        this.showNotification('Dati aggiornati dal database', 'success');
+        this.showNotification('success', NotifyAction.Salvataggio, 'progetto');
       }
     });
   }
@@ -257,26 +250,19 @@ export class ProjectsComponent {
     this.isAddingProject.set(false);
   }
 
-  refreshProjects(){
+  refreshProjects() {
     this.isFetching.set(true);
-    const timeoutId = setTimeout(() => {
-      const subscription = this.projectsService.loadAvailableProjects().pipe(
-          finalize(() => this.isFetching.set(false))
-        )
-        .subscribe({ // Non serve più il next con this.Progetti.set(): caricaProgettiDisponibili fa già il tap() sul segnale
-          error: (error: Error) => {
-            this.error.set(this.buildLoadProjectsErrorMessage(error));
-            this.showNotification('Errore durante l\'aggiornamento dei progetti', 'error');
-          },
-        });
+    this.error.set(null);
 
-      this.destroyRef.onDestroy(() => {
-        subscription.unsubscribe();
-      });
-    }, 3000); // Ritardo di 3 secondi prima della richiesta
-
-    this.destroyRef.onDestroy(() => {
-      clearTimeout(timeoutId);
+    timer(3000).pipe(
+      switchMap(() => this.projectsService.loadAvailableProjects()),
+      finalize(() => this.isFetching.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      error: (error: Error) => {
+        this.error.set(`Errore durante il caricamento dei progetti: ${error.message}`);
+        this.showNotification('error', NotifyAction.Caricamento, 'progetti');
+      },
     });
   }
 
@@ -293,14 +279,18 @@ export class ProjectsComponent {
     // Qui potresti chiamare un metodo del service per salvare le modifiche sul backend, ad esempio:
     this.projectsService.loadAvailableProjects().subscribe({
       next: () => {
-        this.showNotification('Dati aggiornati dal database', 'success');
+        this.showNotification('success', NotifyAction.Salvataggio, 'progetto');
       }
     });
   }
 
-  showNotification(text: string, type: 'success' | 'error') {
-      this.showMessage$.next({ text, type });
+  showNotification(type: 'success' | 'error', action: NotifyAction, params?: string | string[]) {
+  if (type === 'success') {
+    this.snackbarService.success(action, params);
+  } else {
+    this.snackbarService.error(action, params ?? []);
   }
+}
 
   optionName(option: any): string {
     return option?.name || option?.Name || option || '';

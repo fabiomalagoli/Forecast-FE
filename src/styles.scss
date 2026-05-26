@@ -1,4 +1,9 @@
 @use 'variables' as *;
+
+@forward './styles/filter-styles.scss';
+@forward './styles/form-styles.scss';
+@forward './styles/buttons-styles.scss';
+
 * {
   box-sizing: border-box;
   font-family: 'Montserrat', sans-serif;
@@ -32,4 +37,39 @@ html, body {
 
 .d-none {
   display: none !important;
+}
+
+.snackbar-success {
+  /* Variabili di Angular Material MDC */
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-label-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffffff;
+
+  .mdc-snackbar__surface {
+    background-color: #2e7d32 !important;
+  }
+  .mdc-snackbar__label {
+    color: #ffffff !important;
+  }
+  .mat-mdc-snack-bar-action button {
+    color: #ffffff !important;
+  }
+}
+.snackbar-error {
+  /* Variabili di Angular Material MDC */
+  --mdc-snackbar-container-color: #d32f2f;
+  --mdc-snackbar-label-text-color: #ffffff;  
+  --mat-snack-bar-button-color: #ffffff;     
+
+  /* Fallback corazzato */
+  .mdc-snackbar__surface {
+    background-color: #d32f2f !important;
+  }
+  .mdc-snackbar__label {
+    color: #ffffff !important;
+  }
+  .mat-mdc-snack-bar-action button {
+    color: #ffeb3b !important;
+    font-weight: 700;
+  }
 }

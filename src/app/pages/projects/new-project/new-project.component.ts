@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, inject, output, signal } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Project } from '../../../shared/models/project.model';
 import {
@@ -32,7 +32,7 @@ import {
 @Component({
   selector: 'app-new-progetto',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, TextInputComponent], // Rimosso FormsModule, inserito ReactiveFormsModule
+  imports: [ReactiveFormsModule, CommonModule, TextInputComponent],
   templateUrl: './new-project.component.html',
 })
 export class NewProgettoComponent implements OnInit {
@@ -58,6 +58,8 @@ export class NewProgettoComponent implements OnInit {
 
   newProjectForm!: FormGroup;
   private originalFormSnapshot = '';
+  
+  isSubmitDisabled = signal(true);
 
   attemptedSubmit = false;
   noChangesMessage = false;
@@ -78,13 +80,11 @@ export class NewProgettoComponent implements OnInit {
       formControls[header.key] = [initialValue];
     });
 
-    // Inizializziamo i FormArray vuoti per ruoli e dipendenti
     formControls['projectJobRoles'] = this.fb.array([]);
     formControls['projectEmployees'] = this.fb.array([]);
 
     this.newProjectForm = this.fb.group(formControls);
 
-    // Attiviamo i ricalcoli reattivi in background
     this.setupReactiveCalculations();
   }
 
@@ -99,19 +99,22 @@ export class NewProgettoComponent implements OnInit {
     };
 
     forkJoin(lookupRequests).subscribe((lookups) => {
-      this.companiesList.set(lookups.companies);
-      this.customersList.set(lookups.customers);
-      this.projectStatusesList.set(lookups.statuses);
-      this.employeesList.set(lookups.employees);
-      this.jobRolesList.set(lookups.roles);
-      this.jobRoleLevelsList.set(lookups.levels);
+      setTimeout(() => {
+        this.companiesList.set(lookups.companies);
+        this.customersList.set(lookups.customers);
+        this.projectStatusesList.set(lookups.statuses);
+        this.employeesList.set(lookups.employees);
+        this.jobRolesList.set(lookups.roles);
+        this.jobRoleLevelsList.set(lookups.levels);
 
-      // Impostiamo i valori di default appena arrivano i lookups
-      const defaultStatusId = lookups.statuses.find((status) => status.name === 'Initiation')?.id || null;
-      this.newProjectForm.patchValue({ projectStatus: defaultStatusId });
-      
-      // Salviamo lo stato iniziale
-      this.originalFormSnapshot = JSON.stringify(this.newProjectForm.getRawValue());
+        const defaultStatusId = lookups.statuses.find((status) => status.name === 'Initiation')?.id || null;
+        this.newProjectForm.patchValue({ projectStatus: defaultStatusId });
+        
+        this.originalFormSnapshot = JSON.stringify(this.newProjectForm.getRawValue());
+        
+        this.newProjectForm.valueChanges.subscribe(() => this.updateSubmitStatus());
+        this.updateSubmitStatus();
+      });
     });
   }
 
@@ -126,12 +129,10 @@ export class NewProgettoComponent implements OnInit {
       if (start && Number.isFinite(totalDays) && totalDays > 0) {
         this.dateRangeError = false;
         const newEndDate = getDateAfterDays(start, totalDays);
-        // {emitEvent: false} evita loop infiniti con il ricalcolo delle date
         this.newProjectForm.patchValue({ endDate: newEndDate }, { emitEvent: false });
       }
     });
 
-    // Ascoltiamo modifiche agli array per ricalcolare i totali globali
     this.projectJobRoles.valueChanges.subscribe(() => this.recalculateTotals());
     this.projectEmployees.valueChanges.subscribe(() => this.recalculateTotals());
   }
@@ -146,6 +147,7 @@ export class NewProgettoComponent implements OnInit {
     }
     if (end < start) {
       this.dateRangeError = true;
+      this.updateSubmitStatus();
       return;
     }
     this.dateRangeError = false;
@@ -154,7 +156,6 @@ export class NewProgettoComponent implements OnInit {
   }
 
   private recalculateTotals() {
-    // Calcoliamo il totale del budget prendendo dai JSON dei ProjectRoles e ProjectEmployees i Budget relativi 
     const roles = this.projectJobRoles.getRawValue() || [];
     const employees = this.projectEmployees.getRawValue() || [];
     const totals = calculateProjectTotals([...roles, ...employees]);
@@ -163,6 +164,23 @@ export class NewProgettoComponent implements OnInit {
       totalDays: totals.totalDays,
       totalBudget: formatEuroCurrency(totals.totalBudget)
     }, { emitEvent: false });
+  }
+
+  updateSubmitStatus() {
+    if (!this.originalFormSnapshot) {
+      this.isSubmitDisabled.set(true);
+      return;
+    }
+
+    const isRangeInvalid = this.dateRangeError;
+    const isFormInvalid = this.newProjectForm.invalid;
+    const areRolesInvalid = !this.hasValidRoles();
+    const areResourcesInvalid = !this.hasValidResources();
+    const isUnchanged = !this.isChanged();
+
+    this.isSubmitDisabled.set(
+      isRangeInvalid || isFormInvalid || areRolesInvalid || areResourcesInvalid || isUnchanged
+    );
   }
 
   get projectJobRoles(): FormArray {
@@ -207,10 +225,6 @@ export class NewProgettoComponent implements OnInit {
     return employees.every((employee: any) => isProjectEmployeeComplete(employee));
   }
 
-  isSubmitDisabled(): boolean {
-    return this.newProjectForm.invalid || !this.hasValidRoles() || !this.hasValidResources() || !this.isChanged();
-  }
-
   onSubmitClick(event: Event) {
     if (this.isSubmitDisabled()) {
       event.preventDefault();
@@ -224,9 +238,9 @@ export class NewProgettoComponent implements OnInit {
   submit() {
     if (this.isSubmitDisabled()) return;
 
-    const formValue = this.newProjectForm.getRawValue();
+    this.isSubmitDisabled.set(true);
 
-    // Ricalcoliamo il budget pulito perché 'formatEuroCurrency' produce una stringa (es. "1.000 €"), che diventerebbe NaN se inserita in formato Number()
+    const formValue = this.newProjectForm.getRawValue();
     const rawTotals = calculateProjectTotals([...formValue.projectJobRoles, ...formValue.projectEmployees]);
 
     const projectPayload = {
@@ -257,10 +271,16 @@ export class NewProgettoComponent implements OnInit {
             this.showNotification('Progetto creato con successo!', 'success');
             this.created.emit(createdProject);
           },
-          error: () => this.showNotification('Progetto creato, ma errore nel salvataggio di ruoli/risorse.', 'error'),
+          error: () => {
+            this.showNotification('Progetto creato, ma errore nel salvataggio di ruoli/risorse.', 'error');
+            this.isSubmitDisabled.set(false);
+          },
         });
       },
-      error: () => this.showNotification('Errore nella creazione del progetto.', 'error'),
+      error: () => {
+        this.showNotification('Errore nella creazione del progetto.', 'error');
+        this.isSubmitDisabled.set(false);
+      },
     });
   }
 
