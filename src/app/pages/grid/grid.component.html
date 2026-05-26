@@ -19,4 +19,16 @@
       </div>
     }
   </div>
+
+  <p class="count-footer">Numero Preferiti: {{ pagination()?.totalCount || 0 }}</p>
+
+  <mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[4, 8, 12]"
+    [showFirstLastButtons]="true"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+
 }

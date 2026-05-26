@@ -187,9 +187,17 @@
           }
         </tbody>
       </table>
-    </div> <p class="count-footer">Numero progetti: {{ projects().length }}</p>
+    </div> <p class="count-footer">Numero progetti: {{ pagination()?.totalCount || 0 }}</p>
   </div>
 
+  <mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [showFirstLastButtons]="true"
+    (page)="onPageChange($event)">
+  </mat-paginator>
 
   <div class="bottom-actions">
     @if (isAddingProject()) {

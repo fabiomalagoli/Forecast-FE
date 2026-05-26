@@ -17,10 +17,12 @@ export class ProjectsService {
   private projects = signal<Project[]>([]);
   private projectJobRoles = signal<any[]>([]);
   private projectEmployees = signal<any[]>([]);
+  private projectPagination = signal<any>(null);
 
   loadedProjects = this.projects.asReadonly();
   loadedProjectJobRoles = this.projectJobRoles.asReadonly();
   loadedProjectEmployees = this.projectEmployees.asReadonly();
+  paginationData = this.projectPagination.asReadonly();
 
   // --- MAPPING PAYLOADS ---
   private mapToProject(project: any): Project {
@@ -72,6 +74,28 @@ export class ProjectsService {
         console.error(error);
         return throwError(() => buildEntityError(error, 'progetto', 'caricamento'));
       })
+    );
+  }
+
+  loadProjects(pageNumber: number = 1, pageSize: number = 10) {
+    const url = `${environment.apiUrl}/projects?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    return this.httpClient.get<any[]>(url, { observe: 'response' }).pipe(
+      tap(response => {
+        const paginationHeader = response.headers.get('X-Pagination');
+        if (paginationHeader) {
+          const data = JSON.parse(paginationHeader);
+          this.projectPagination.set({
+            currentPage: data.CurrentPage,
+            totalPages: data.TotalPages,
+            pageSize: data.PageSize,
+            totalCount: data.TotalCount,
+            hasPrevious: data.HasPrevious,
+            hasNext: data.HasNext
+          });
+        }
+      }),
+      map(response => (response.body || []).map(p => this.mapToProject(p))),
+      tap(projects => this.projects.set(projects)) 
     );
   }
 

@@ -144,8 +144,8 @@ export class EmployeesComponent implements OnInit {
     selectedEmployeeId = signal<string | null>(null);
     selectedEmployee = signal<Employee | null>(null);
 
-    currentPage = signal(1) 
-    pageSize = 10;
+    currentPage = signal(this.employeesService.paginationData()?.currentPage || 1); 
+    pageSize = this.employeesService.paginationData()?.pageSize || 10;
     pagination = this.employeesService.paginationData;
 
     constructor() {
@@ -221,8 +221,15 @@ export class EmployeesComponent implements OnInit {
             this.lookupsService.loadAvailableCompanies()
         ];
 
-        forkJoin(initRequests).pipe(
-            finalize(() => { timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
+        forkJoin([
+            this.employeesService.loadEmployees(this.currentPage(), this.pageSize),
+            this.employeesService.loadAllEmployees(),
+            this.rolesService.loadAllJobRoles(),
+            this.rolesService.loadJobRoleLevels(),
+            this.lookupsService.loadAvailableCompanies(),
+            timer(1500)
+        ]).pipe(
+            finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
             takeUntilDestroyed(this.destroyRef)
         ).subscribe({
             next: ([_, _allEmps, roles, levels, companies]) => {
@@ -297,8 +304,9 @@ export class EmployeesComponent implements OnInit {
     reloadEmployees() {
         this.isFetching.set(true);
         this.error.set(null);
-        const subscription = this.employeesService.loadEmployees().pipe(
-            finalize(() => this.isFetching.set(false))
+        this.employeesService.loadEmployees().pipe(
+            finalize(() => this.isFetching.set(false)),
+            takeUntilDestroyed(this.destroyRef)
         ).subscribe({
             next: (data) => {
                 console.log('Risorse ricaricate:', data);
@@ -315,39 +323,31 @@ export class EmployeesComponent implements OnInit {
                 }
             },
         });
-
-        this.destroyRef.onDestroy(() => {
-            subscription.unsubscribe();
-        });
     }
 
     updateEmployees(){
         this.isFetching.set(true);
         this.error.set(null);
-        const timeoutId = setTimeout(() => {
-            const subscription = this.employeesService.loadEmployees().pipe(
-                finalize(() => this.isFetching.set(false))
-            )
-            .subscribe({
-                next: () => {
-                    this.showNotification('success', NotifyAction.Aggiornamento, 'risorse');
-                },
-                error: (err) => {
-                    if(this.error() === null){
-                        this.error.set('Errore durante l\'aggiornamento delle risorse: ' + err.message);
-                        this.showNotification('error', NotifyAction.Aggiornamento, 'risorse');
-                    }
-                },
-            });
-
-            this.destroyRef.onDestroy(() => {
-                subscription.unsubscribe();
-            });
-
-        }, 3000); 
-
-        this.destroyRef.onDestroy(() => {
-            clearTimeout(timeoutId);
+        timer(3000).pipe(
+            switchMap(() => this.employeesService.loadEmployees(this.currentPage(), this.pageSize)),
+            finalize(() => this.isFetching.set(false)),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+            next: (data) => {
+                console.log('Risorse aggiornate:', data);
+                const meta = this.pagination();
+                if (meta) {
+                    this.currentPage.set(meta.currentPage);
+                    this.pageSize = meta.pageSize;
+                }
+                this.showNotification('success', NotifyAction.Aggiornamento, 'risorse');
+            },
+            error: (err) => {
+                if(this.error() === null){
+                    this.error.set('Errore durante l\'aggiornamento delle risorse: ' + err.message);
+                    this.showNotification('error', NotifyAction.Aggiornamento, 'risorse');
+                }
+            },
         });
     }
 

@@ -10,9 +10,10 @@ import { buildEntityError } from '../utils/http-error-message.utils';
 export class CustomersService {
   private errorService = inject(ErrorService);
   private httpClient = inject(HttpClient);
-
+  private customersPagination = signal<any>(null);
   private customers = signal<Customer[]>([]);
   loadedCustomers = this.customers.asReadonly();
+  paginationData = this.customersPagination.asReadonly();
 
   private mapToCustomer(customer: any): Customer {
     return {
@@ -42,6 +43,29 @@ export class CustomersService {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/customers`).pipe(
       map(customers => customers.map(c => this.mapToCustomer(c))),
       tap(customers => this.customers.set(customers)),
+      catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
+    );
+  }
+
+  loadCustomers(pageNumber: number = 1, pageSize: number = 10) {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/customers?PageNumber=${pageNumber}&PageSize=${pageSize}`, { observe: 'response' }).pipe(
+      tap(response => {
+        const paginationHeader = response.headers.get('X-Pagination');
+        if (paginationHeader) {
+          const data = JSON.parse(paginationHeader);
+          this.customersPagination.set({
+            currentPage: data.CurrentPage,
+            totalPages: data.TotalPages,
+            pageSize: data.PageSize,
+            totalCount: data.TotalCount,
+            hasPrevious: data.HasPrevious,
+            hasNext: data.HasNext
+          });
+        }
+        const customers = (response.body || []).map(c => this.mapToCustomer(c));
+        this.customers.set(customers);
+      }),
+      map(response => (response.body || []).map(c => this.mapToCustomer(c))),
       catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
     );
   }

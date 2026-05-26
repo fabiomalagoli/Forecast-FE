@@ -18,11 +18,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { A11yModule } from "@angular/cdk/a11y";
 
 
 @Component({
   selector: 'app-projects',
-  imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule, MatProgressSpinnerModule],
+  imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule, MatProgressSpinnerModule, MatPaginatorModule, A11yModule],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.scss'],
   
@@ -85,6 +87,12 @@ export class ProjectsComponent {
   showAllCompanyOptions = signal(false);
   showAllCustomerOptions = signal(false);
   showAllStatusOptions = signal(false);
+
+  currentPage = signal(this.projectsService.paginationData()?.currentPage || 1);
+  pageSize = this.projectsService.paginationData()?.pageSize || 10;
+  pagination = this.projectsService.paginationData;
+
+  AllProjects = this.projectsService.loadedProjects;
 
   filteredProjects = computed<Project[]>(() => {
     const hasFilters = !!(
@@ -151,13 +159,13 @@ export class ProjectsComponent {
   loadInitialData() {
     this.isFetching.set(true);
     this.error.set(null);
-    const initRequests = [
-      this.projectsService.loadAvailableProjects(),
+    forkJoin([
+      this.projectsService.loadProjects(this.currentPage(), this.pageSize),
       this.lookupsService.loadAvailableCompanies(),
       this.lookupsService.loadProjectStatuses(),
-      this.customersService.loadAvailableCustomers()
-    ];
-    forkJoin(initRequests).pipe(
+      this.customersService.loadAvailableCustomers(),
+      timer(1500)
+    ]).pipe(
       finalize(() => { timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
@@ -239,7 +247,7 @@ export class ProjectsComponent {
 
   onProjectCreated() {
     this.isAddingProject.set(false);
-    this.projectsService.loadAvailableProjects().subscribe({
+    this.projectsService.loadProjects(this.currentPage(), this.pageSize).subscribe({
       next: () => {
         this.showNotification('success', NotifyAction.Salvataggio, 'progetto');
       }
@@ -255,7 +263,7 @@ export class ProjectsComponent {
     this.error.set(null);
 
     timer(3000).pipe(
-      switchMap(() => this.projectsService.loadAvailableProjects()),
+      switchMap(() => this.projectsService.loadProjects(this.currentPage(), this.pageSize)),
       finalize(() => this.isFetching.set(false)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
@@ -277,11 +285,35 @@ export class ProjectsComponent {
   onProjectSaved() {
     this.editingProject.set(null);
     // Qui potresti chiamare un metodo del service per salvare le modifiche sul backend, ad esempio:
-    this.projectsService.loadAvailableProjects().subscribe({
+    this.projectsService.loadProjects(this.currentPage(), this.pageSize).subscribe({
       next: () => {
         this.showNotification('success', NotifyAction.Salvataggio, 'progetto');
       }
     });
+  }
+
+  loadPage(page: number) {
+    this.currentPage.set(page);
+    this.isFetching.set(true);
+    this.error.set(null);
+
+    this.projectsService.loadProjects(page, this.pageSize).pipe(
+      finalize(() => this.isFetching.set(false)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      error: (error: Error) => {
+        this.error.set(`Errore durante il caricamento dei progetti: ${error.message}`);
+        this.snackbarService.error(NotifyAction.Caricamento, 'progetti', 'Riprova')
+        .onAction().subscribe(() => {
+          this.loadPage(page);
+        });
+      }
+    });
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageSize = event.pageSize;
+    this.loadPage(event.pageIndex + 1);
   }
 
   showNotification(type: 'success' | 'error', action: NotifyAction, params?: string | string[]) {

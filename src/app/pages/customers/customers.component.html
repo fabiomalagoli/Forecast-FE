@@ -92,9 +92,18 @@
         }
       </tbody>
     </table>
-    <p class="count-footer">Numero clienti: {{ filteredCustomers().length }}</p>
+    <p class="count-footer">Numero clienti: {{ pagination()?.totalCount || 0 }}</p>
   </div>
 
+
+  <mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [showFirstLastButtons]="true"
+    (page)="onPageChange($event)">
+  </mat-paginator>
 
   <div class="bottom-actions">
     @if (editingCustomer()) {
@@ -104,7 +113,7 @@
         (modified)="saveEdits()" />
     }
     
-    @if (isAddingCustomerState) {
+    @if (isAddingCustomer()) {
       <app-new-customer 
         (cancel)="cancelCustomerAddition()" 
         (created)="addCustomer()" />

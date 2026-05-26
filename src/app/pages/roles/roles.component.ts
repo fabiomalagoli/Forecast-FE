@@ -84,8 +84,8 @@ export class RolesComponent implements OnInit {
     selectedRole = signal<any | null>(null);
     filteredSelectedEmployees = signal<any[]>([]);
 
-    currentPage = signal(1);
-    pageSize = 10;
+    currentPage = signal(this.rolesService.paginationData()?.currentPage || 1);
+    pageSize = this.rolesService.paginationData()?.pageSize || 10;
     pagination = this.rolesService.paginationData;
 
     constructor(private router: Router) {
@@ -121,9 +121,10 @@ export class RolesComponent implements OnInit {
         forkJoin({
             paginatedRoles: this.rolesService.loadJobRoles(this.currentPage(), this.pageSize),
             allRoles: this.rolesService.loadAllJobRoles(),
-            employees: this.employeesService.loadAllEmployees()
+            employees: this.employeesService.loadAllEmployees(),
+            hold: timer(1500) // Aggiunta di un timer per garantire che lo spinner sia visibile per almeno 1.5 secondi
         }).pipe(
-            finalize(() => { timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
+            finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
             takeUntilDestroyed(this.destroyRef)
         ).subscribe({
             next: () => {
@@ -154,12 +155,11 @@ export class RolesComponent implements OnInit {
         ).subscribe(value => {
         this.filterNameValue.set(value?.toLowerCase() || '');
         this.showAllRoleOptions.set(false);
-        this.chiudiPannello();
         });
 
         const ruoloSalvato = this.rolesService.lastRoleSelected();
         if (ruoloSalvato) {
-        this.mostraRisorsePerRuolo(ruoloSalvato);
+            this.mostraRisorsePerRuolo(ruoloSalvato);
         }
     }
 
@@ -171,28 +171,27 @@ export class RolesComponent implements OnInit {
     caricaPagina(page: number) {
         this.isFetching.set(true);
         this.currentPage.set(page);
-        this.chiudiPannello();
         this.error.set(null); 
 
         this.rolesService.loadJobRoles(page, this.pageSize).pipe(
-        finalize(() => this.isFetching.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-        ).subscribe({
-        next: () => {
-            const meta = this.pagination();
-            if (meta) {
-            this.currentPage.set(meta.currentPage);
-            this.pageSize = meta.pageSize;
-            }
-        },
-        error: (err) => {
-            this.error.set(err.message);
-            // Chiamata diretta al servizio con opzione "Riprova" configurata nell'azione della snackbar
-            this.snackbarService.error(NotifyAction.Caricamento, 'ruoli', 'Riprova')
-            .onAction().subscribe(() => {
-                this.caricaPagina(page);
-            });
-        },
+            finalize(() => this.isFetching.set(false)),
+            takeUntilDestroyed(this.destroyRef)
+            ).subscribe({
+            next: () => {
+                const meta = this.pagination();
+                if (meta) {
+                this.currentPage.set(meta.currentPage);
+                this.pageSize = meta.pageSize;
+                }
+            },
+            error: (err) => {
+                this.error.set(err.message);
+                // Chiamata diretta al servizio con opzione "Riprova" configurata nell'azione della snackbar
+                this.snackbarService.error(NotifyAction.Caricamento, 'ruoli', 'Riprova')
+                .onAction().subscribe(() => {
+                    this.caricaPagina(page);
+                });
+            },
         });
     }
 
@@ -276,7 +275,7 @@ export class RolesComponent implements OnInit {
         this.filterNameValue.set(roleName.toLowerCase());
         this.roleFilterDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
-        this.chiudiPannello();
+        this.closeSidePanel();
     }
 
     clearRoleFilter() {
@@ -284,7 +283,7 @@ export class RolesComponent implements OnInit {
         this.filterNameValue.set('');
         this.roleFilterDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
-        this.chiudiPannello();
+        this.closeSidePanel();
     }
 
     aggiungiRuolo() {
@@ -294,6 +293,12 @@ export class RolesComponent implements OnInit {
     }
 
     chiudiPannello() {
+        // this.selectedRoleId.set(null);
+        // this.selectedRole.set(null);
+        // this.filteredSelectedEmployees.set([]);
+    }
+
+    closeSidePanel() {
         this.selectedRoleId.set(null);
         this.selectedRole.set(null);
         this.filteredSelectedEmployees.set([]);

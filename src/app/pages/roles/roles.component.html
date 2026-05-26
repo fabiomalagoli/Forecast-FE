@@ -85,7 +85,7 @@
         <div class="right-column">
         @if (selectedRoleId() !== null) {
             <div class="side-panel">
-                <button class="btn-close-panel" (click)="chiudiPannello()">✖ Chiudi</button>
+                <button class="btn-close-panel" (click)="closeSidePanel()">✖ Chiudi</button>
                 <app-role-resources 
                   [risorseAssociate]="filteredSelectedEmployees()"
                   [ruoloSelezionato]="selectedRole()">
