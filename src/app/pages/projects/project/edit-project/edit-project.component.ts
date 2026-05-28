@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject, input, output, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, HostListener, OnInit, inject, input, output, signal, ChangeDetectorRef, effect, DestroyRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, timer } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Project, ProjectEmployee, ProjectRole } from '../../../../shared/models/project.model';
 import {
   buildProjectEmployeePayload,
@@ -10,6 +11,9 @@ import {
   normalizeProjectBudgetForForm,
 } from '../../../../shared/payloads/project.payloads';
 import { TextInputComponent } from '../../../../shared/text-input/text-input.component';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
+import { Role } from '../../../../shared/models/role.model';
+import { Employee } from '../../../../shared/models/employee.model';
 import {
   buildEditableProjectHeaders,
   calculateProjectTotals,
@@ -38,11 +42,13 @@ import { EmployeesService } from '../../../../shared/services/employees.service'
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { ProjectsService } from '../../../../shared/services/projects.service';
 import { RolesService } from '../../../../shared/services/roles.service';
+import { AssignSingleComponent } from '../assign-single/assign-single.component';
+import { Company } from '../../../../shared/models/company.model';
 
 @Component({
   selector: 'app-modifica-progetto',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, TextInputComponent], // Sostituito FormsModule con ReactiveFormsModule
+  imports: [ReactiveFormsModule, CommonModule, TextInputComponent, AssignSingleComponent], // Sostituito FormsModule con ReactiveFormsModule
   templateUrl: './edit-project.component.html',
 })
 export class EditProjectComponent implements OnInit {
@@ -53,6 +59,14 @@ export class EditProjectComponent implements OnInit {
   private employeesService = inject(EmployeesService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+  showAssignPanel = signal(false);
+  assignRole = signal<Role | null>(null);
+  assignList = signal<Employee[]>([]);
+  assignSelectedEmployeeId = signal<string | null>(null);
+  assignSelectedRoleId = signal<string | null>(null);
+  assignSelectedLevel = signal<string | null>(null);
+  hasUnassignedInProject = signal(false);
 
   companiesList = signal<any[]>([]);
   customersList = signal<any[]>([]);
@@ -65,6 +79,7 @@ export class EditProjectComponent implements OnInit {
   pmFilterValue = signal('');
 
   selectedProjectToEdit = input.required<Project>();
+  hasMadeInlineAssignment = signal(false);
 
   saved = output<Project>();
   isSaving = signal(false);
@@ -80,10 +95,20 @@ export class EditProjectComponent implements OnInit {
   statusMessage: { text: string; type: 'success' | 'error' } | null = null;
   dateRangeError = false;
 
+  activeAssignIndex = signal<number | null>(null);
+
   readonly headers = buildEditableProjectHeaders();
 
   constructor() {
     this.initForm();
+    this.setupEmployeesEffect();
+  }
+
+  private setupEmployeesEffect() {
+    effect(() => {
+      const _ = this.employeesList();
+      this.recomputeUnassignedFlag();
+    });
   }
 
   initForm() {
@@ -113,7 +138,6 @@ export class EditProjectComponent implements OnInit {
     };
 
     forkJoin(lookupRequests).subscribe((lookups) => {
-      setTimeout(() => {
         this.companiesList.set(lookups.companies);
         this.customersList.set(lookups.customers);
         this.projectStatusesList.set(lookups.statuses);
@@ -133,9 +157,140 @@ export class EditProjectComponent implements OnInit {
 
         // Attiviamo i ricalcoli reattivi solo dopo aver popolato il form
         this.setupReactiveCalculations();
-
         this.saveInitialSnapshot();
+        this.recomputeUnassignedFlag();
       });
+  }
+
+  openAssignPanel() {
+    console.log('[EditProject] openAssignPanel called');
+    const allRoles = this.jobRolesList() || [];
+    const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
+    const roleForPanel: Role = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
+
+    const projectEmps = this.projectEmployees.getRawValue() || [];
+    const projectEmpIds = projectEmps.map((pe: any) => (pe.employeeId || pe.id) && String(pe.employeeId || pe.id)).filter(Boolean);
+    const allEmps = this.employeesList() || [];
+    const assignedUnassignedInProject = allEmps.filter(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned' || (e.jobRole || '').toString().toLowerCase() === 'unassigned'));
+
+    this.assignRole.set(roleForPanel);
+    this.assignList.set(assignedUnassignedInProject);
+    this.assignSelectedEmployeeId.set(null);
+    this.assignSelectedRoleId.set(null);
+    this.assignSelectedLevel.set(null);
+    this.showAssignPanel.set(true);
+  }
+
+  chooseAssignEmployee(id: string | null) {
+    this.assignSelectedEmployeeId.set(id);
+    if (!id) return;
+    const e = (this.employeesList() || []).find(x => String(x.id) === String(id));
+    if (e) {
+      this.assignSelectedLevel.set(e.jobRoleLevel || null);
+      this.assignSelectedRoleId.set(e.jobRole || null);
+    }
+  }
+
+  saveAssignSingle() {
+    const empId = this.assignSelectedEmployeeId();
+    if (!empId) return;
+    const emp = (this.employeesList() || []).find(x => String(x.id) === String(empId));
+    if (!emp) return;
+
+    const roleId = this.assignSelectedRoleId();
+    const level = this.assignSelectedLevel() || 'Junior';
+
+    const payload = buildEmployeePayload({ ...emp, jobRoleLevel: level, jobRole: roleId }, {
+      selectedRoleId: roleId,
+      levels: this.jobRoleLevelsList(),
+      companies: this.companiesList(),
+    });
+
+    const uiFallback = buildEmployeeUiFallback({ ...emp, jobRole: roleId ? (this.jobRolesList().find(r => String(r.id) === String(roleId))?.name || '') : '', jobRoleLevel: level }, emp.id);
+
+    this.employeesService.updateEmployee(emp.id, payload, uiFallback).subscribe({
+      next: () => {
+        this.employeesService.loadAllEmployees().subscribe({ next: (emps) => { this.employeesList.set(emps); this.recomputeUnassignedFlag(); } });
+        this.showAssignPanel.set(false);
+      },
+      error: () => {
+        this.statusMessage = { text: 'Errore durante l\'aggiornamento', type: 'error' };
+      }
+    });
+  }
+
+  isEmployeeUnassigned(employeeId: string): boolean {
+    if(!employeeId) return false;
+    const emp = this.employeesList().find(e => String(e.id) === String(employeeId));
+    return emp ? (emp.jobRole || '').toString().toLowerCase() === 'unassigned' : false;
+  }
+
+  closeAssignPanel() {
+    this.activeAssignIndex.set(null);
+  }
+
+  recomputeUnassignedFlag() {
+    const projectEmpIds = (this.projectEmployees.getRawValue() || []).map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);
+    const allEmps = this.employeesList() || [];
+    const has = allEmps.some(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
+    this.hasUnassignedInProject.set(has);
+  }
+
+
+  onAssignSaved(updated: Employee[]) {
+    this.activeAssignIndex.set(null);
+    let updatedProjectEmployee: any = null;
+    
+    if (updated && updated.length > 0) {
+      const updatedEmp = updated[0];
+      const controls = this.projectEmployees.controls;
+      
+      for (let i = 0; i < controls.length; i++) {
+        const ctrl = controls[i];
+        const ctrlId = ctrl.get('employeeId')?.value || ctrl.get('id')?.value;
+        
+        if (String(ctrlId) === String(updatedEmp.id)) {
+          ctrl.patchValue({
+            jobRole: this.resolveLookupId(this.jobRolesList(), updatedEmp.jobRole),
+            jobRoleLevel: this.resolveLookupId(this.jobRoleLevelsList(), updatedEmp.jobRoleLevel),
+          });
+          ctrl.markAsDirty();
+          updatedProjectEmployee = ctrl.getRawValue();
+          break;
+        }
+      }
+    }
+
+    if (updatedProjectEmployee) {
+      this.persistProjectEmployeeAssignment(updatedProjectEmployee);
+    }
+
+    this.employeesService.loadAllEmployees().subscribe({
+      next: (emps) => {
+        this.employeesList.set(emps);
+        this.recomputeUnassignedFlag();
+        
+        this.hasMadeInlineAssignment.set(true); 
+        this.editProjectForm.markAsDirty();
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private persistProjectEmployeeAssignment(projectEmployee: any) {
+    const projectId = this.selectedProjectToEdit().id;
+    const projectEmployeeId = getProjectEmployeeRequestId(projectEmployee);
+    const payload = buildProjectEmployeePayload(projectEmployee);
+
+    this.projectsService.updateProjectEmployee(projectId, projectEmployeeId, payload).subscribe({
+      next: () => {
+        this.saveInitialSnapshot();
+        this.showNotification('Ruolo della risorsa aggiornato anche nel progetto.', 'success');
+      },
+      error: (error) => {
+        console.error('Errore durante l\'aggiornamento della risorsa nel progetto:', error);
+        this.showNotification('Risorsa aggiornata, ma errore nel salvataggio del ruolo nel progetto.', 'error');
+      },
     });
   }
 
@@ -227,20 +382,22 @@ export class EditProjectComponent implements OnInit {
   }
 
   isChanged(): boolean {
+    if (this.hasMadeInlineAssignment()) return true;
+
     const currentFormValue = this.editProjectForm.getRawValue();
     return getProjectFormComparableSnapshot(currentFormValue) !== this.originalComparableSnapshot;
   }
 
-  hasValidRoles(): boolean {
+hasValidRoles(): boolean {
     const roles = this.projectJobRoles.getRawValue();
     if (!roles || roles.length === 0) return true;
-    return roles.every((role: any) => isProjectRoleComplete(role));
+    return roles.every((role: any) => isProjectRoleComplete(role) && !this.getWinProbabilityError(role));
   }
 
   hasValidResources(): boolean {
     const employees = this.projectEmployees.getRawValue();
     if (!employees || employees.length === 0) return true;
-    return employees.every((employee: any) => isProjectEmployeeComplete(employee));
+    return employees.every((employee: any) => isProjectEmployeeComplete(employee) && !this.getWinProbabilityError(employee));
   }
 
   isSubmitDisabled(): boolean {
@@ -275,11 +432,11 @@ submit() {
   const deleteCalls: any[] = [];
   const saveCalls: any[] = [];
 
-  const originalRoles = this.selectedProjectToEdit().projectJobRoles || [];
+  const originalRoles = this.initialFormData?.projectJobRoles || [];
   const currentRoles = formValue.projectJobRoles || [];
   const rolesToRemove = getRemovedProjectItems(originalRoles, currentRoles);
 
-  const originalEmployees = this.selectedProjectToEdit().projectEmployees || [];
+  const originalEmployees = this.initialFormData?.projectEmployees || [];
   const currentEmployees = formValue.projectEmployees || [];
   const employeesToRemove = getRemovedProjectItems(originalEmployees, currentEmployees);
 
@@ -354,6 +511,7 @@ private executeSaves(saveCalls: any[], formValue: any) {
 // Funzione di supporto per concludere la procedura
 private finalizeSubmit(formValue: any) {
   this.isSaving.set(false);
+  this.hasMadeInlineAssignment.set(false);
   this.showNotification('Progetto e dettagli aggiornati con successo!', 'success');
   this.saved.emit(formValue);
   this.saveInitialSnapshot();
@@ -462,21 +620,37 @@ private finalizeSubmit(formValue: any) {
   }
 
   private isTemporaryRoleId(id: string): boolean {
-    return isTemporaryProjectItem(id, this.selectedProjectToEdit().projectJobRoles as ProjectRole[]);
+    return isTemporaryProjectItem(id, this.initialFormData?.projectJobRoles as ProjectRole[]);
   }
 
   private isTemporaryEmployeeId(id: string): boolean {
-    return isTemporaryProjectItem(id, this.selectedProjectToEdit().projectEmployees as ProjectEmployee[]);
+    return isTemporaryProjectItem(id, this.initialFormData?.projectEmployees as ProjectEmployee[]);
   }
 
   private saveInitialSnapshot() {
     const currentVal = this.editProjectForm.getRawValue();
+    this.initialFormData = JSON.parse(JSON.stringify(currentVal));
     this.originalComparableSnapshot = getProjectFormComparableSnapshot(currentVal);
   }
 
   private showNotification(text: string, type: 'success' | 'error') {
     this.statusMessage = { text, type };
-    setTimeout(() => this.statusMessage = null, 3000);
+    timer(3000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.statusMessage = null;
+    });
+  }
+
+  private resolveLookupId(options: any[], value: string | null | undefined): string | null {
+    if (!value) return null;
+
+    const valueAsString = String(value);
+    const normalizedValue = valueAsString.trim().toLowerCase();
+    const match = options.find((option) =>
+      String(option.id || option.Id) === valueAsString ||
+      String(option.name || option.Name || '').trim().toLowerCase() === normalizedValue
+    );
+
+    return match ? (match.id || match.Id) : valueAsString;
   }
 
   @HostListener('document:mousedown', ['$event'])

@@ -1,0 +1,32 @@
+<div class="assign-single-panel filter-bar" style="margin-top: 0.5rem; padding: 1rem; gap: 1rem; flex-direction: column; align-items: flex-start;">
+    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.95rem; font-weight: 600; color: #333;">Configura Ruolo e Livello</h4>
+
+    <form [formGroup]="assignSingleEmployeeForm" style="width: 100%; display: flex; flex-direction: column; gap: 1rem;">       
+        <div class="filter-group">
+            <label>Ruolo Progetto</label>
+            <select [value]="selectedRoleId() ?? ''" (change)="selectedRoleId.set($any($event.target).value || null)">
+                <option value="">Seleziona ruolo...</option>
+                @for (r of availableRoles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Livello Esperienza</label>
+            <select [value]="selectedLevel() ?? ''" (change)="selectedLevel.set($any($event.target).value || null)">
+                <option value="">Seleziona livello...</option>
+                @for (l of levels(); track l.id) { <option [value]="l.name">{{ l.name }}</option> }
+            </select>
+        </div>
+
+        <div class="actions" style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+            <button appButton class="btn-primary" type="button" (click)="save()" [class.btn--disabled]="isSaving()" style="height: 38px; padding: 0 1.25rem;">Salva</button>
+            <button appButton type="button" (click)="doCancel()" style="height: 38px; padding: 0 1.25rem;">Annulla</button>
+        </div>
+    </form>
+
+    @if(statusMessage) {
+        <div class="toast-msg" [class.success]="statusMessage.type === 'success'" [class.error]="statusMessage.type === 'error'">
+            {{ statusMessage.text }}
+        </div>
+    }
+</div>

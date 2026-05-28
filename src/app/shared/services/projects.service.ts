@@ -1,7 +1,8 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, concatMap, map, tap, throwError, of, Observable } from 'rxjs';
+import { catchError, concatMap, forkJoin, map, switchMap, tap, throwError, of, Observable } from 'rxjs';
 import { Project } from '../models/project.model';
+import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { toBackendDate, toNumber, normalizeWinProbability } from '../utils/shared-utils';
@@ -266,10 +267,14 @@ export class ProjectsService {
     );
   }
 
-  updateProjectEmployee(projectId: string, employeeId: string, data: any) {
-    return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(employeeId)}`, data).pipe(
+  updateProjectEmployee(projectId: string, projectEmployeeId: string, data: any) {
+    return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(projectEmployeeId)}`, data).pipe(
       tap(() => {
-        this.projectEmployees.update(prev => prev.map(employee => employee.id === employeeId ? { ...employee, ...data } : employee));
+        this.projectEmployees.update(prev => prev.map(employee =>
+          employee.id === projectEmployeeId
+            ? { ...employee, ...data }
+            : employee
+        ));
       }),
       catchError(error => {
         this.errorService.showError('Errore durante l\'aggiornamento della risorsa di progetto.');
@@ -278,19 +283,65 @@ export class ProjectsService {
     );
   }
 
-  replaceProjectEmployee(projectId: string, employeeId: string, data: any) {
-    return this.deleteProjectEmployee(projectId, employeeId).pipe(
+  replaceProjectEmployee(projectId: string, projectEmployeeId: string, data: any) {
+    return this.deleteProjectEmployee(projectId, projectEmployeeId).pipe(
       concatMap(() => this.addProjectEmployee(projectId, data))
     );
   }
 
-  deleteProjectEmployee(projectId: string, employeeId: string) {
-    return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(employeeId)}`).pipe(
-      tap(() => this.projectEmployees.update(prev => prev.filter(e => e.id !== employeeId))),
+  updateProjectEmployeesForEmployeeRole(
+    employee: Employee,
+    jobRoleId: string | null | undefined,
+    jobRoleLevelId: string | null,
+  ) {
+    return this.loadAvailableProjects().pipe(
+      switchMap((projects) => {
+        const updates = projects.flatMap((project) => {
+          const matchingProjectEmployees = (project.projectEmployees || []).filter((projectEmployee: any) =>
+            this.isProjectEmployeeForEmployee(projectEmployee, employee)
+          );
+
+          return matchingProjectEmployees.map((projectEmployee: any) =>
+            this.updateProjectEmployee(project.id, projectEmployee.id, {
+              employeeId: employee.id,
+              jobRoleId: jobRoleId || null,
+              jobRoleLevelId,
+              dailyCost: projectEmployee.dailyCost || 0,
+              daysSpent: projectEmployee.daysSpent || 0,
+              winProbability: projectEmployee.winProbability || 0,
+              monthlyManagements: projectEmployee.monthlyManagements || [],
+            })
+          );
+        });
+
+        return updates.length ? forkJoin(updates) : of([]);
+      }),
+    );
+  }
+
+  deleteProjectEmployee(projectId: string, projectEmployeeId: string) {
+    return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(projectEmployeeId)}`).pipe(
+      tap(() => this.projectEmployees.update(prev => prev.filter(e => e.id !== projectEmployeeId))),
       catchError(error => {
         this.errorService.showError('Errore durante la rimozione della risorsa dal progetto.');
         return throwError(() => buildEntityError(error, 'risorsa', 'rimozione'));
       })
     );
+  }
+
+  private isProjectEmployeeForEmployee(projectEmployee: any, employee: Employee): boolean {
+    if (projectEmployee.employeeId && String(projectEmployee.employeeId) === String(employee.id)) {
+      return true;
+    }
+
+    const projectEmployeeName = this.normalizeEmployeeName(projectEmployee.employee || '');
+    const nameSurname = this.normalizeEmployeeName(`${employee.name} ${employee.surname}`);
+    const surnameName = this.normalizeEmployeeName(`${employee.surname} ${employee.name}`);
+
+    return projectEmployeeName === nameSurname || projectEmployeeName === surnameName;
+  }
+
+  private normalizeEmployeeName(value: string): string {
+    return value.toLowerCase().replace(/\s+/g, '');
   }
 }

@@ -1,0 +1,71 @@
+@use 'variables' as *;
+
+:host {
+  display: block;
+  flex: 0 0 clamp(220px, 15vw, 280px);
+  align-self: stretch;
+
+  // Nesting della media query direttamente dentro il selettore principale
+  @media (max-width: 768px) {
+    flex-basis: 88px;
+  }
+}
+
+.sidebar-container {
+  width: clamp(220px, 15vw, 280px);
+  min-height: 100dvh; /* Occupa tutta l'altezza visibile */
+  height: 100%;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    width: 88px;
+    padding-inline: 0.75rem !important;
+
+    .fs-4 {
+      font-size: 0;
+    }
+  }
+}
+
+.sidebar-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+  color: $text-black; 
+
+  @media (max-width: 768px) {
+    margin-right: 0 !important;
+  }
+}
+
+/* NAV PILLS */
+.nav-pills {
+  .nav-link {
+    &.active,
+    &.show > .nav-link {
+      background-color: $color-primary-hover !important;
+      color: $text-black !important;
+      font-weight: bold;
+    }
+
+    // Effetto hover per le opzioni non attive
+    &:not(.active):hover {
+      background-color: rgba($color-primary-hover, 0.15); // Sfrutta la variabile
+      color: #ffa733 !important; 
+    }
+
+    // Effetto al click
+    &:active {
+      background-color: $color-primary-active;
+      transform: scale(0.98);
+    }
+
+    @media (max-width: 768px) {
+      font-size: 0;
+      display: flex;
+      justify-content: center;
+    }
+  }
+}

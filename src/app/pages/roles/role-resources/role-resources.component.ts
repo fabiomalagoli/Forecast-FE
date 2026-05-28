@@ -5,10 +5,11 @@ import { Employee } from '../../../shared/models/employee.model';
 import { EditEmployeeForRoleComponent } from './edit-employee-for-role/edit-employee-for-role.component';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../shared/button/button';
-import { finalize } from 'rxjs';
+import { finalize, timer } from 'rxjs';
 import { Location } from '@angular/common';
 import { EmployeesService } from '../../../shared/services/employees.service';
 import { RolesService } from '../../../shared/services/roles.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-role-resources',
@@ -116,7 +117,9 @@ export class RoleResourcesComponent {
 
     showNotification(text: string, type: 'success' | 'error') {
         this.statusMessage.set({ text, type });
-        setTimeout(() => this.statusMessage.set(null), 3000);
+        timer(3000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            this.statusMessage.set(null);
+        });
     }
 
     apriDettagliRisorsa(r: Employee) {

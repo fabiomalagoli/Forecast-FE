@@ -27,8 +27,7 @@
             ],
             "styles": [
               "src/material-theme.scss",
-              "src/styles.scss",
-              "src/app/shared/progetto-form.css"
+              "src/styles.scss"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [

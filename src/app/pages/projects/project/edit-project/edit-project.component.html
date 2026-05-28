@@ -4,7 +4,7 @@
   <div class="np-panel">
     <h2 class="np-title">Modifica progetto</h2>
 
-    <form (ngSubmit)="submit()" [formGroup]="editProjectForm" class="np-form--grid">
+      <form (ngSubmit)="submit()" [formGroup]="editProjectForm" class="np-form--grid">
       @for (h of headers; track h.key) {
         <div class="np-field--grid">
           <app-text-input>
@@ -148,36 +148,70 @@
           </div>
           
           @for (empCtrl of projectEmployees.controls; track empCtrl; let i = $index) {
+            
             <div class="resource-grid-row" [formGroupName]="i">
               <div class="np-resource-field">
                 <select class="np-input-direct" formControlName="employeeId" (change)="onFieldChange()">
                   <option [ngValue]="null" disabled selected>Scegli una risorsa...</option>
-                  @for (opt of employeesList(); track opt.id) { <option [value]="opt.id">{{ opt.name }} {{ opt.surname }}</option> }
+                  @for (opt of employeesList(); track opt.id) { 
+                    <option [value]="opt.id">{{ opt.name }} {{ opt.surname }}</option> 
+                  }
                 </select>
                 @if (empCtrl.get('employeeId')?.invalid && (empCtrl.get('employeeId')?.dirty || attemptedSubmit)) {
                   <span class="error">*obbligatorio</span>
                 }
               </div>              
+              
               <div class="np-resource-field">
                 <input type="number" class="np-input-direct np-input--currency" formControlName="dailyCost" min="0" (input)="onFieldChange()" />
                 @if (empCtrl.get('dailyCost')?.invalid && (empCtrl.get('dailyCost')?.dirty || attemptedSubmit)) {
                   <span class="error">*non valido</span>
                 }
               </div>
+
               <div class="np-resource-field">
                 <input type="number" class="np-input-direct" formControlName="daysSpent" min="0" (input)="onFieldChange()" />
                 @if (empCtrl.get('daysSpent')?.invalid && (empCtrl.get('daysSpent')?.dirty || attemptedSubmit)) {
                   <span class="error">*non valido</span>
                 }
               </div>
+
               <div class="np-resource-field">
                 <input type="text" inputmode="decimal" class="np-input-direct" formControlName="winProbability" (input)="onFieldChange()" />
                 @if ((empCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(empCtrl.value)) {
                   <span class="error">*valore errato</span>
                 }
               </div>
+
               <button type="button" class="btn-remove" (click)="removeEmployee(i)">×</button>
             </div>
+
+            @if (isEmployeeUnassigned(empCtrl.get('employeeId')?.value)) {
+              <div class="unassigned-row-container" style="grid-column: 1 / -1; margin: 0.5rem 0 1.5rem 0; padding: 0 0.5rem;">
+                
+                @if (activeAssignIndex() !== i) {
+                  <div class="banner warning" style="margin: 0; padding: 0.6rem 1rem; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; background-color: #fff3cd; border: 1px solid #ffeeba;">
+                    <span style="font-size: 0.875rem; color: #856404; font-weight: 500;">⚠️ Questa risorsa risulta <strong>Unassigned</strong> nel sistema.</span>
+                    <button appButton class="btn-small" type="button" style="padding: 0.3rem 0.85rem; font-size: 0.8rem; background-color: #ffc107; border: none; color: #212529; font-weight: 600;"
+                      (click)="activeAssignIndex.set(i); assignSelectedEmployeeId.set(empCtrl.get('employeeId')?.value)">
+                      Assegna Ruolo
+                    </button>
+                  </div>
+                } @else {
+                  <app-assign-single
+                    [employees]="employeesList()"
+                    [levels]="jobRoleLevelsList()"
+                    [roles]="jobRolesList()"
+                    [companies]="companiesList()"
+                    [selectedEmployeeIdFromForm]="assignSelectedEmployeeId()"
+                    (cancel)="closeAssignPanel()"
+                    (saved)="onAssignSaved($event)">
+                  </app-assign-single>
+                }
+
+              </div>
+            }
+
           }
         }
       </div>
@@ -190,6 +224,7 @@
       <div class="actions">
         <button
           type="submit"
+          [disabled]="isSubmitDisabled()"
           [attr.aria-disabled]="isSubmitDisabled()"
           [class.btn--disabled]="isSubmitDisabled()"
           (click)="onSubmitClick($event)">

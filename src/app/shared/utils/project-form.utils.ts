@@ -57,7 +57,7 @@ export function normalizeProjectFormData(
   );
 
   formData.projectEmployees = (formData.projectEmployees || []).map((employee: any) =>
-    normalizeProjectEmployeeForForm(employee, lookups.employees),
+    normalizeProjectEmployeeForForm(employee, lookups.employees, lookups.roles, lookups.levels),
   );
 
   formData.startDate = toDateInputValue(formData.startDate);
@@ -289,6 +289,8 @@ function getComparableProjectEmployees(employees: any[]): any[] {
 function getComparableProjectEmployee(employee: any): any {
   return {
     employeeId: employee.employeeId || null,
+    jobRole: employee.jobRole || null,
+    jobRoleLevel: employee.jobRoleLevel || null,
     dailyCost: normalizeComparableNumber(parseCurrencyNumber(employee.dailyCost)),
     daysSpent: normalizeComparableNumber(Number(employee.daysSpent || 0)),
     winProbability: normalizeComparableNumber(parseDecimalNumber(employee.winProbability)),
@@ -316,16 +318,29 @@ function normalizeProjectRoleForForm(role: ProjectRole, roles: LookupOption[], l
   };
 }
 
-function normalizeProjectEmployeeForForm(employee: any, employees: LookupOption[]): any {
+function normalizeProjectEmployeeForForm(
+  employee: any,
+  employees: LookupOption[],
+  roles: LookupOption[],
+  levels: LookupOption[],
+): any {
+  const normalizedEmployee = {
+    ...employee,
+    jobRole: isUuid(employee.jobRole) ? employee.jobRole : findOptionIdByName(roles, employee.jobRole),
+    jobRoleLevel: isUuid(employee.jobRoleLevel)
+      ? employee.jobRoleLevel
+      : findOptionIdByName(levels, employee.jobRoleLevel),
+    daysSpent: Number(employee.daysSpent || 0),
+  };
+
   if (isUuid(employee.employeeId)) {
-    return { ...employee, daysSpent: Number(employee.daysSpent || 0) };
+    return normalizedEmployee;
   }
 
   return {
-    ...employee,
+    ...normalizedEmployee,
     employeeId: findEmployeeIdByFullName(employees, employee.employee),
     dailyCost: employee.dailyCost || 0,
-    daysSpent: Number(employee.daysSpent || 0),
     winProbability: employee.winProbability || 0,
   };
 }

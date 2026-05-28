@@ -4,6 +4,42 @@
   <div class="np-panel">
     <h2 class="np-title">{{ newProjectForm.value.id ? 'Modifica' : 'Nuovo' }} progetto</h2>
 
+    <!-- Banner e form di assegnazione risorse (compare sopra il form) -->
+    @if (showAssignPanel()) {
+      <div class="assign-single-panel card">
+        <h3>Assegna Ruolo (singola risorsa)</h3>
+
+        <div class="field-row">
+          <label>Risorsa</label>
+          <select [value]="assignSelectedEmployeeId() ?? ''" (change)="chooseAssignEmployee($any($event.target).value || null)">
+            <option value="">Seleziona risorsa...</option>
+            @for (e of assignList(); track e.id) { <option [value]="e.id">{{ e.name }} {{ e.surname }}</option> }
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label>Ruolo</label>
+          <select [value]="assignSelectedRoleId() ?? ''" (change)="assignSelectedRoleId.set($any($event.target).value || null)">
+            <option value="">Seleziona ruolo...</option>
+            @for (r of jobRolesList(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label>Livello</label>
+          <select [value]="assignSelectedLevel() ?? ''" (change)="assignSelectedLevel.set($any($event.target).value || null)">
+            <option value="">Seleziona livello...</option>
+            @for (l of jobRoleLevelsList(); track l.id) { <option [value]="l.name">{{ l.name }}</option> }
+          </select>
+        </div>
+
+        <div class="actions">
+          <button appButton class="btn-primary" type="button" (click)="saveAssignSingle()">Salva</button>
+          <button appButton type="button" (click)="closeAssignPanel()">Annulla</button>
+        </div>
+      </div>
+    } <!-- TO-DO: implementare il component giusto per il form ed il banner -->
+
     <form (ngSubmit)="submit()" [formGroup]="newProjectForm" class="np-form--grid">
       @for (h of headers; track h.key) {
         <div class="np-field--grid">
@@ -145,8 +181,19 @@
       <div class="np-resources-section" formArrayName="projectEmployees">
         <div class="resources-header">
           <h3 class="np-title-sm">Risorse</h3>
-          <button type="button" class="btn-add-resource" (click)="addEmployee()">+ Aggiungi Risorsa</button>
+           <button type="button" class="btn-add-resource" (click)="addEmployee()">+ Aggiungi Risorsa</button>
         </div>
+        @if (!showAssignPanel()) {
+          @if (hasUnassignedInProject()) {
+            <div class="banner warning">
+              <strong>Attenzione:</strong> Ci sono risorse non assegnate ("Unassigned") in questo progetto.
+              <div class="banner-actions">
+                <button appButton class="btn-small" type="button" (click)="openAssignPanel()">Apri Assegna Risorse</button>
+                <button appButton class="btn-small btn-outline" type="button" (click)="onCancel()">Annulla</button>
+              </div>
+            </div>
+          }
+        }
         
         @if (projectEmployees.length > 0) {
           <div class="resource-grid-header">

@@ -1,7 +1,7 @@
 import { Component, input, output, OnInit, inject, signal, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, switchMap } from 'rxjs';
 
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { Employee } from '../../../shared/models/employee.model'; 
@@ -9,6 +9,7 @@ import { EMPLOYEES_HEADERS } from '../employee.headers';
 import { RolesService } from '../../../shared/services/roles.service';
 import { LookupsService } from '../../../shared/services/lookups.service';
 import { EmployeesService } from '../../../shared/services/employees.service';
+import { ProjectsService } from '../../../shared/services/projects.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../shared/payloads/employee.payloads';
 import { normalizeEmployeeForForm } from '../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../shared/utils/project-form.utils';
@@ -23,6 +24,7 @@ export class EditEmployeeComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private rolesService = inject(RolesService);
     private lookupsService = inject(LookupsService);
+    private projectsService = inject(ProjectsService);
     private fb = inject(FormBuilder);
     
     selectedEmployeeToEdit = input.required<Employee>();
@@ -177,9 +179,18 @@ export class EditEmployeeComponent implements OnInit {
             companies: this.companiesList(),
         });
 
-        const modifiedEmployee = {...this.editEmployeeForm.value} as Employee;
+        const modifiedEmployee = {
+            ...this.editEmployeeForm.value,
+            id: this.selectedEmployeeToEdit().id,
+        } as Employee;
 
-        this.employeesService.updateEmployee(this.selectedEmployeeToEdit().id, backendPayload, modifiedEmployee).subscribe({
+        this.employeesService.updateEmployee(this.selectedEmployeeToEdit().id, backendPayload, modifiedEmployee).pipe(
+            switchMap(() => this.projectsService.updateProjectEmployeesForEmployeeRole(
+                modifiedEmployee,
+                backendPayload.jobRoleId,
+                backendPayload.jobRoleLevelId,
+            )),
+        ).subscribe({
             next: () => {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;

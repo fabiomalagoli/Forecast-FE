@@ -56,9 +56,13 @@ export class RolesComponent implements OnInit {
         const AllRolesData = this.listAllJobRoles() ?? [];
         const filtro = this.filterNameValue().toLowerCase();
 
-        if (!filtro) return rolesData;
+        // Esclude'Unassigned' dalla lista dei ruoli principali
+        const visibleRoles = rolesData.filter(r => (r?.name || '').toString().trim().toLowerCase() !== 'unassigned');
 
-        return AllRolesData.filter(r => r.name.toLowerCase().includes(filtro));
+        if (!filtro) return visibleRoles;
+
+        // Coi filtri, prendiamo comunque TUTTI i ruoli
+        return AllRolesData.filter(r => (r?.name || '').toString().toLowerCase().includes(filtro));
     });
 
     filterNameValue = signal<string>('');
@@ -88,6 +92,16 @@ export class RolesComponent implements OnInit {
     pageSize = this.rolesService.paginationData()?.pageSize || 10;
     pagination = this.rolesService.paginationData;
 
+    assigningRoleEmployees = computed<any[]>(() => {
+    const ruolo = this.assigningRole();
+    if (!ruolo) return [];
+
+    const tutteLeRisorse = this.employeesService.loadedAllEmployees() ?? [];
+        return tutteLeRisorse.filter(risorsa => 
+            risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
+        );
+    });
+
     constructor(private router: Router) {
         effect(() => {
         console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.roles());
@@ -98,9 +112,8 @@ export class RolesComponent implements OnInit {
         const ruolo = this.selectedRole();
         
         if (ruolo) {
-            const risorseFiltrate = employees.filter(risorsa => 
-            risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
-            );
+            const risorseFiltrate = (employees || [])
+                .filter(risorsa => risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name);
             this.filteredSelectedEmployees.set(risorseFiltrate);
         }
         });
@@ -232,12 +245,10 @@ export class RolesComponent implements OnInit {
     mostraRisorsePerRuolo(ruolo: any) {
         this.selectedRoleId.set(ruolo.id);
         this.selectedRole.set(ruolo);
-        
-        const tutteLeRisorse = this.employeesService.loadedAllEmployees();
-        const risorseFiltrate = tutteLeRisorse.filter(risorsa => 
-        risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
-        );
-        
+        const tutteLeRisorse = this.employeesService.loadedAllEmployees() ?? [];
+        const risorseFiltrate = tutteLeRisorse
+            .filter(risorsa => risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name);
+
         this.filteredSelectedEmployees.set(risorseFiltrate);
     }
 
@@ -321,9 +332,9 @@ export class RolesComponent implements OnInit {
 
         const ruolo = this.selectedRole();
         if (ruolo) {
-        const filteredEmployees = this.employeesService.loadedAllEmployees().filter(risorsa =>
-            risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
-        );
+        const filteredEmployees = (this.employeesService.loadedAllEmployees() || [])
+            .filter(r => r.isActive !== false)
+            .filter(risorsa => risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name);
         this.filteredSelectedEmployees.set(filteredEmployees);
         }
     }

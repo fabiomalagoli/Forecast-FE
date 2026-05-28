@@ -30,9 +30,12 @@ export interface ProjectJobRolePayload {
 
 export interface ProjectEmployeePayload {
   employeeId: string | null;
+  jobRoleId?: string | null;
+  jobRoleLevelId?: string | null;
   dailyCost: number;
   daysSpent: number;
   winProbability: number;
+  monthlyManagements?: any[];
 }
 
 export function buildProjectUpdatePayload(
@@ -74,12 +77,26 @@ export function buildProjectJobRolePayload(role: any): ProjectJobRolePayload {
 }
 
 export function buildProjectEmployeePayload(employee: any): ProjectEmployeePayload {
-  return {
+  const payload: ProjectEmployeePayload = {
     employeeId: employee.employeeId,
     dailyCost: parseCurrencyNumber(employee.dailyCost),
     daysSpent: Number(employee.daysSpent),
     winProbability: parseDecimalNumber(employee.winProbability),
   };
+
+  if (Object.prototype.hasOwnProperty.call(employee, 'jobRole')) {
+    payload.jobRoleId = employee.jobRole || null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(employee, 'jobRoleLevel')) {
+    payload.jobRoleLevelId = employee.jobRoleLevel || null;
+  }
+
+  if (Array.isArray(employee.monthlyManagements)) {
+    payload.monthlyManagements = employee.monthlyManagements;
+  }
+
+  return payload;
 }
 
 export function normalizeProjectBudgetForForm(formData: any): void {

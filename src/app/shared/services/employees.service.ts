@@ -104,6 +104,10 @@ export class EmployeesService {
     );
   }
 
+  updateEmployeeLocal(employee: Employee) {
+    this.upsertEmployee(employee);
+  }
+
   addEmployee(payload: any) {
     return this.httpClient.post(`${environment.apiUrl}/employees`, payload).pipe(
       tap((created: any) => {
@@ -121,7 +125,7 @@ export class EmployeesService {
   updateEmployee(id: string, payload: any, uiFallback: Employee) {
     return this.httpClient.put(`${environment.apiUrl}/employees/${encodeURIComponent(id)}`, payload).pipe(
       tap(() => {
-        this.employees.update(prev => prev.map(e => e.id === id ? { ...e, ...uiFallback } : e));
+        this.upsertEmployee(uiFallback);
       }),
       catchError(error => {
         this.errorService.showError('Errore durante l\'aggiornamento della risorsa.');

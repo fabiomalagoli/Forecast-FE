@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject, output, signal } from '@angular/core';
+import { Component, HostListener, OnInit, inject, output, signal, effect, DestroyRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, timer } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Project } from '../../../shared/models/project.model';
 import {
   buildProjectEmployeePayload,
@@ -13,6 +14,9 @@ import { LookupsService } from '../../../shared/services/lookups.service';
 import { ProjectsService } from '../../../shared/services/projects.service';
 import { RolesService } from '../../../shared/services/roles.service';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../shared/payloads/employee.payloads';
+import { Role } from '../../../shared/models/role.model';
+import { Employee } from '../../../shared/models/employee.model';
 import {
   buildEditableProjectHeaders,
   calculateProjectTotals,
@@ -42,6 +46,16 @@ export class NewProgettoComponent implements OnInit {
   private lookupsService = inject(LookupsService);
   private employeesService = inject(EmployeesService);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
+
+  showAssignPanel = signal(false);
+  assignRole = signal<Role | null>(null);
+  assignList = signal<Employee[]>([]);
+  hasUnassignedInProject = signal(false);
+  // inline assign state
+  assignSelectedEmployeeId = signal<string | null>(null);
+  assignSelectedRoleId = signal<string | null>(null);
+  assignSelectedLevel = signal<string | null>(null);
 
   companiesList = signal<any[]>([]);
   customersList = signal<any[]>([]);
@@ -70,6 +84,7 @@ export class NewProgettoComponent implements OnInit {
 
   constructor() {
     this.initForm();
+    this.setupEmployeesEffect();
   }
 
   initForm() {
@@ -99,7 +114,6 @@ export class NewProgettoComponent implements OnInit {
     };
 
     forkJoin(lookupRequests).subscribe((lookups) => {
-      setTimeout(() => {
         this.companiesList.set(lookups.companies);
         this.customersList.set(lookups.customers);
         this.projectStatusesList.set(lookups.statuses);
@@ -114,8 +128,83 @@ export class NewProgettoComponent implements OnInit {
         
         this.newProjectForm.valueChanges.subscribe(() => this.updateSubmitStatus());
         this.updateSubmitStatus();
-      });
+        this.recomputeUnassignedFlag();
+    });  
+  }
+
+  private setupEmployeesEffect() {
+    effect(() => {
+      const _ = this.employeesList();
+      this.recomputeUnassignedFlag();
     });
+  }
+
+  openAssignPanel() {
+    const allRoles = this.jobRolesList() || [];
+    console.log('[NewProject] openAssignPanel called');
+    const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
+    const roleForPanel: Role = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
+
+    const projectEmps = this.projectEmployees.getRawValue() || [];
+    const projectEmpIds = projectEmps.map((pe: any) => (pe.employeeId || pe.id) && String(pe.employeeId || pe.id)).filter(Boolean);
+    const allEmps = this.employeesList() || [];
+    const assignedUnassignedInProject = allEmps.filter(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
+
+    this.assignRole.set(roleForPanel);
+    this.assignList.set(assignedUnassignedInProject);
+    this.showAssignPanel.set(true);
+  }
+
+  closeAssignPanel() { this.showAssignPanel.set(false); }
+
+  onAssignSaved(updated: Employee[]) {
+    this.showAssignPanel.set(false);
+    this.employeesService.loadAllEmployees().subscribe({ next: (emps) => { this.employeesList.set(emps); this.recomputeUnassignedFlag(); } });
+  }
+
+  chooseAssignEmployee(id: string | null) {
+    this.assignSelectedEmployeeId.set(id);
+    if (!id) return;
+    const e = (this.employeesList() || []).find(x => String(x.id) === String(id));
+    if (e) {
+      this.assignSelectedLevel.set(e.jobRoleLevel || null);
+      this.assignSelectedRoleId.set(e.jobRole || null);
+    }
+  }
+
+  saveAssignSingle() {
+    const empId = this.assignSelectedEmployeeId();
+    if (!empId) return;
+    const emp = (this.employeesList() || []).find(x => String(x.id) === String(empId));
+    if (!emp) return;
+
+    const roleId = this.assignSelectedRoleId();
+    const level = this.assignSelectedLevel() || 'Junior';
+
+    const payload = buildEmployeePayload({ ...emp, jobRoleLevel: level, jobRole: roleId }, {
+      selectedRoleId: roleId,
+      levels: this.jobRoleLevelsList(),
+      companies: this.companiesList(),
+    });
+
+    const uiFallback = buildEmployeeUiFallback({ ...emp, jobRole: roleId ? (this.jobRolesList().find(r => String(r.id) === String(roleId))?.name || '') : '', jobRoleLevel: level }, emp.id);
+
+    this.employeesService.updateEmployee(emp.id, payload, uiFallback).subscribe({
+      next: () => {
+        this.employeesService.loadAllEmployees().subscribe({ next: (emps) => { this.employeesList.set(emps); this.recomputeUnassignedFlag(); } });
+        this.showAssignPanel.set(false);
+      },
+      error: () => {
+        this.statusMessage = { text: 'Errore durante l\'aggiornamento', type: 'error' };
+      }
+    });
+  }
+
+  recomputeUnassignedFlag() {
+    const projectEmpIds = (this.projectEmployees.getRawValue() || []).map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);
+    const allEmps = this.employeesList() || [];
+    const has = allEmps.some(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
+    this.hasUnassignedInProject.set(has);
   }
 
   private setupReactiveCalculations() {
@@ -377,9 +466,9 @@ export class NewProgettoComponent implements OnInit {
 
   private showNotification(text: string, type: 'success' | 'error') {
     this.statusMessage = { text, type };
-    setTimeout(() => {
+    timer(3000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.statusMessage = null;
-    }, 3000);
+    });
   }
 
   @HostListener('document:mousedown', ['$event'])

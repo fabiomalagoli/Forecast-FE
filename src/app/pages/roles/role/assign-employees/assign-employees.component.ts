@@ -1,10 +1,11 @@
-import { Component, DestroyRef, HostListener, computed, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, effect, inject, input, output, signal } from '@angular/core';
 import { Role } from '../../../../shared/models/role.model';
 import { Employee } from '../../../../shared/models/employee.model';
 import { debounceTime, distinctUntilChanged, forkJoin, tap } from 'rxjs';
 import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { EmployeesService } from '../../../../shared/services/employees.service';
+import { ProjectsService } from '../../../../shared/services/projects.service';
 import { RolesService } from '../../../../shared/services/roles.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
@@ -15,6 +16,7 @@ import {
     mapAssignedEmployeesToSelected,
 } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-assegna-risorse',
@@ -26,13 +28,15 @@ import { toElementId } from '../../../../shared/utils/project-form.utils';
 export class AssignEmployeeComponent {
 
     private employeesService = inject(EmployeesService);
+    private projectsService = inject(ProjectsService);
     private rolesService = inject(RolesService);
     private lookupsService = inject(LookupsService);
     private destroyRef = inject(DestroyRef);
+    private initializedState = false;
 
 
     selectedRole = input.required<Role>();
-    listaRisorseAsssegnate = signal<Employee[]>([]);
+    listaRisorseAssegnate = input.required<Employee[]>();
     listaRisorseSelezionate = signal<AssignableEmployee[]>([]);
 
 
@@ -48,7 +52,6 @@ export class AssignEmployeeComponent {
     showAllEmployeeOptions = signal(false);
     // showAllLevelOptions = signal(false);
     employeeDropdownOpen = signal(false);
-
 
     fullName(employee: Employee): string {
         return getEmployeeFullName(employee);
@@ -81,20 +84,28 @@ export class AssignEmployeeComponent {
 
     private initialEmployeeState: AssignableEmployee[] = [];
 
+    constructor() {
+        effect(() => {
+            const ra = this.listaRisorseAssegnate();
+            if (!this.initializedState && ra) {
+                const assignedEmployees = JSON.parse(JSON.stringify(ra)) as Employee[];
+                const mappedEmployees = mapAssignedEmployeesToSelected(assignedEmployees);
+
+                this.initialEmployeeState = [...mappedEmployees];
+                this.listaRisorseSelezionate.set([...mappedEmployees]);
+                
+                // Blocca l'effetto per tutta la durata di vita del component
+                this.initializedState = true; 
+            }
+        });
+    }
 
     ngOnInit() {
         this.isLoadingLookups.set(true);
 
-        const ra = this.listaRisorseAsssegnate();
-        const assignedEmployees = JSON.parse(JSON.stringify(ra)) as Employee[];
-        const mappedEmployees = mapAssignedEmployeesToSelected(assignedEmployees)
-
-        this.initialEmployeeState = [...mappedEmployees];
-
-        this.listaRisorseSelezionate.set([...mappedEmployees]);
-
         const caricamenti = {
             employees: this.employeesService.loadAllEmployees(),
+            roles: this.rolesService.loadAllJobRoles(),
             levels: this.rolesService.loadJobRoleLevels(),
             companies: this.lookupsService.loadAvailableCompanies(),
         };
@@ -199,7 +210,11 @@ export class AssignEmployeeComponent {
     }
 
     isSubmitDisabled(form: NgForm): boolean {
-        return this.isLoadingLookups() || form.invalid || this.listaRisorseSelezionate().length === 0 || !this.hasValidResources();
+        // Disable when loading or invalid or resources invalid or when there are no actual changes
+        if (this.isLoadingLookups() || form.invalid || !this.hasValidResources()) return true;
+
+        // Allow submit when there are changes even if selection is empty (unassigning all)
+        return !this.isChanged();
     }
 
     onSubmitClick(form: NgForm, event: Event) {
@@ -224,13 +239,14 @@ export class AssignEmployeeComponent {
 
         const selectedEmployees = this.listaRisorseSelezionate();
 
-        if (selectedEmployees.length === 0) {
-            this.attemptedSubmit = true;
-            this.statusMessage = { text: 'Seleziona almeno una risorsa da assegnare.', type: 'error' };
-            return;
-        }
+        // If there are no selected employees but also no changes, show error
+        // (isChanged check above should prevent this; keep defensive guard)
+        // proceed even when selection is empty because this may mean unassigning all
 
         const selectedRole = this.selectedRole();
+        const selectedRoleId = selectedRole.id;
+
+        // Employees to assign/keep
         const updatedEmployees: Employee[] = selectedEmployees.map((employee) => ({
             ...employee,
             jobRole: selectedRole.name,
@@ -238,7 +254,13 @@ export class AssignEmployeeComponent {
             company: employee.company,
         }));
 
-        const updateRequests = updatedEmployees.map((employee) =>
+        // Employees che erano assegnati a un ruolo -> devono essere unassigned ora
+        const currentIds = new Set(selectedEmployees.map(e => e.id));
+        const removedEmployees: Employee[] = this.initialEmployeeState
+            .filter(init => !currentIds.has(init.id))
+            .map(emp => ({ ...emp, jobRole: '', jobRoleLevel: '' }));
+
+        const assignRequests = updatedEmployees.map((employee) =>
             this.employeesService.updateEmployee(
                 employee.id,
                 buildEmployeePayload(employee, {
@@ -250,19 +272,93 @@ export class AssignEmployeeComponent {
             )
         );
 
-        forkJoin(updateRequests).subscribe({
+        const allRoles = this.rolesService.loadedAllJobRoles?.() || [];
+        const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
+        let unassignRequests: any[] = [];
+        const projectEmployeeRoleUpdates: { employee: Employee; jobRoleId: string | null | undefined; jobRoleLevelId: string | null }[] = updatedEmployees.map((employee) => ({
+            employee,
+            jobRoleId: selectedRoleId,
+            jobRoleLevelId: this.resolveJobRoleLevelId(employee.jobRoleLevel),
+        }));
+
+        let localOnlyUnassign = false;
+        if (foundUnassigned && foundUnassigned.id) {
+            const unassignedRoleId = foundUnassigned.id;
+            // Use 'Junior' as default level for unassigned
+            unassignRequests = removedEmployees.map(emp => {
+                const empForPayload = { ...emp, jobRoleLevel: 'Junior' } as any;
+                return this.employeesService.updateEmployee(
+                    emp.id,
+                    buildEmployeePayload(empForPayload, {
+                        selectedRoleId: unassignedRoleId,
+                        levels: this.listaJobRolesLevels(),
+                        companies: this.lookupsService.loadedCompanies(),
+                    }),
+                    buildEmployeeUiFallback({ ...emp, jobRole: foundUnassigned.name, jobRoleLevel: 'Junior' }, emp.id),
+                );
+            });
+            removedEmployees.forEach((employee) => {
+                projectEmployeeRoleUpdates.push({
+                    employee: { ...employee, jobRole: foundUnassigned.name, jobRoleLevel: 'Junior' },
+                    jobRoleId: unassignedRoleId,
+                    jobRoleLevelId: this.resolveJobRoleLevelId('Junior'),
+                });
+            });
+        } else {
+            // Nessun 'unassigned' role trovato: applico un unassign locale e mostriamo un messaggio
+            localOnlyUnassign = true;
+            unassignRequests = removedEmployees.map(emp => {
+                const localUpdate = { ...emp, jobRole: '', jobRoleLevel: 'Junior' } as Employee;
+                this.employeesService.updateEmployeeLocal(localUpdate);
+                return of(null);
+            });
+        }
+
+        const allRequests = [...assignRequests, ...unassignRequests];
+
+        forkJoin(allRequests).subscribe({
             next: () => {
-                this.attemptedSubmit = false;
-                this.noChangesMessage = false;
-                this.statusMessage = { text: 'Risorse assegnate con successo!', type: 'success' };
-                this.saved.emit(updatedEmployees);
-                form.resetForm();
-                this.cancel.emit();
+                const projectSyncRequests = projectEmployeeRoleUpdates.map((update) =>
+                    this.projectsService.updateProjectEmployeesForEmployeeRole(
+                        update.employee,
+                        update.jobRoleId,
+                        update.jobRoleLevelId,
+                    )
+                );
+
+                const finalizeSuccess = () => {
+                    this.attemptedSubmit = false;
+                    this.noChangesMessage = false;
+                    if (localOnlyUnassign) {
+                        this.statusMessage = { text: 'Assegnazioni salvate. Alcune rimozioni sono state applicate solo localmente perché il ruolo "Unassigned" non esiste sul server. Crea il ruolo "Unassigned" per persistere le rimozioni.', type: 'success' };
+                    } else {
+                        this.statusMessage = { text: 'Risorse assegnate con successo!', type: 'success' };
+                    }
+                    this.saved.emit(updatedEmployees);
+                    form.resetForm();
+                    this.cancel.emit();
+                };
+
+                if (!projectSyncRequests.length) {
+                    finalizeSuccess();
+                    return;
+                }
+
+                forkJoin(projectSyncRequests).subscribe({
+                    next: finalizeSuccess,
+                    error: (error) => {
+                        this.attemptedSubmit = true;
+                        this.statusMessage = {
+                            text: `Risorse aggiornate, ma errore nella sincronizzazione dei progetti: ${error.message || error}`,
+                            type: 'error',
+                        };
+                    }
+                });
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;
                 let errorMessage = 'Errore durante la modifica della risorsa';
-                
+
                 if (error.status === 400) {
                     errorMessage = 'Dati non validi. Controlla i campi inseriti.';
                 } else if (error.status === 404) {
@@ -272,7 +368,7 @@ export class AssignEmployeeComponent {
                 } else if (error.message) {
                     errorMessage = `Errore: ${error.message}`;
                 }
-                
+
                 this.statusMessage = { text: errorMessage, type: 'error' };
             }
         });
@@ -283,9 +379,32 @@ export class AssignEmployeeComponent {
     }
 
     removeSelectedResource(employeeId: string) {
+        const idStr = String(employeeId);
+
+        const currentSelected = this.listaRisorseSelezionate();
+        let employee = currentSelected.find(e => String(e.id) === idStr) as Employee | undefined;
+        if (!employee) {
+            employee = (this.listaTotaleRisorse() || []).find(e => String(e.id) === idStr) as Employee | undefined;
+        }
+
+        // Se ci sono Employees con 'Unassigned' role, segnali come tali con Junior level come default
+        const allRoles = this.rolesService.loadedAllJobRoles?.() || [];
+        const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
+
+        if (employee) {
+            if (foundUnassigned && foundUnassigned.id) {
+                const localUpdate = { ...employee, jobRole: foundUnassigned.id, jobRoleLevel: 'Junior' } as Employee;
+                this.employeesService.updateEmployeeLocal(localUpdate);
+            } else {
+                const localUpdate = { ...employee, jobRole: '', jobRoleLevel: 'Junior' } as Employee;
+                this.employeesService.updateEmployeeLocal(localUpdate);
+            }
+        }
+
         this.listaRisorseSelezionate.update((selected) =>
-            selected.filter((employee) => employee.id !== employeeId)
+            selected.filter((emp) => String(emp.id) !== idStr)
         );
+
         this.onFieldChange();
     }
 
@@ -329,6 +448,18 @@ export class AssignEmployeeComponent {
 
     optionName(option: any): string {
         return option?.name || option?.Name || option || '';
+    }
+
+    private resolveJobRoleLevelId(levelName: string | null | undefined): string | null {
+        if (!levelName) return null;
+
+        const normalizedLevel = levelName.trim().toLowerCase();
+        const level = this.listaJobRolesLevels().find((item) =>
+            String(item.id || item.Id) === levelName ||
+            String(item.name || item.Name || '').trim().toLowerCase() === normalizedLevel
+        );
+
+        return level ? (level.id || level.Id) : null;
     }
 
     @HostListener('document:mousedown', ['$event'])

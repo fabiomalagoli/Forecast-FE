@@ -128,6 +128,7 @@
   @if(assigningRole()) {
       <app-assegna-risorse
           [selectedRole]="assigningRole()!"
+          [listaRisorseAssegnate]="assigningRoleEmployees()"
           (cancel)="chiudiAssegnaRisorse()"
           (saved)="salvaAssegnazioneRisorse()"
       ></app-assegna-risorse>

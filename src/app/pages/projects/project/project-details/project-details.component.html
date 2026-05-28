@@ -55,7 +55,7 @@
   } -->
   <!-- IMPORTANT: Per il momento, disattiviamo i ruoli in Visualizza. L'idea sarà di unirli con i dipendenti -->
 
-  @if (p.projectEmployees && p.projectEmployees.length > 0) {
+  @if (displayedProjectEmployees() && displayedProjectEmployees().length > 0) {
     <h3 style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>
     <section class="card-risorse">
       <table class="roles-table">
@@ -70,7 +70,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (employee of p.projectEmployees; track employee.id) {
+          @for (employee of displayedProjectEmployees(); track employee.id) {
             <tr class="resource-row" (click)="openEmployeeDetails(employee)">
               <td><strong>{{ employee.employee }}</strong></td>
               <td>{{ employee.jobRole }}</td>

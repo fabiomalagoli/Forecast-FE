@@ -24,7 +24,15 @@ import { A11yModule } from "@angular/cdk/a11y";
 
 @Component({
   selector: 'app-projects',
-  imports: [AppButtonComponent, NewProgettoComponent, EditProjectComponent, ReactiveFormsModule, MatProgressSpinnerModule, MatPaginatorModule, A11yModule],
+  imports: [
+    AppButtonComponent,
+    NewProgettoComponent, 
+    EditProjectComponent, 
+    ReactiveFormsModule, 
+    MatProgressSpinnerModule, 
+    MatPaginatorModule, 
+    A11yModule
+  ],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.scss'],
   
@@ -61,7 +69,7 @@ export class ProjectsComponent {
 
   constructor(private router: Router) {
     effect(() => {
-      console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.projects());
+      console.log('Lista progetti aggiornata dal backend:', this.projects());
     });
 
     this.showMessage$.pipe(
@@ -166,7 +174,7 @@ export class ProjectsComponent {
       this.customersService.loadAvailableCustomers(),
       timer(1500)
     ]).pipe(
-      finalize(() => { timer(1500).subscribe(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }); }),
+      finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: ([_, companies, statuses, customers]) => { // Il primo elemento dell'array è il risultato di loadAvailableProjects, che non ci serve qui perché il service aggiorna già il segnale internamente
@@ -262,7 +270,7 @@ export class ProjectsComponent {
     this.isFetching.set(true);
     this.error.set(null);
 
-    timer(3000).pipe(
+    timer(1500).pipe(
       switchMap(() => this.projectsService.loadProjects(this.currentPage(), this.pageSize)),
       finalize(() => this.isFetching.set(false)),
       takeUntilDestroyed(this.destroyRef)

@@ -4,8 +4,11 @@ import { Location } from '@angular/common';
 import { Project } from '../../../../shared/models/project.model';
 import { COMPLETE_PROJECT_HEADERS } from '../../../projects/project/complete-project.headers';
 import { AppButtonComponent } from '../../../../shared/button/button';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { CustomersService } from '../../../../shared/services/customers.service';
+import { EmployeesService } from '../../../../shared/services/employees.service';
+import { RolesService } from '../../../../shared/services/roles.service';
+import { mergeProjectsWithEmployeeDetails } from '../../../../shared/utils/project-display.utils';
 
 @Component({
   selector: 'app-customer-projects',
@@ -20,6 +23,8 @@ export class CustomerProjectsComponent implements OnInit {
   // Usiamo la history del browser per tornare indietro
   private location = inject(Location);
   private customersService = inject(CustomersService);
+  private employeesService = inject(EmployeesService);
+  private rolesService = inject(RolesService);
 
   loading = signal(true);
   error = signal<string | null>(null);
@@ -44,12 +49,18 @@ export class CustomerProjectsComponent implements OnInit {
       return;
     }
 
-    this.customersService.loadActiveProjectsForCustomer(id).pipe(
+    forkJoin({
+      projects: this.customersService.loadActiveProjectsForCustomer(id),
+      employees: this.employeesService.loadAllEmployees(),
+      roles: this.rolesService.loadAllJobRoles(),
+    }).pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
-      next: (p) => {
-        console.log('Progetti caricati:', p);
-        this.projects.set(p);
+      next: ({ projects, employees, roles }) => {
+        const displayedProjects = mergeProjectsWithEmployeeDetails(projects, employees, roles);
+        console.log('Progetti cliente caricati dal backend:', projects);
+        console.log('Progetti cliente visualizzati:', displayedProjects);
+        this.projects.set(displayedProjects);
       },
       error: (err) => {
         console.error('Errore API:', err);

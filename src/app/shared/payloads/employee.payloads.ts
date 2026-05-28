@@ -10,7 +10,7 @@ type LookupOption = {
 export interface EmployeePayload {
   name: string;
   surname: string;
-  jobRoleId: string | null;
+  jobRoleId: string | null | undefined;
   jobRoleLevelId: string | null;
   companyId: string | null;
   isActive: boolean;
@@ -22,13 +22,15 @@ export function buildEmployeePayload(
     roles?: LookupOption[];
     levels: LookupOption[];
     companies: LookupOption[];
-    selectedRoleId?: string;
+    selectedRoleId?: string | null;
   },
 ): EmployeePayload {
   return {
     name: formData.name,
     surname: formData.surname,
-    jobRoleId: lookups.selectedRoleId || findOptionIdByName(lookups.roles || [], formData.jobRole),
+    jobRoleId: (Object.prototype.hasOwnProperty.call(lookups, 'selectedRoleId'))
+      ? lookups.selectedRoleId
+      : findOptionIdByName(lookups.roles || [], formData.jobRole),
     jobRoleLevelId: findOptionIdByName(lookups.levels, formData.jobRoleLevel),
     companyId: findOptionIdByName(lookups.companies, formData.company),
     isActive: formData.isActive ?? true,
