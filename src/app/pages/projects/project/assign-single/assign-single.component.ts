@@ -2,9 +2,6 @@ import { Component, computed, effect, inject, input, output, signal } from '@ang
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { AppButtonComponent } from '../../../../shared/button/button';
-import { EmployeesService } from '../../../../shared/services/employees.service';
-import { RolesService } from '../../../../shared/services/roles.service';
-import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import { Employee } from '../../../../shared/models/employee.model';
 import { Role } from '../../../../shared/models/role.model';
 import { Company } from '../../../../shared/models/company.model';
@@ -17,8 +14,6 @@ import { Company } from '../../../../shared/models/company.model';
 })
 export class AssignSingleComponent {
     private fb = inject(FormBuilder);
-    private employeesService = inject(EmployeesService);
-    private rolesService = inject(RolesService);
 
     // Inputs provided by parent
     employees = input.required<Employee[]>();
@@ -93,27 +88,11 @@ export class AssignSingleComponent {
         const roleId = this.selectedRoleId();
         const level = this.selectedLevel() || 'Junior';
 
-        this.isSaving.set(true);
+        const roleName = roleId ? (this.roles().find(r => String(r.id) === String(roleId))?.name || '') : '';
+        const updatedEmployee = { ...emp, jobRole: roleName, jobRoleLevel: level } as Employee;
 
-        const payload = buildEmployeePayload({ ...emp, jobRoleLevel: level, jobRole: roleId }, {
-            selectedRoleId: roleId,
-            levels: this.levels(),
-            companies: this.companies(),
-        });
-
-        const uiFallback = buildEmployeeUiFallback({ ...emp, jobRole: roleId ? (this.roles().find(r => String(r.id) === String(roleId))?.name || '') : '', jobRoleLevel: level }, emp.id);
-
-        this.employeesService.updateEmployee(emp.id, payload, uiFallback).subscribe({
-            next: () => {
-            this.isSaving.set(false);
-            this.statusMessage = { text: 'Ruolo aggiornato', type: 'success' };
-            this.saved.emit([ { ...emp, jobRole: uiFallback.jobRole, jobRoleLevel: uiFallback.jobRoleLevel } as Employee ]);
-            },
-            error: () => {
-            this.isSaving.set(false);
-            this.statusMessage = { text: 'Errore durante l\'aggiornamento', type: 'error' };
-            }
-        });
+        this.statusMessage = { text: 'Ruolo pronto per il salvataggio', type: 'success' };
+        this.saved.emit([updatedEmployee]);
     }
 
     doCancel() {

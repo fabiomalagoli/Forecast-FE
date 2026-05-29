@@ -93,13 +93,13 @@ export class RolesComponent implements OnInit {
     pagination = this.rolesService.paginationData;
 
     assigningRoleEmployees = computed<any[]>(() => {
-    const ruolo = this.assigningRole();
-    if (!ruolo) return [];
+        const ruolo = this.assigningRole();
+        if (!ruolo) return [];
 
-    const tutteLeRisorse = this.employeesService.loadedAllEmployees() ?? [];
-        return tutteLeRisorse.filter(risorsa => 
-            risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
-        );
+        const tutteLeRisorse = this.employeesService.loadedAllEmployees() ?? [];
+            return tutteLeRisorse.filter(risorsa => 
+                risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name
+            );
     });
 
     constructor(private router: Router) {
@@ -119,11 +119,11 @@ export class RolesComponent implements OnInit {
         });
 
         this.showMessage$.pipe(
-        tap(msg => this.statusMessage.set(msg)),
-        switchMap(() => timer(3000)),
-        takeUntilDestroyed()
-        ).subscribe(() => {
-        this.statusMessage.set(null);
+            tap(msg => this.statusMessage.set(msg)),
+            switchMap(() => timer(3000)),
+            takeUntilDestroyed()
+            ).subscribe(() => {
+                this.statusMessage.set(null);
         });
     }
 
@@ -148,8 +148,8 @@ export class RolesComponent implements OnInit {
             }
             },
             error: (err) => {
-            this.error.set(err.message || 'Errore di connessione al server');
-            this.snackbarService.error(NotifyAction.Ricaricamento, 'dati iniziali', 'Riprova')
+            this.error.set(err.message);
+            this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
                 .onAction().subscribe(() => {
                 this.loadInitialData(); // Se clicco su Riprova, riesegue l'intero blocco di caricamento iniziale, inclusa la paginazione. NOTA: Se vuoi mantenere la pagina corrente, modifica la chiamata per ricaricare solo i ruoli, senza resettare la pagina alla prima
                 });

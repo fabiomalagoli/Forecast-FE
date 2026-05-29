@@ -1,7 +1,7 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, input, output, signal } from '@angular/core';
 import { Role } from '../../../../shared/models/role.model';
 import { Employee } from '../../../../shared/models/employee.model';
-import { debounceTime, distinctUntilChanged, forkJoin, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin, Observable, tap } from 'rxjs';
 import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { EmployeesService } from '../../../../shared/services/employees.service';
@@ -203,7 +203,7 @@ export class AssignEmployeeComponent {
 
     }
 
-      hasValidResources(): boolean {
+    hasValidResources(): boolean {
         const risorse = this.listaRisorseSelezionate();
         if (!risorse || risorse.length === 0) return true;
         return risorse.every((resource) => isAssignableEmployeeComplete(resource));
@@ -314,7 +314,7 @@ export class AssignEmployeeComponent {
             });
         }
 
-        const allRequests = [...assignRequests, ...unassignRequests];
+        const allRequests: Observable<any>[] = [...assignRequests, ...unassignRequests];
 
         forkJoin(allRequests).subscribe({
             next: () => {
