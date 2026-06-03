@@ -48,8 +48,7 @@ export class DashboardService {
         id: card.id || card.Id,
         employeeCount: card.assignmentSummary?.employeesCount,
         totalBudget: card.totalBudget,
-      }))),
-      catchError(error => throwError(() => buildEntityError(error, 'progetto', 'caricamento')))
+      })))
     );
   }
 

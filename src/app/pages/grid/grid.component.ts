@@ -10,6 +10,7 @@ import { NotifyAction } from '../../shared/enums/notify.enum';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { ProjectsService } from '../../shared/services/projects.service';
 import { FavouritesService } from '../../shared/services/favourites.service';
+import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 
 @Component({
   selector: 'app-grid',
@@ -72,20 +73,23 @@ export class GridComponent {
     this.loadCards(true);
   }
 
-  loadInitialData() {
-    this.error.set(null);
-    
+  loadInitialData(forceInitialSpinner = false) {
     // Controlliamo se il servizio ha già dei dati salvati in memoria
     const dataAlreadyLoaded = this.dashboardService.loadedCards().length > 0;
 
+    this.error.set(null);
+    this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
+    
     if (dataAlreadyLoaded) {
       this.isFetching.set(true);
-      this.isInitialLoading.set(false);
 
       this.setExtendedCards(this.dashboardService.loadedCards());
 
       this.dashboardService.loadDashboardCardsPagination(this.currentPage(), this.pageSize).pipe(
-        finalize(() => this.isFetching.set(false)),
+        finalize(() => {
+          this.isFetching.set(false);
+          this.isInitialLoading.set(false);
+        }),
         takeUntilDestroyed(this.destroy)
       ).subscribe({
         next: (cards) => this.setExtendedCards(cards),
@@ -122,10 +126,10 @@ export class GridComponent {
   }
 
   private handleError(error: Error): void {
-    this.error.set(`Errore durante il caricamento della Home: ${error.message}`);
-    this.snackbarService.error(NotifyAction.ErroreCaricamento, 'Home', 'Riprova')
+    this.error.set(this.buildLoadHomeErrorMessage(error));
+    this.snackbarService.error(NotifyAction.Caricamento, 'Home', 'Riprova')
       .onAction().subscribe(() => {
-        this.loadInitialData();
+        this.loadInitialData(true);
       });
     console.error('Errore:', error);
   }
@@ -134,13 +138,15 @@ export class GridComponent {
     this.showFavoriteOnly.update(current => !current);
   }
 
-  private loadCards(showSuccessMessage = false) {
+  private loadCards(showSuccessMessage = false, forceInitialSpinner = false) {
     this.isFetching.set(true);
+    this.isInitialLoading.set(forceInitialSpinner);
     this.error.set(null);
 
     this.dashboardService.loadDashboardCardsPagination(this.currentPage(), this.pageSize).pipe(
       finalize(() => {
         this.isFetching.set(false);
+        this.isInitialLoading.set(false);
       }),
       takeUntilDestroyed(this.destroy)
     ).subscribe({
@@ -154,23 +160,27 @@ export class GridComponent {
         console.log('Cards caricate: ', extendedCards);
       },
       error: (error: Error) => {
-        this.error.set(`Errore durante il caricamento della Home: ${error.message}`);
-        this.snackbarService.error(NotifyAction.ErroreCaricamento, 'Home', 'Riprova')
+        this.error.set(this.buildLoadHomeErrorMessage(error));
+        this.snackbarService.error(NotifyAction.Caricamento, 'Home', 'Riprova')
           .onAction().subscribe(() => {
-            this.loadCards(showSuccessMessage);
+            this.loadCards(showSuccessMessage, true);
           });
         console.error('Errore durante il caricamento delle cards:', error);
       },
     });
   }
 
-  loadPage(pageNumber: number) {
+  loadPage(pageNumber: number, forceInitialSpinner = false) {
     this.currentPage.set(pageNumber);
     this.isFetching.set(true);
+    this.isInitialLoading.set(forceInitialSpinner);
     this.error.set(null);
 
     this.dashboardService.loadDashboardCardsPagination(pageNumber, this.pageSize).pipe(
-      finalize(() => this.isFetching.set(false)),
+      finalize(() => {
+        this.isFetching.set(false);
+        this.isInitialLoading.set(false);
+      }),
       takeUntilDestroyed(this.destroy)
     ).subscribe({
       next: (cards) => {
@@ -182,10 +192,10 @@ export class GridComponent {
         console.log(`Cards caricate per pagina ${pageNumber}: `, extendedCards);
       },
       error: (error: Error) => {
-        this.error.set(`Errore durante il caricamento della pagina ${pageNumber}: ${error.message}`);
-        this.snackbarService.error(NotifyAction.ErroreCaricamento, `pagina ${pageNumber}`, 'Riprova')
+        this.error.set(this.buildLoadHomeErrorMessage(error));
+        this.snackbarService.error(NotifyAction.Caricamento, 'Home', 'Riprova')
           .onAction().subscribe(() => {
-            this.loadPage(pageNumber);
+            this.loadPage(pageNumber, true);
           });
         console.error(`Errore durante il caricamento delle cards per pagina ${pageNumber}:`, error);
       },
@@ -203,5 +213,9 @@ export class GridComponent {
     } else {
       this.snackbarService.error(action, params ?? []);
     }
+  }
+
+  private buildLoadHomeErrorMessage(error: Error): string {
+    return `Errore durante il caricamento della Home: ${getHttpErrorStatusMessage(error)}`;
   }
 }

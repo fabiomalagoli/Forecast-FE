@@ -17,6 +17,12 @@ export function buildEntityError(error: any, entity: EntityName, action: EntityA
   return specificError;
 }
 
+export function getHttpErrorStatusMessage(error: any): string {
+  return typeof error?.status === 'number'
+    ? `Errore HTTP ${error.status}`
+    : 'Errore HTTP non disponibile';
+}
+
 export function getEntityErrorMessage(error: any, entity: EntityName, action: EntityAction): string {
   const entityLabel = getEntityLabel(entity);
 

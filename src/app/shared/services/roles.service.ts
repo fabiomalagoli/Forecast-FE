@@ -47,7 +47,6 @@ export class RolesService {
         this.jobRoles.set(response.body || []);
       }),
       map(response => response.body || []),
-      catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );
   }
 
@@ -55,7 +54,6 @@ export class RolesService {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobroles?PageNumber=1&PageSize=1000`, { observe: 'response' }).pipe(
       tap(response => this.allJobRoles.set(response.body || [])),
       map(response => response.body || []),
-      catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );
   }
 

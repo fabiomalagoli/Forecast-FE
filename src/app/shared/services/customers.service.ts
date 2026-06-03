@@ -66,7 +66,6 @@ export class CustomersService {
         this.customers.set(customers);
       }),
       map(response => (response.body || []).map(c => this.mapToCustomer(c))),
-      catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
     );
   }
 

@@ -16,6 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
+import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 
 
 @Component({
@@ -170,14 +171,18 @@ export class EmployeesComponent implements OnInit {
         this.loadPage(nextPage);
     }
 
-    loadPage(page: number){
+    loadPage(page: number, forceInitialSpinner = false){
         this.isFetching.set(true);
+        this.isInitialLoading.set(forceInitialSpinner);
         this.currentPage.set(page);
         this.closePanel();
         this.error.set(null);
 
         this.employeesService.loadEmployees(page, this.pageSize).pipe(
-            finalize(() => this.isFetching.set(false))
+            finalize(() => {
+                this.isFetching.set(false);
+                this.isInitialLoading.set(false);
+            })
         ).subscribe({
             next: () => {
                 const meta = this.pagination();
@@ -188,8 +193,12 @@ export class EmployeesComponent implements OnInit {
             },
             error: (err) => {
                 if(this.error() === null){
-                    this.error.set('Errore durante il caricamento delle risorse: ' + err.message);
-                    this.showNotification('error', NotifyAction.Caricamento, 'risorse');
+                    this.error.set(this.buildLoadEmployeesErrorMessage(err));
+                    this.snackbarService.error(NotifyAction.Caricamento, `risorse`, 'Riprova')
+                    .onAction()
+                    .subscribe(() => {
+                        this.loadPage(page, true);
+                    });
                 }
             },
         });
@@ -209,8 +218,11 @@ export class EmployeesComponent implements OnInit {
         }
     }
 
-    loadInitialData() {
+    loadInitialData(forceInitialSpinner = false) {
+        const dataAlreadyLoaded = this.employeesService.loadedEmployees().length > 0;
+
         this.isFetching.set(true);
+        this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
         this.error.set(null);
 
         const initRequests = [
@@ -244,11 +256,11 @@ export class EmployeesComponent implements OnInit {
                 }
             },
             error: (err) => {
-                this.error.set('Errore durante il caricamento delle risorse: ' + err.message);               
+                this.error.set(this.buildLoadEmployeesErrorMessage(err));               
                 this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
                 .onAction()
                 .subscribe(() => {
-                    this.loadInitialData();
+                    this.loadInitialData(true);
                 });
             }
         });
@@ -318,7 +330,7 @@ export class EmployeesComponent implements OnInit {
             },
             error: (err) => {
                 if(this.error() === null){
-                    this.error.set('Errore durante il ricaricamento delle risorse: ' + err.message);
+                    this.error.set(`Errore durante il ricaricamento delle risorse: ${getHttpErrorStatusMessage(err)}`);
                     this.showNotification('error', NotifyAction.Ricaricamento, 'risorse');
                 }
             },
@@ -344,7 +356,7 @@ export class EmployeesComponent implements OnInit {
             },
             error: (err) => {
                 if(this.error() === null){
-                    this.error.set('Errore durante l\'aggiornamento delle risorse: ' + err.message);
+                    this.error.set(`Errore durante l'aggiornamento delle risorse: ${getHttpErrorStatusMessage(err)}`);
                     this.showNotification('error', NotifyAction.Aggiornamento, 'risorse');
                 }
             },
@@ -381,6 +393,10 @@ export class EmployeesComponent implements OnInit {
     } else {
         this.snackbarService.error(action, params ?? []);
     }
+    }
+
+    private buildLoadEmployeesErrorMessage(error: Error): string {
+        return `Errore durante il caricamento delle risorse: ${getHttpErrorStatusMessage(error)}`;
     }
 
     safeEdits() {

@@ -52,7 +52,6 @@ export class EmployeesService {
         this.employees.set(emps);
       }),
       map(response => (response.body || []).map(e => this.normalizeEmployee(e))),
-      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 
@@ -64,7 +63,6 @@ export class EmployeesService {
         this.allEmployees.set(emps);
       }),
       map(response => (response.body || []).map(e => this.normalizeEmployee(e))),
-      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 

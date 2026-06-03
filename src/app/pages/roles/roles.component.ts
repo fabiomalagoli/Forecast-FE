@@ -16,6 +16,7 @@ import { AppButtonComponent } from '../../shared/button/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
+import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 
 @Component({
   selector: 'app-roles',
@@ -127,8 +128,11 @@ export class RolesComponent implements OnInit {
         });
     }
 
-    loadInitialData() {
+    loadInitialData(forceInitialSpinner = false) {
+        const dataAlreadyLoaded = this.rolesService.loadedJobRoles().length > 0;
+
         this.isFetching.set(true);
+        this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
         this.error.set(null);
 
         forkJoin({
@@ -148,10 +152,10 @@ export class RolesComponent implements OnInit {
             }
             },
             error: (err) => {
-            this.error.set(err.message);
+            this.error.set(this.buildLoadRolesErrorMessage(err));
             this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
                 .onAction().subscribe(() => {
-                this.loadInitialData(); // Se clicco su Riprova, riesegue l'intero blocco di caricamento iniziale, inclusa la paginazione. NOTA: Se vuoi mantenere la pagina corrente, modifica la chiamata per ricaricare solo i ruoli, senza resettare la pagina alla prima
+                this.loadInitialData(true); // Se clicco su Riprova, riesegue l'intero blocco di caricamento iniziale, inclusa la paginazione. NOTA: Se vuoi mantenere la pagina corrente, modifica la chiamata per ricaricare solo i ruoli, senza resettare la pagina alla prima
                 });
             }
         });
@@ -181,13 +185,17 @@ export class RolesComponent implements OnInit {
         this.caricaPagina(event.pageIndex + 1);
     }
 
-    caricaPagina(page: number) {
+    caricaPagina(page: number, forceInitialSpinner = false) {
         this.isFetching.set(true);
+        this.isInitialLoading.set(forceInitialSpinner);
         this.currentPage.set(page);
         this.error.set(null); 
 
         this.rolesService.loadJobRoles(page, this.pageSize).pipe(
-            finalize(() => this.isFetching.set(false)),
+            finalize(() => {
+                this.isFetching.set(false);
+                this.isInitialLoading.set(false);
+            }),
             takeUntilDestroyed(this.destroyRef)
             ).subscribe({
             next: () => {
@@ -198,11 +206,11 @@ export class RolesComponent implements OnInit {
                 }
             },
             error: (err) => {
-                this.error.set(err.message);
+                this.error.set(this.buildLoadRolesErrorMessage(err));
                 // Chiamata diretta al servizio con opzione "Riprova" configurata nell'azione della snackbar
                 this.snackbarService.error(NotifyAction.Caricamento, 'ruoli', 'Riprova')
                 .onAction().subscribe(() => {
-                    this.caricaPagina(page);
+                    this.caricaPagina(page, true);
                 });
             },
         });
@@ -216,7 +224,7 @@ export class RolesComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
         ).subscribe({
         error: (err) => {
-            this.error.set(err.message);
+            this.error.set(`Errore durante il ricaricamento dei ruoli: ${getHttpErrorStatusMessage(err)}`);
             this.showNotification('error', NotifyAction.Ricaricamento, 'ruoli');
         }
         });
@@ -233,7 +241,7 @@ export class RolesComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
         ).subscribe({
         error: (error: Error) => {
-            this.error.set(error.message);
+            this.error.set(`Errore durante l'aggiornamento dei ruoli: ${getHttpErrorStatusMessage(error)}`);
             this.snackbarService.error(NotifyAction.Ricaricamento, 'ruoli', 'Riprova')
             .onAction().subscribe(() => {
                 this.aggiornaRuoli();
@@ -346,5 +354,9 @@ export class RolesComponent implements OnInit {
         } else {
         this.snackbarService.error(action, params ?? []); 
         }
+    }
+
+    private buildLoadRolesErrorMessage(error: Error): string {
+        return `Errore durante il caricamento dei ruoli: ${getHttpErrorStatusMessage(error)}`;
     }
 }

@@ -21,6 +21,7 @@ import { NotifyAction } from '../../shared/enums/notify.enum';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { A11yModule } from "@angular/cdk/a11y";
 import { FavouritesService } from '../../shared/services/favourites.service';
+import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 
 
 @Component({
@@ -54,7 +55,7 @@ export class ProjectsComponent {
   isInitialLoading = signal(this.projectsService.loadedProjects().length === 0);
 
   private buildLoadProjectsErrorMessage(error: Error): string {
-    return `Errore durante il caricamento dei progetti: ${error.message}`;
+    return `Errore durante il caricamento dei progetti: ${getHttpErrorStatusMessage(error)}`;
   }
 
   isAddingProject = signal<boolean | null>(null);
@@ -165,8 +166,11 @@ export class ProjectsComponent {
 
   filterData: any = {};
 
-  loadInitialData() {
+  loadInitialData(forceInitialSpinner = false) {
+    const dataAlreadyLoaded = this.projectsService.loadedProjects().length > 0;
+
     this.isFetching.set(true);
+    this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
     this.error.set(null);
     forkJoin([
       this.projectsService.loadProjects(this.currentPage(), this.pageSize),
@@ -191,7 +195,7 @@ export class ProjectsComponent {
         this.error.set(this.buildLoadProjectsErrorMessage(error));
         this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
         .onAction().subscribe(() => {
-          this.loadInitialData();
+          this.loadInitialData(true);
         });
       }
     });
@@ -277,7 +281,7 @@ export class ProjectsComponent {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       error: (error: Error) => {
-        this.error.set(`Errore durante il caricamento dei progetti: ${error.message}`);
+        this.error.set(this.buildLoadProjectsErrorMessage(error));
         this.showNotification('error', NotifyAction.Caricamento, 'progetti');
       },
     });
@@ -306,20 +310,24 @@ export class ProjectsComponent {
     });
   }
 
-  loadPage(page: number) {
+  loadPage(page: number, forceInitialSpinner = false) {
     this.currentPage.set(page);
     this.isFetching.set(true);
+    this.isInitialLoading.set(forceInitialSpinner);
     this.error.set(null);
 
     this.projectsService.loadProjects(page, this.pageSize).pipe(
-      finalize(() => this.isFetching.set(false)),
+      finalize(() => {
+        this.isFetching.set(false);
+        this.isInitialLoading.set(false);
+      }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       error: (error: Error) => {
-        this.error.set(`Errore durante il caricamento dei progetti: ${error.message}`);
+        this.error.set(this.buildLoadProjectsErrorMessage(error));
         this.snackbarService.error(NotifyAction.Caricamento, 'progetti', 'Riprova')
         .onAction().subscribe(() => {
-          this.loadPage(page);
+          this.loadPage(page, true);
         });
       }
     });

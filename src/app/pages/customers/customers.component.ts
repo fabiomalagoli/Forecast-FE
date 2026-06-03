@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 
 @Component({
   selector: 'app-customers',
@@ -98,8 +99,11 @@ export class CustomersComponent implements OnInit {
     });
   }
 
-  loadInitialData() {
+  loadInitialData(forceInitialSpinner = false) {
+    const dataAlreadyLoaded = this.customersService.loadedCustomers().length > 0;
+
     this.isFetching.set(true);
+    this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
     this.error.set(null);
 
     forkJoin([
@@ -116,7 +120,7 @@ export class CustomersComponent implements OnInit {
         this.error.set(this.buildLoadCustomersErrorMessage(error));
         this.snackbarService.error(NotifyAction.Caricamento, 'clienti', 'Riprova')
           .onAction().subscribe(() => {
-            this.loadInitialData(); 
+            this.loadInitialData(true); 
           });
       }
     });
@@ -166,13 +170,17 @@ export class CustomersComponent implements OnInit {
     this.loadPage(event.pageIndex + 1);
   }
 
-  loadPage(page: number) {
+  loadPage(page: number, forceInitialSpinner = false) {
     this.isFetching.set(true);
+    this.isInitialLoading.set(forceInitialSpinner);
     this.currentPage.set(page);
     this.error.set(null);
 
     this.customersService.loadCustomers(page, this.pageSize).pipe(
-      finalize(() => this.isFetching.set(false)),
+      finalize(() => {
+        this.isFetching.set(false);
+        this.isInitialLoading.set(false);
+      }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: () => {
@@ -186,7 +194,7 @@ export class CustomersComponent implements OnInit {
         this.error.set(this.buildLoadCustomersErrorMessage(error));
         this.snackbarService.error(NotifyAction.Caricamento, 'clienti', 'Riprova')
           .onAction().subscribe(() => {
-            this.loadPage(page); 
+            this.loadPage(page, true); 
           });
       },
     });
@@ -251,7 +259,7 @@ export class CustomersComponent implements OnInit {
   }
 
   private buildLoadCustomersErrorMessage(error: Error): string {
-    return `Errore durante il caricamento dei clienti: ${error.message}`;
+    return `Errore durante il caricamento dei clienti: ${getHttpErrorStatusMessage(error)}`;
   }
 
   private addressFormatting(customer: Customer): string {

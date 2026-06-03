@@ -3,6 +3,11 @@
     <mat-progress-spinner mode="indeterminate" diameter="120"></mat-progress-spinner>
   </div>
 } 
+@else if(error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+  </div>
+}
 @else if(!error()){
   @if (statusMessage()) {
     <div class="notification" [class]="statusMessage()?.type">
