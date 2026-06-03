@@ -34,6 +34,7 @@ export class DashboardService {
           activity: card.activity,
           projectStatus: card.projectStatus,
           projectName: card.projectName || card.name || card.title || card.progetto || '',
+          id: card.id || card.Id,
           employeeCount: card.assignmentSummary?.employeesCount,
           totalBudget: card.totalBudget,
         }));
@@ -44,6 +45,7 @@ export class DashboardService {
         activity: card.activity,
         projectStatus: card.projectStatus,
         projectName: card.projectName || card.name || card.title || card.progetto || '',
+        id: card.id || card.Id,
         employeeCount: card.assignmentSummary?.employeesCount,
         totalBudget: card.totalBudget,
       }))),
@@ -58,6 +60,7 @@ export class DashboardService {
         activity: card.activity,
         projectStatus: card.projectStatus,
         projectName: card.projectName || card.name || card.title || card.progetto || '',
+        id: card.id || card.Id,
         employeeCount: card.assignmentSummary?.employeesCount,
         totalBudget: card.totalBudget,
       }))),

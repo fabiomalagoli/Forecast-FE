@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { CardModel } from './card-home.model';
+import { CardModel, CardModelWithFavorite } from './card-home.model';
 
 @Component({
   selector: 'app-card-home',
@@ -8,5 +8,5 @@ import { CardModel } from './card-home.model';
   styleUrl: './card-home.component.scss',
 })
 export class CardHomeComponent {
-  cards = input.required<CardModel>();
+  cards = input.required<CardModelWithFavorite>();
 }

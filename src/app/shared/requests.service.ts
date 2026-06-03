@@ -1432,16 +1432,16 @@ export class RequestsService {
     );
   }
 
-  caricaCardsDisponibili() {
-    return this.fetchCards(
-      `${environment.apiUrl}/projects/summary`,
-      'Qualcosa è andato storto. Riprova più tardi.',
-    ).pipe(
-      tap({
-        next: (cards) => this.Cards.set(cards),
-      }),
-    );
-  }
+  // caricaCardsDisponibili() {
+  //   return this.fetchCards(
+  //     `${environment.apiUrl}/projects/summary`,
+  //     'Qualcosa è andato storto. Riprova più tardi.',
+  //   ).pipe(
+  //     tap({
+  //       next: (cards) => this.Cards.set(cards),
+  //     }),
+  //   );
+  // }
 
   toProjectPayload(progetto: Project) {
     // NON usare il fallback ?? (progetto as any).pm perché se è una stringa rompe il backend

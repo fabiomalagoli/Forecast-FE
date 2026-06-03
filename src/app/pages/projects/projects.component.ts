@@ -20,6 +20,7 @@ import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { A11yModule } from "@angular/cdk/a11y";
+import { FavouritesService } from '../../shared/services/favourites.service';
 
 
 @Component({
@@ -47,6 +48,7 @@ export class ProjectsComponent {
   private destroyRef = inject(DestroyRef);
   private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
   private snackbarService = inject(SnackbarService);
+  private favouritesService = inject(FavouritesService);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   projects = this.projectsService.loadedProjects;
   isInitialLoading = signal(this.projectsService.loadedProjects().length === 0);
@@ -103,13 +105,12 @@ export class ProjectsComponent {
   AllProjects = this.projectsService.loadedProjects;
 
   filteredProjects = computed<Project[]>(() => {
-    const hasFilters = !!(
-      this.companyFilterValue() ||
-      this.customerFilterValue() ||
-      this.statusFilterValue()
-    );
+    const projectsWithFavourite = this.projects().map(project => ({
+      ...project,
+      isFavorite: this.favouritesService.isFavorite(project.id)
+    }));
     
-    return this.projects().filter(project =>
+    return projectsWithFavourite.filter(project =>
       project.company.toLowerCase().includes(this.companyFilterValue()) &&
       project.customer.toLowerCase().includes(this.customerFilterValue()) &&
       project.projectStatus.toLowerCase().includes(this.statusFilterValue())
@@ -280,6 +281,11 @@ export class ProjectsComponent {
         this.showNotification('error', NotifyAction.Caricamento, 'progetti');
       },
     });
+  }
+
+  onToggleFavorite(project: Project) {
+    this.favouritesService.toggleFavorite(project.id);
+    project.isFavorite = !project.isFavorite;
   }
 
   openEditProject(project: Project) {

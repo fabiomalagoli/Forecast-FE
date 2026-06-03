@@ -1,4 +1,4 @@
-export type EntityName = 'cliente' | 'progetto' | 'risorsa' | 'ruolo';
+export type EntityName = 'cliente' | 'progetto' | 'risorsa' | 'ruolo' | 'favourite';
 
 export type EntityAction =
   | 'caricamento'
@@ -57,6 +57,7 @@ function getEntityLabel(entity: EntityName): string {
     progetto: 'il progetto',
     risorsa: 'la risorsa',
     ruolo: 'il ruolo',
+    favourite: 'il favourite'
   };
 
   return labels[entity];
