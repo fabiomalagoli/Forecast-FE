@@ -27,7 +27,7 @@
                     <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
                 </app-text-input>
                 <app-text-input>
-                    <label>{{resourceDetailsHeaders.CostoGiornaliero}}</label>
+                    <label>{{resourceDetailsHeaders.Tariffa}}</label>
                     <input type="text" [value]="((resource()?.dailyCost ?? 0))" [readonly] = "!isEditMode()">
                 </app-text-input>
             </div>
@@ -60,7 +60,6 @@
                     <div class="grid-row header-row">
                         <span>Mese</span>
                         <span class="text-center">Giorni Occupati</span>
-                        <span class="text-center">Tariffa</span>
                         <span class="text-center">Conferma</span>
                     </div>
 
@@ -71,12 +70,6 @@
                             <app-text-input>
                                 <input type="number" 
                                     [formControlName]="'month_' + mese.month + '_days'" 
-                                    [readonly]="!isEditMode()">
-                            </app-text-input>
-                            
-                            <app-text-input>
-                                <input type="number" 
-                                    [formControlName]="'month_' + mese.month + '_tariffs'" 
                                     [readonly]="!isEditMode()">
                             </app-text-input>
                             
@@ -94,7 +87,6 @@
                     <div class="grid-row header-row">
                         <span>Mese</span>
                         <span class="text-center">Giorni Occupati</span>
-                        <span class="text-center">Tariffa</span>
                         <span class="text-center">Conferma</span>
                     </div>
 
@@ -105,12 +97,6 @@
                             <app-text-input>
                                 <input type="number" 
                                     [formControlName]="'month_' + mese.month + '_days'" 
-                                    [readonly]="!isEditMode()">
-                            </app-text-input>
-                            
-                            <app-text-input>
-                                <input type="number" 
-                                    [formControlName]="'month_' + mese.month + '_tariffs'" 
                                     [readonly]="!isEditMode()">
                             </app-text-input>
                             

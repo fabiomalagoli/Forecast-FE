@@ -6,5 +6,5 @@ export const EMPLOYEES_DETAILS_RECAP_HEADERS: Partial<Record<keyof EmployeeDetai
     BudgetWin: 'Budget Win',
     TotaleConsuntivate: 'Totale Consuntivate',
     Delta: 'Delta',
-    CostoGiornaliero: 'Costo Giornaliero',
+    Tariffa: 'Tariffa',
 };

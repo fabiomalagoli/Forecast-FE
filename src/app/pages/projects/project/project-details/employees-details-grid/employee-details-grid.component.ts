@@ -94,7 +94,6 @@ export class ResourceDetailsGridComponent {
       const savedMonth = monthlyManagements.find(monthlyManagement => monthlyManagement.month === monthDetail.month);
 
       formValues[`month_${monthDetail.month}_days`] = savedMonth?.days ?? monthDetail.days; // Se esiste un dato salvato per questo mese, usalo; altrimenti, usa il valore di default
-      formValues[`month_${monthDetail.month}_tariffs`] = savedMonth?.tariff ?? monthDetail.tariffs;
       formValues[`month_${monthDetail.month}_confirm`] = savedMonth?.isConfirmed ?? monthDetail.confirm;
     });
 
@@ -202,7 +201,6 @@ export class ResourceDetailsGridComponent {
     const monthsToSave: MonthlyManagementSavePayload[] = allMonths.map(monthDetail => ({
       month: monthDetail.month,
       days: Number(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value ?? 0),
-      tariff: Number(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_tariffs`)?.value ?? 0),
       isConfirmed: Boolean(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_confirm`)?.value),
     }));
 

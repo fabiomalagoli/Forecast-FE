@@ -4,5 +4,5 @@ export interface EmployeeDetailsRecap {
     BudgetWin: number;
     TotaleConsuntivate: number;
     Delta: number;
-    CostoGiornaliero: number;
+    Tariffa: number;
 }

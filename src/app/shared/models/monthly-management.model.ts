@@ -3,7 +3,6 @@ export interface MonthlyManagement {
   year: number;
   month: number;
   days: number;
-  tariff: number;
   isConfirmed: boolean;
   projectEmployeeId: string;
 }
@@ -12,7 +11,6 @@ export interface MonthlyResourceDetail {
   month: number;
   name: string;
   days: number;
-  tariffs: number;
   confirm: boolean;
 };
 
@@ -25,8 +23,6 @@ export interface MonthlyManagementApiResponse {
   month?: number;
   Days?: number;
   days?: number;
-  Tariff?: number;
-  tariff?: number;
   IsConfirmed?: boolean;
   isConfirmed?: boolean;
   ProjectEmployeeId?: string;
@@ -36,6 +32,5 @@ export interface MonthlyManagementApiResponse {
 export interface MonthlyManagementSavePayload {
   month: number;
   days: number;
-  tariff: number;
   isConfirmed: boolean;
 }

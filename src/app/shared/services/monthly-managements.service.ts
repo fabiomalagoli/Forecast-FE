@@ -43,7 +43,6 @@ export class MonthlyManagementsService {
         const payload = monthsToSave.map(m => ({
             month: m.month,
             days: m.days,
-            tariff: m.tariff,
             isConfirmed: m.isConfirmed ?? false
         }));
 
@@ -85,7 +84,6 @@ export class MonthlyManagementsService {
             year: item.Year ?? item.year ?? 0,
             month: item.Month ?? item.month ?? 0,
             days: item.Days ?? item.days ?? 0,
-            tariff: item.Tariff ?? item.tariff ?? 0,
             isConfirmed: item.IsConfirmed ?? item.isConfirmed ?? false,
             projectEmployeeId: item.ProjectEmployeeId ?? item.projectEmployeeId ?? '',
         };
