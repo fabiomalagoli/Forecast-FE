@@ -14,6 +14,44 @@ export class DashboardService {
   paginationData = this.dashboardCardsPagination.asReadonly();
 
 
+  loadFavoriteDashboardCards(pageNumber: number = 1, pageSize: number = 10) {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/favorites/summary?PageNumber=${pageNumber}&PageSize=${pageSize}`, { observe: 'response' }).pipe(
+      tap(response => {
+        const paginationHeader = response.headers.get('X-Pagination');
+        if (paginationHeader) {
+          const data = JSON.parse(paginationHeader);
+          this.dashboardCardsPagination.set({
+            currentPage: data.CurrentPage,
+            totalPages: data.TotalPages,
+            pageSize: data.PageSize,
+            totalCount: data.TotalCount,
+            hasPrevious: data.HasPrevious,
+            hasNext: data.HasNext
+          });
+        }
+        const cards = (response.body || []).map(card => ({
+          customer: card.customer,
+          activity: card.activity,
+          projectStatus: card.projectStatus,
+          projectName: card.projectName || card.name || card.title || card.progetto || '',
+          id: card.id || card.Id,
+          employeeCount: card.assignmentSummary?.employeesCount,
+          totalBudget: card.totalBudget,
+        }));
+        this.dashboardCards.set(cards);
+      }),
+      map(response => (response.body || []).map(card => ({
+        customer: card.customer,
+        activity: card.activity,
+        projectStatus: card.projectStatus,
+        projectName: card.projectName || card.name || card.title || card.progetto || '',
+        id: card.id || card.Id,
+        employeeCount: card.assignmentSummary?.employeesCount,
+        totalBudget: card.totalBudget,
+      })))
+    );
+  }
+
   loadDashboardCardsPagination(pageNumber: number = 1, pageSize: number = 10) {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/summary?PageNumber=${pageNumber}&PageSize=${pageSize}`, { observe: 'response' }).pipe(
       tap(response => {

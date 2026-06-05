@@ -8,5 +8,5 @@ import { CardModel, CardModelWithFavorite } from './card-home.model';
   styleUrl: './card-home.component.scss',
 })
 export class CardHomeComponent {
-  cards = input.required<CardModelWithFavorite>();
+  cards = input.required<CardModel>();
 }

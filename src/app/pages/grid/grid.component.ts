@@ -1,6 +1,6 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CardHomeComponent } from './card-home/card-home.component';
-import { CardModel, CardModelWithFavorite } from './card-home/card-home.model';
+import { CardModel } from './card-home/card-home.model';
 import { finalize, forkJoin, Subject, switchMap, tap, timer } from 'rxjs';
 import { DashboardService } from '../../shared/services/dashboards.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -8,7 +8,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { ProjectsService } from '../../shared/services/projects.service';
 import { FavouritesService } from '../../shared/services/favourites.service';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 
@@ -23,26 +22,30 @@ export class GridComponent {
   private destroy = inject(DestroyRef);
   private showMessage$ = new Subject<{ text: string; type: 'success' | 'error' }>();
   private snackbarService = inject(SnackbarService);
-  private projectsService = inject(ProjectsService);
   private favoritesService = inject(FavouritesService);
 
-  cards = signal<CardModelWithFavorite[] | undefined>(undefined);
-  projectCards = signal<CardModelWithFavorite[] | undefined>(undefined);
+  cards = signal<CardModel[] | undefined>(undefined);
   isFetching = signal(false);
   error = signal<string | null>(null);
   statusMessage = signal<{ text: string; type: 'success' | 'error' } | null>(null);
-  projects = this.projectsService.loadedProjects;
 
-  displayedCards = computed(() => {
-    const allCards = this.cards();
-    const showOnlyFavorites = this.showFavoriteOnly();
+  // extendedCards = computed(() => {
+  //   const rawCards = this.cards() || [];
+  //   const dbProjects = this.projects();
 
-    if (showOnlyFavorites) {
-      return allCards?.filter(card => card.isFavorite);
-    }
+  //   return rawCards.map(card => {
+  //     const matchingProject = dbProjects.find(project => project.id === card.id);
+  //     return {
+  //       ...card,
+  //       isFavorite: matchingProject ? matchingProject.isFavorite : false
+  //     };
+  //   },
+  //   );
+  // });
 
-    return allCards;
-  });
+  // displayedCards = computed(() => {
+  //   return this.extendedCards().filter(card => card.isFavorite);
+  // });
 
   isInitialLoading = signal(this.dashboardService.loadedCards().length === 0);
 
@@ -85,7 +88,7 @@ export class GridComponent {
 
       this.setExtendedCards(this.dashboardService.loadedCards());
 
-      this.dashboardService.loadDashboardCardsPagination(this.currentPage(), this.pageSize).pipe(
+      this.dashboardService.loadFavoriteDashboardCards(this.currentPage(), this.pageSize).pipe(
         finalize(() => {
           this.isFetching.set(false);
           this.isInitialLoading.set(false);
@@ -101,7 +104,7 @@ export class GridComponent {
       this.isInitialLoading.set(true);
 
       forkJoin([
-        this.dashboardService.loadDashboardCardsPagination(this.currentPage(), this.pageSize),
+        this.dashboardService.loadFavoriteDashboardCards(this.currentPage(), this.pageSize),
         timer(1500)
       ]).pipe(
         finalize(() => {
@@ -117,12 +120,7 @@ export class GridComponent {
   }
 
   private setExtendedCards(cards: CardModel[]): void {
-    const extendedCards = cards.map(card => ({
-      ...card,
-      isFavorite: this.favoritesService.isFavorite(card.id)
-    }));
-    this.cards.set(extendedCards);
-    console.log('Cards aggiornate nel segnale: ', extendedCards);
+    this.cards.set(cards);
   }
 
   private handleError(error: Error): void {
@@ -143,7 +141,7 @@ export class GridComponent {
     this.isInitialLoading.set(forceInitialSpinner);
     this.error.set(null);
 
-    this.dashboardService.loadDashboardCardsPagination(this.currentPage(), this.pageSize).pipe(
+    this.dashboardService.loadFavoriteDashboardCards(this.currentPage(), this.pageSize).pipe(
       finalize(() => {
         this.isFetching.set(false);
         this.isInitialLoading.set(false);
@@ -176,7 +174,7 @@ export class GridComponent {
     this.isInitialLoading.set(forceInitialSpinner);
     this.error.set(null);
 
-    this.dashboardService.loadDashboardCardsPagination(pageNumber, this.pageSize).pipe(
+    this.dashboardService.loadFavoriteDashboardCards(pageNumber, this.pageSize).pipe(
       finalize(() => {
         this.isFetching.set(false);
         this.isInitialLoading.set(false);

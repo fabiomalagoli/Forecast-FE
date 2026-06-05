@@ -21,7 +21,7 @@ export interface Project {
   customerId?: string;
   projectStatusId?: string;
   totalBudget: number;
-  isFavorite?: boolean;
+  isFavorite: boolean;
 }
 
 

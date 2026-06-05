@@ -106,12 +106,8 @@ export class ProjectsComponent {
   AllProjects = this.projectsService.loadedProjects;
 
   filteredProjects = computed<Project[]>(() => {
-    const projectsWithFavourite = this.projects().map(project => ({
-      ...project,
-      isFavorite: this.favouritesService.isFavorite(project.id)
-    }));
     
-    return projectsWithFavourite.filter(project =>
+    return this.projects().filter(project =>
       project.company.toLowerCase().includes(this.companyFilterValue()) &&
       project.customer.toLowerCase().includes(this.customerFilterValue()) &&
       project.projectStatus.toLowerCase().includes(this.statusFilterValue())
@@ -288,7 +284,7 @@ export class ProjectsComponent {
   }
 
   onToggleFavorite(project: Project) {
-    this.favouritesService.toggleFavorite(project.id);
+    this.favouritesService.toggleFavorite(project.id, project.isFavorite);
     project.isFavorite = !project.isFavorite;
   }
 

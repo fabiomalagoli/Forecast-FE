@@ -15,16 +15,16 @@
     </div>
   }
 
-  <button 
+  <!-- <button 
     class="btn-outline btn-filter-toggle" 
     [class.active]="showFavoriteOnly()" 
     (click)="onShowFavoriteOnlyChange()">
     <span class="star-icon">{{ showFavoriteOnly() ? '📁' : '★' }}</span>
     {{ showFavoriteOnly() ? 'Mostra Tutti' : 'Mostra Preferiti' }}
-  </button>
+  </button> -->
 
   <div class="griglia">
-    @for (card of displayedCards(); track $index) {
+    @for (card of cards(); track $index) {
       <app-card-home [cards]="card"></app-card-home>
     } @empty {
       <div class="empty-state">
@@ -33,7 +33,7 @@
     }
   </div>
 
-  <p class="count-footer">Numero Totale Progetti: {{ pagination()?.totalCount || 0 }}</p>
+  <!-- <p class="count-footer">Numero Totale Progetti: {{ pagination()?.totalCount || 0 }}</p> -->
 
   <mat-paginator
     [length]="pagination()?.totalCount || 0"

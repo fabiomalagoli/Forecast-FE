@@ -1,8 +1,9 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, catchError, map, tap, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment.development';
-import { buildEntityError } from '../utils/http-error-message.utils';
+import { BehaviorSubject } from 'rxjs';
+import { ProjectsService } from './projects.service';
+import { SnackbarService } from './snackbar.service';
+import { NotifyAction } from '../enums/notify.enum';
 
 @Injectable({ providedIn: 'root' })
 export class FavouritesService {
@@ -10,6 +11,8 @@ export class FavouritesService {
     private httpClient = inject(HttpClient);
     private favoritesPagination = signal<any>(null);
     private favorites$ = new BehaviorSubject<string[]>(this.loadFromStorage());
+    private projectsService = inject(ProjectsService);
+    private snackbarService = inject(SnackbarService);
     paginationData = this.favoritesPagination.asReadonly();
 
     constructor() {}
@@ -27,17 +30,14 @@ export class FavouritesService {
         return this.getFavorites().includes(projectId);
     }
 
-    toggleFavorite(projectId: string): void {
-        const currentFavs = [...this.favorites$.value];
-        const index = currentFavs.indexOf(projectId);
+    toggleFavorite(projectId: string, currentFavoriteState: boolean): void {
+        const nextFavoriteState = !currentFavoriteState;
 
-        if (index > -1) {
-            currentFavs.splice(index, 1);
-        } else {
-            currentFavs.push(projectId);
-        }
-
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(currentFavs));
-        this.favorites$.next(currentFavs);
+        this.projectsService.toggleFavoriteState(projectId, nextFavoriteState).subscribe({
+            error: (error) => {
+                console.error('Errore durante l\'aggiornamento dello stato del preferito:', error);
+                this.snackbarService.error(NotifyAction.Aggiornamento, 'lo stato del preferito');
+            }
+        });
     }
 }

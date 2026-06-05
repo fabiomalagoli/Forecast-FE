@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, concatMap, forkJoin, map, switchMap, tap, throwError, of, Observable } from 'rxjs';
 import { Project } from '../models/project.model';
 import { Employee } from '../models/employee.model';
@@ -38,6 +38,7 @@ export class ProjectsService {
       endDate: project.endDate || '',
       totalDays: project.totalDays || 0,
       winProbability: project.winProbability ? project.winProbability * 100 : 0,
+      isFavorite: project.isFavorite || false,
       projectEmployees: project.projectEmployees || [],
       projectJobRoles: project.projectJobRoles || [],
       projectStatus: project.projectStatus || 'Initiation',
@@ -138,6 +139,23 @@ export class ProjectsService {
       catchError(error => {
         this.errorService.showError('Errore durante l\'aggiornamento del progetto.');
         return throwError(() => buildEntityError(error, 'progetto', 'aggiornamento'));
+      })
+    );
+  }
+
+  toggleFavoriteState(projectId: string, isFavorite: boolean) {
+
+    const patchPayload = [
+    { op: 'replace', path: '/isFavorite', value: isFavorite }
+    ];
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json-patch+json'
+    });
+
+    return this.httpClient.patch(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/isFavorite`, patchPayload, { headers }).pipe(
+      tap(() => {
+        this.projects.update(prev => prev.map(p => p.id === projectId ? { ...p, isFavorite } : p));
       })
     );
   }
