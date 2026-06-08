@@ -1,4 +1,4 @@
-import { formatEuroCurrency, parseCurrencyNumber, parseDecimalNumber } from '../utils/project-form.utils';
+import { formatEuroCurrency, parseCurrencyNumber, cleanProbability } from '../utils/project-form.utils';
 
 export interface ProjectUpdatePayload {
   id: string;
@@ -55,7 +55,7 @@ export function buildProjectUpdatePayload(
     customer: selectedNames.customer,
     projectStatus: selectedNames.projectStatus,
     pm: selectedNames.pm ?? formData.pm,
-    winProbability: Number(formData.winProbability),
+    winProbability: cleanProbability(formData.winProbability),
     totalDays: Number(formData.totalDays),
     totalBudget: parseCurrencyNumber(formData.totalBudget),
   };
@@ -72,7 +72,7 @@ export function buildProjectJobRolePayload(role: any): ProjectJobRolePayload {
     jobRoleLevelId: role.jobRoleLevel,
     dailyCost: parseCurrencyNumber(role.dailyCost),
     daysSpent: Number(role.daysSpent),
-    winProbability: parseDecimalNumber(role.winProbability),
+    winProbability: cleanProbability(role.winProbability),
   };
 }
 
@@ -81,7 +81,7 @@ export function buildProjectEmployeePayload(employee: any): ProjectEmployeePaylo
     employeeId: employee.employeeId,
     dailyCost: parseCurrencyNumber(employee.dailyCost),
     daysSpent: Number(employee.daysSpent),
-    winProbability: parseDecimalNumber(employee.winProbability),
+    winProbability: cleanProbability(employee.winProbability),
   };
 
   if (Object.prototype.hasOwnProperty.call(employee, 'jobRole')) {

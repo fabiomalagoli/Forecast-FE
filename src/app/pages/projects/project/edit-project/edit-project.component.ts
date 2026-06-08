@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, inject, input, output, signal, ChangeDetectorRef, effect, DestroyRef } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin, Observable, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Project, ProjectEmployee, ProjectRole } from '../../../../shared/models/project.model';
@@ -36,6 +36,7 @@ import {
   normalizeProjectFormData,
   parseIsoDate,
   toElementId,
+  getProjectFieldPattern
 } from '../../../../shared/utils/project-form.utils';
 import { CustomersService } from '../../../../shared/services/customers.service';
 import { EmployeesService } from '../../../../shared/services/employees.service';
@@ -98,6 +99,9 @@ export class EditProjectComponent implements OnInit {
   activeAssignIndex = signal<number | null>(null);
 
   readonly headers = buildEditableProjectHeaders();
+  readonly getPattern = getProjectFieldPattern;
+
+  isButtonDisabled = signal(false);
 
   constructor() {
     this.initForm();
@@ -115,13 +119,34 @@ export class EditProjectComponent implements OnInit {
     const formControls: { [key: string]: any } = {};
 
     this.headers.forEach(h => {
-      formControls[h.key] = [''];
+      if (['name', 'companyId', 'customerId', 'pmId', 'winProbability'].includes(h.key)) {
+              formControls[h.key] = ['', Validators.required];
+      } else {
+        formControls[h.key] = [''];
+      }
     });
 
     formControls['projectJobRoles'] = this.fb.array([]);
     formControls['projectEmployees'] = this.fb.array([]);
 
     this.editProjectForm = this.fb.group(formControls);
+  }
+
+  checkButtonState() {
+    if (!this.initialFormData) {
+      this.isButtonDisabled.set(true);
+      return;
+    }
+
+    const disabled = this.isSaving() || 
+                     this.dateRangeError ||
+                     this.resourceDaysExceeded ||
+                     this.editProjectForm.invalid || 
+                     !this.hasValidRoles() || 
+                     !this.hasValidResources() || 
+                     !this.isChanged();
+                     
+    this.isButtonDisabled.set(disabled);
   }
 
   ngOnInit() {
@@ -159,6 +184,9 @@ export class EditProjectComponent implements OnInit {
         this.setupReactiveCalculations();
         this.saveInitialSnapshot();
         this.recomputeUnassignedFlag();
+
+        this.checkButtonState();
+        this.cdr.detectChanges();
       });
   }
 
@@ -291,6 +319,10 @@ export class EditProjectComponent implements OnInit {
 
     this.projectJobRoles.valueChanges.subscribe(() => this.recalculateTotals());
     this.projectEmployees.valueChanges.subscribe(() => this.recalculateTotals());
+
+    this.editProjectForm.valueChanges.subscribe(() => {
+      this.checkButtonState();
+    })
   }
 
   private recalculateDateRange() {
@@ -316,9 +348,32 @@ export class EditProjectComponent implements OnInit {
     const totals = calculateProjectTotals([...roles, ...employees]);
 
     this.editProjectForm.patchValue({
-      totalDays: totals.totalDays,
       totalBudget: formatEuroCurrency(totals.totalBudget)
     }, { emitEvent: false });
+
+    this.cdr.detectChanges(); // Previene l'errore ExpressionChanged
+  }
+
+  get resourceDaysExceeded(): boolean {
+    const projectDays = Number(this.editProjectForm.get('totalDays')?.value || 0);
+    const roles = this.projectJobRoles.getRawValue() || [];
+    const employees = this.projectEmployees.getRawValue() || [];
+    
+    const totalAllocatedDays = roles.reduce((sum: number, r: any) => sum + Number(r.daysSpent || 0), 0) +
+                               employees.reduce((sum: number, e: any) => sum + Number(e.daysSpent || 0), 0);
+    
+    return totalAllocatedDays > projectDays;
+  }
+
+  isSubmitDisabled(): boolean {
+    if(!this.initialFormData) return true;
+    return this.isSaving() || 
+           this.dateRangeError ||
+           this.resourceDaysExceeded ||
+           this.editProjectForm.invalid || 
+           !this.hasValidRoles() || 
+           !this.hasValidResources() || 
+           !this.isChanged();
   }
 
   get projectJobRoles(): FormArray {
@@ -352,7 +407,7 @@ export class EditProjectComponent implements OnInit {
     return getProjectFormComparableSnapshot(currentFormValue) !== this.originalComparableSnapshot;
   }
 
-hasValidRoles(): boolean {
+  hasValidRoles(): boolean {
     const roles = this.projectJobRoles.getRawValue();
     if (!roles || roles.length === 0) return true;
     return roles.every((role: any) => isProjectRoleComplete(role) && !this.getWinProbabilityError(role));
@@ -362,11 +417,6 @@ hasValidRoles(): boolean {
     const employees = this.projectEmployees.getRawValue();
     if (!employees || employees.length === 0) return true;
     return employees.every((employee: any) => isProjectEmployeeComplete(employee) && !this.getWinProbabilityError(employee));
-  }
-
-  isSubmitDisabled(): boolean {
-    if(!this.initialFormData) return true;
-    return this.isSaving() || this.editProjectForm.invalid || !this.hasValidRoles() || !this.hasValidResources() || !this.isChanged();
   }
 
   onSubmitClick(event: Event) {
@@ -498,10 +548,18 @@ private finalizeSubmit(formValue: any) {
     return key === 'winProbability' || key === 'totalDays';
   }
 
-  getPattern(key: string): string {
-    if (key === 'winProbability') return '^(100|[1-9][0-9]?)$';
-    if (this.isNumericField(key)) return '^[0-9]+$';
-    return '';
+  onWinProbabilityBlur(control: any) {
+    const val = control?.value;
+    if (!val) return;
+
+    const normalized = String(val).replace(',', '.');
+    const num = parseFloat(normalized);
+
+    if (!isNaN(num) && num >= 1 && num <= 100) {
+      // Imposta il valore a 2 cifre decimali fisse
+      control.setValue(num.toFixed(2), { emitEvent: true });
+    }
+    this.onFieldChange();
   }
 
   getOptions(key: string): any[] {

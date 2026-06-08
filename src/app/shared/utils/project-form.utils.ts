@@ -62,7 +62,7 @@ export function normalizeProjectFormData(
 
   formData.startDate = toDateInputValue(formData.startDate);
   formData.endDate = toDateInputValue(formData.endDate);
-  formData.winProbability = Number(formData.winProbability || 0);
+  formData.winProbability = parseDecimalNumber(formData.winProbability || 0);
   formData.totalDays = Number(formData.totalDays || 0);
 
   return formData;
@@ -81,6 +81,12 @@ export function calculateProjectTotals(entries: any[]): { totalDays: number; tot
     },
     { totalDays: 0, totalBudget: 0 },
   );
+}
+
+export function cleanProbability(value: any): number {
+  if (value === null || value === undefined || value === '') return 0;
+  const normalized = String(value).trim().replace(',', '.');
+  return Number(normalized) || 0;
 }
 
 export function parseCurrencyNumber(value: unknown): number {
@@ -103,6 +109,49 @@ export function parseCurrencyNumber(value: unknown): number {
   }
 
   return Number(normalized);
+}
+
+export function getProjectFieldPattern(key: string): string {
+  if (key === 'winProbability') {
+    // Accetta sia il punto che la virgola (1-100 con max 2 decimali)
+    return '^(100([.,]0{1,2})?|[1-9][0-9]?([.,][0-9]{1,2})?)$';
+  }
+  
+  if (key === 'totalBudget') {
+    return '^\\s*(?:\\u20AC\\s*)?(?:\\d{1,3}(?:[.,]\\d{3})*|\\d+)(?:[.,]\\d{1,2})?\\s*(?:\\u20AC\\s*)?$';
+  }
+  
+  if (key === 'totalDays') {
+    return '^[0-9]+$';
+  }
+  
+  return '';
+}
+
+export function getProjectFormComparableSnapshot(formData: any): string {
+  const comparable = {
+    ...formData,
+    winProbability: parseDecimalNumber(formData.winProbability),
+    
+    totalBudget: parseCurrencyNumber(formData.totalBudget),
+    totalDays: Number(formData.totalDays || 0),
+
+    projectJobRoles: (formData.projectJobRoles || []).map((role: any) => ({
+      ...role,
+      dailyCost: parseCurrencyNumber(role.dailyCost),
+      daysSpent: Number(role.daysSpent || 0),
+      winProbability: parseDecimalNumber(role.winProbability)
+    })).sort((a: any, b: any) => String(a.jobRole).localeCompare(String(b.jobRole))),
+
+    projectEmployees: (formData.projectEmployees || []).map((emp: any) => ({
+      ...emp,
+      dailyCost: parseCurrencyNumber(emp.dailyCost),
+      daysSpent: Number(emp.daysSpent || 0),
+      winProbability: parseDecimalNumber(emp.winProbability)
+    })).sort((a: any, b: any) => String(a.employeeId).localeCompare(String(b.employeeId)))
+  };
+
+  return JSON.stringify(comparable);
 }
 
 export function formatEuroCurrency(value: number): string {
@@ -190,16 +239,25 @@ export function isProjectRoleComplete(role: any): boolean {
     !isNaN(daysSpent) &&
     daysSpent > 0 &&
     !isNaN(winProbability) &&
-    winProbability >= 0.1 &&
-    winProbability <= 1
+    winProbability >= 1 &&
+    winProbability <= 100
   );
 }
 
 export function isProjectEmployeeComplete(employee: any): boolean {
-  return (
-    !!employee.employeeId &&
-    parseCurrencyNumber(employee.dailyCost) > 0 &&
-    Number(employee.daysSpent) > 0
+  const dailyCost = parseCurrencyNumber(employee?.dailyCost);
+  const daysSpent = Number(employee?.daysSpent || 0);
+  const winProbability = parseDecimalNumber(employee?.winProbability);
+
+  return !!(
+    !!employee?.employeeId &&
+    !isNaN(dailyCost) &&
+    dailyCost > 0 &&
+    !isNaN(daysSpent) &&
+    daysSpent > 0 &&
+    !isNaN(winProbability) &&
+    winProbability >= 1 &&     // Controllo limite minimo (1%)
+    winProbability <= 100      // Controllo limite massimo (100%)
   );
 }
 
@@ -208,7 +266,7 @@ export function getWinProbabilityError(item: any): WinProbabilityError {
   if (value === null || value === undefined || value === '') return 'required';
 
   const num = parseDecimalNumber(value);
-  if (!Number.isFinite(num) || num < 0.1 || num > 1) return 'range';
+  if (!Number.isFinite(num) || num < 1 || num > 100) return 'range';
 
   return null;
 }
@@ -267,15 +325,6 @@ export function findEquivalentProjectEmployee(employees: any[] = [], employee: a
   });
 }
 
-export function getProjectFormComparableSnapshot(formData: any): string {
-  const comparable = {
-    ...formData,
-    projectEmployees: getComparableProjectEmployees(formData.projectEmployees || []),
-  };
-
-  return JSON.stringify(comparable);
-}
-
 function getComparableProjectEmployees(employees: any[]): any[] {
   return employees
     .map((employee) => getComparableProjectEmployee(employee))
@@ -293,7 +342,7 @@ function getComparableProjectEmployee(employee: any): any {
     jobRoleLevel: employee.jobRoleLevel || null,
     dailyCost: normalizeComparableNumber(parseCurrencyNumber(employee.dailyCost)),
     daysSpent: normalizeComparableNumber(Number(employee.daysSpent || 0)),
-    winProbability: normalizeComparableNumber(parseDecimalNumber(employee.winProbability)),
+    winProbability: normalizeComparableNumber(Number(employee.winProbability)),
   };
 }
 

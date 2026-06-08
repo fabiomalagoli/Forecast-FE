@@ -5,7 +5,7 @@ import { Project } from '../models/project.model';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
-import { toBackendDate, toNumber, normalizeWinProbability } from '../utils/shared-utils';
+import { toBackendDate, toNumber } from '../utils/shared-utils';
 import { LookupsService } from './lookups.service';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { ProjectFilters } from '../utils/filters.utils';
@@ -38,7 +38,7 @@ export class ProjectsService {
       startDate: project.startDate || '',
       endDate: project.endDate || '',
       totalDays: project.totalDays || 0,
-      winProbability: project.winProbability ? project.winProbability * 100 : 0,
+      winProbability: project.winProbability ? project.winProbability : 0,
       isFavorite: project.isFavorite || false,
       projectEmployees: project.projectEmployees || [],
       projectJobRoles: project.projectJobRoles || [],
@@ -53,6 +53,9 @@ export class ProjectsService {
   }
 
   private toProjectPayload(project: Project) {
+    const cleanWinProb = typeof project.winProbability === 'string'
+      ? Number(String(project.winProbability).replace(',', '.'))
+      : project.winProbability;
     return {
       name: project.name,
       description: project.description,
@@ -64,7 +67,7 @@ export class ProjectsService {
       startDate: toBackendDate(project.startDate),
       endDate: toBackendDate(project.endDate),
       totalDays: toNumber(project.totalDays),
-      winProbability: normalizeWinProbability(toNumber(project.winProbability)),
+      winProbability: cleanWinProb || 0,
     };
   }
 

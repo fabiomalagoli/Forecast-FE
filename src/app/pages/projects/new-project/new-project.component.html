@@ -3,43 +3,6 @@
 <dialog open>
   <div class="np-panel">
     <h2 class="np-title">{{ newProjectForm.value.id ? 'Modifica' : 'Nuovo' }} progetto</h2>
-
-    <!-- Banner e form di assegnazione risorse (compare sopra il form) -->
-    @if (showAssignPanel()) {
-      <div class="assign-single-panel card">
-        <h3>Assegna Ruolo (singola risorsa)</h3>
-
-        <div class="field-row">
-          <label>Risorsa</label>
-          <select [value]="assignSelectedEmployeeId() ?? ''" (change)="chooseAssignEmployee($any($event.target).value || null)">
-            <option value="">Seleziona risorsa...</option>
-            @for (e of assignList(); track e.id) { <option [value]="e.id">{{ e.name }} {{ e.surname }}</option> }
-          </select>
-        </div>
-
-        <div class="field-row">
-          <label>Ruolo</label>
-          <select [value]="assignSelectedRoleId() ?? ''" (change)="assignSelectedRoleId.set($any($event.target).value || null)">
-            <option value="">Seleziona ruolo...</option>
-            @for (r of jobRolesList(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
-          </select>
-        </div>
-
-        <div class="field-row">
-          <label>Livello</label>
-          <select [value]="assignSelectedLevel() ?? ''" (change)="assignSelectedLevel.set($any($event.target).value || null)">
-            <option value="">Seleziona livello...</option>
-            @for (l of jobRoleLevelsList(); track l.id) { <option [value]="l.name">{{ l.name }}</option> }
-          </select>
-        </div>
-
-        <div class="actions">
-          <button appButton class="btn-primary" type="button" (click)="saveAssignSingle()">Salva</button>
-          <button appButton type="button" (click)="closeAssignPanel()">Annulla</button>
-        </div>
-      </div>
-    } <!-- TO-DO: implementare il component giusto per il form ed il banner -->
-
     <form (ngSubmit)="submit()" [formGroup]="newProjectForm" class="np-form--grid">
       @for (h of headers; track h.key) {
         <div class="np-field--grid">
@@ -128,9 +91,8 @@
             <span>Ruolo</span><span>Livello</span><span>Costo G.</span><span>Giorni</span><span>Win %</span><span></span>
           </div>
           
-          @for (roleCtrl of projectJobRoles.controls; track $index; let i = $index) {
+          @for (roleCtrl of projectJobRoles.controls; track roleCtrl; let i = $index) {
             <div class="role-grid-row" [formGroupName]="i">
-              
               <div class="np-role-field">
                 <select class="np-input-direct" formControlName="jobRole" (change)="onFieldChange()">
                   <option [ngValue]="null" disabled selected>Scegli un ruolo...</option>
@@ -166,10 +128,17 @@
               </div>
 
               <div class="np-role-field">
-                <input type="text" inputmode="decimal" class="np-input-direct" formControlName="winProbability" (input)="onFieldChange()" />
-                @if ((roleCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(roleCtrl.value)) {
-                  <span class="error">*valore errato</span>
-                }
+                <input 
+                    type="text" 
+                    inputmode="decimal" 
+                    class="np-input-direct" 
+                    formControlName="winProbability" 
+                    (input)="onFieldChange()" 
+                    (blur)="onWinProbabilityBlur(roleCtrl.get('winProbability'))" />
+                    
+                  @if ((roleCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(roleCtrl.value)) {
+                    <span class="error">*valore errato (1-100 con max 2 decimali)</span>
+                  }
               </div>
 
               <button type="button" class="btn-remove" (click)="removeRole(i)">×</button>
@@ -181,32 +150,22 @@
       <div class="np-resources-section" formArrayName="projectEmployees">
         <div class="resources-header">
           <h3 class="np-title-sm">Risorse</h3>
-           <button type="button" class="btn-add-resource" (click)="addEmployee()">+ Aggiungi Risorsa</button>
+          <button type="button" class="btn-add-resource" (click)="addEmployee()">+ Aggiungi Risorsa</button>
         </div>
-        @if (!showAssignPanel()) {
-          @if (hasUnassignedInProject()) {
-            <div class="banner warning">
-              <strong>Attenzione:</strong> Ci sono risorse non assegnate ("Unassigned") in questo progetto.
-              <div class="banner-actions">
-                <button appButton class="btn-small" type="button" (click)="openAssignPanel()">Apri Assegna Risorse</button>
-                <button appButton class="btn-small btn-outline" type="button" (click)="onCancel()">Annulla</button>
-              </div>
-            </div>
-          }
-        }
         
         @if (projectEmployees.length > 0) {
           <div class="resource-grid-header">
             <span>Risorsa</span><span>Costo G.</span><span>Giorni</span><span>Win %</span><span></span>
           </div>
           
-          @for (empCtrl of projectEmployees.controls; track $index; let i = $index) {
+          @for (empCtrl of projectEmployees.controls; track empCtrl; let i = $index) {
             <div class="resource-grid-row" [formGroupName]="i">
-              
               <div class="np-resource-field">
                 <select class="np-input-direct" formControlName="employeeId" (change)="onFieldChange()">
                   <option [ngValue]="null" disabled selected>Scegli una risorsa...</option>
-                  @for (opt of employeesList(); track opt.id) { <option [value]="opt.id">{{ opt.name }} {{ opt.surname }}</option> }
+                  @for (opt of employeesList(); track opt.id) { 
+                    <option [value]="opt.id">{{ opt.name }} {{ opt.surname }}</option> 
+                  }
                 </select>
                 @if (empCtrl.get('employeeId')?.invalid && (empCtrl.get('employeeId')?.dirty || attemptedSubmit)) {
                   <span class="error">*obbligatorio</span>
@@ -228,24 +187,62 @@
               </div>
 
               <div class="np-resource-field">
-                <input type="text" inputmode="decimal" class="np-input-direct" formControlName="winProbability" (input)="onFieldChange()" />
-                @if ((empCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(empCtrl.value)) {
-                  <span class="error">*valore errato</span>
-                }
+                <input 
+                    type="text" 
+                    inputmode="decimal" 
+                    class="np-input-direct" 
+                    formControlName="winProbability" 
+                    (input)="onFieldChange()" 
+                    (blur)="onWinProbabilityBlur(empCtrl.get('winProbability'))" />
+                    
+                  @if ((empCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(empCtrl.value)) {
+                    <span class="error">*valore errato (1-100 con max 2 decimali)</span>
+                  }
               </div>
 
               <button type="button" class="btn-remove" (click)="removeEmployee(i)">×</button>
             </div>
+
+            @if (isEmployeeUnassigned(empCtrl.get('employeeId')?.value)) {
+              <div class="unassigned-row-container" style="grid-column: 1 / -1; margin: 0.5rem 0 1.5rem 0; padding: 0 0.5rem;">
+                
+                @if (activeAssignIndex() !== i) {
+                  <div class="banner warning" style="margin: 0; padding: 0.6rem 1rem; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; background-color: #fff3cd; border: 1px solid #ffeeba;">
+                    <span style="font-size: 0.875rem; color: #856404; font-weight: 500;">⚠️ Questa risorsa risulta <strong>Unassigned</strong> nel sistema.</span>
+                    <button appButton class="btn-small" type="button" style="padding: 0.3rem 0.85rem; font-size: 0.8rem; background-color: #ffc107; border: none; color: #212529; font-weight: 600;"
+                      (click)="activeAssignIndex.set(i); assignSelectedEmployeeId.set(empCtrl.get('employeeId')?.value)">
+                      Assegna Ruolo
+                    </button>
+                  </div>
+                } @else {
+                  <app-assign-single
+                    [employees]="employeesList()"
+                    [levels]="jobRoleLevelsList()"
+                    [roles]="jobRolesList()"
+                    [companies]="companiesList()"
+                    [selectedEmployeeIdFromForm]="assignSelectedEmployeeId()"
+                    (cancel)="closeAssignPanel()"
+                    (saved)="onAssignSaved($event)">
+                  </app-assign-single>
+                }
+              </div>
+            }
           }
         }
       </div>
 
+      @if (newProjectForm.valid && hasValidRoles() && hasValidResources() && !isChanged()) {
+        <div class="info-message">
+          <p>ℹ️ Il form è vuoto o identico allo stato iniziale. Inserisci i dati per procedere.</p>
+        </div>
+      }
+
       <div class="actions">
         <button
           type="submit"
-          class="btn-primary"
-          [attr.aria-disabled]="isSubmitDisabled()"
-          [class.btn--disabled]="isSubmitDisabled()"
+          [disabled]="isButtonDisabled()"
+          [attr.aria-disabled]="isButtonDisabled()"
+          [class.btn--disabled]="isButtonDisabled()"
           (click)="onSubmitClick($event)">
           Crea Progetto
         </button>

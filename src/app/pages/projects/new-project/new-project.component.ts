@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject, output, signal, effect, DestroyRef } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Component, HostListener, OnInit, inject, output, signal, effect, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin, timer } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Project } from '../../../shared/models/project.model';
@@ -15,8 +15,8 @@ import { ProjectsService } from '../../../shared/services/projects.service';
 import { RolesService } from '../../../shared/services/roles.service';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../shared/payloads/employee.payloads';
-import { Role } from '../../../shared/models/role.model';
 import { Employee } from '../../../shared/models/employee.model';
+import { AssignSingleComponent } from '../project/assign-single/assign-single.component';
 import {
   buildEditableProjectHeaders,
   calculateProjectTotals,
@@ -31,12 +31,14 @@ import {
   isProjectRoleComplete,
   parseIsoDate,
   toElementId,
+  getProjectFieldPattern,
+  getProjectFormComparableSnapshot
 } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-new-progetto',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, TextInputComponent],
+  imports: [ReactiveFormsModule, CommonModule, TextInputComponent, AssignSingleComponent],
   templateUrl: './new-project.component.html',
 })
 export class NewProgettoComponent implements OnInit {
@@ -46,16 +48,13 @@ export class NewProgettoComponent implements OnInit {
   private lookupsService = inject(LookupsService);
   private employeesService = inject(EmployeesService);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
 
-  showAssignPanel = signal(false);
-  assignRole = signal<Role | null>(null);
-  assignList = signal<Employee[]>([]);
-  hasUnassignedInProject = signal(false);
-  // inline assign state
+  private pendingEmployeeAssignments = new Map<string, Employee>();
+  hasMadeInlineAssignment = signal(false);
+  activeAssignIndex = signal<number | null>(null);
   assignSelectedEmployeeId = signal<string | null>(null);
-  assignSelectedRoleId = signal<string | null>(null);
-  assignSelectedLevel = signal<string | null>(null);
 
   companiesList = signal<any[]>([]);
   customersList = signal<any[]>([]);
@@ -68,23 +67,32 @@ export class NewProgettoComponent implements OnInit {
   pmFilterValue = signal('');
 
   created = output<Project>();
+  isSaving = signal(false);
   cancel = output<void>();
 
   newProjectForm!: FormGroup;
   private originalFormSnapshot = '';
   
-  isSubmitDisabled = signal(true);
-
   attemptedSubmit = false;
   noChangesMessage = false;
   statusMessage: { text: string; type: 'success' | 'error' } | null = null;
   dateRangeError = false;
 
   readonly headers = buildEditableProjectHeaders();
+  readonly getPattern = getProjectFieldPattern;
+
+  isButtonDisabled = signal(true);
 
   constructor() {
     this.initForm();
     this.setupEmployeesEffect();
+  }
+
+  private setupEmployeesEffect() {
+    effect(() => {
+      const _ = this.employeesList();
+      this.recomputeUnassignedFlag();
+    });
   }
 
   initForm() {
@@ -92,15 +100,29 @@ export class NewProgettoComponent implements OnInit {
 
     this.headers.forEach(header => {
       const initialValue = header.key === 'startDate' ? getTodayIsoDate() : '';
-      formControls[header.key] = [initialValue];
+      if (['name', 'companyId', 'customerId', 'pmId', 'winProbability'].includes(header.key)) {
+        formControls[header.key] = [initialValue, Validators.required];
+      } else {
+        formControls[header.key] = [initialValue];
+      }
     });
 
     formControls['projectJobRoles'] = this.fb.array([]);
     formControls['projectEmployees'] = this.fb.array([]);
 
     this.newProjectForm = this.fb.group(formControls);
+  }
 
-    this.setupReactiveCalculations();
+  checkButtonState() {
+    const disabled = this.isSaving() || 
+                     this.dateRangeError || 
+                     this.resourceDaysExceeded ||
+                     this.newProjectForm.invalid || 
+                     !this.hasValidRoles() || 
+                     !this.hasValidResources() || 
+                     !this.isChanged();
+                     
+    this.isButtonDisabled.set(disabled);
   }
 
   ngOnInit() {
@@ -122,89 +144,61 @@ export class NewProgettoComponent implements OnInit {
         this.jobRoleLevelsList.set(lookups.levels);
 
         const defaultStatusId = lookups.statuses.find((status) => status.name === 'Initiation')?.id || null;
-        this.newProjectForm.patchValue({ projectStatus: defaultStatusId });
-        
-        this.originalFormSnapshot = JSON.stringify(this.newProjectForm.getRawValue());
-        
-        this.newProjectForm.valueChanges.subscribe(() => this.updateSubmitStatus());
-        this.updateSubmitStatus();
-        this.recomputeUnassignedFlag();
+        this.newProjectForm.patchValue({ projectStatusId: defaultStatusId }, { emitEvent: false });
+
+        this.setupReactiveCalculations();        
+        this.originalFormSnapshot = getProjectFormComparableSnapshot(this.newProjectForm.getRawValue());
+
+        this.checkButtonState()
+        this.cdr.detectChanges();
     });  
   }
 
-  private setupEmployeesEffect() {
-    effect(() => {
-      const _ = this.employeesList();
-      this.recomputeUnassignedFlag();
-    });
+  isEmployeeUnassigned(employeeId: string): boolean {
+    if (!employeeId) return false;
+    const emp = this.employeesList().find(e => String(e.id) === String(employeeId));
+    return emp ? (emp.jobRole || '').toString().toLowerCase() === 'unassigned' : false;
   }
 
-  openAssignPanel() {
-    const allRoles = this.jobRolesList() || [];
-    console.log('[NewProject] openAssignPanel called');
-    const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
-    const roleForPanel: Role = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
-
-    const projectEmps = this.projectEmployees.getRawValue() || [];
-    const projectEmpIds = projectEmps.map((pe: any) => (pe.employeeId || pe.id) && String(pe.employeeId || pe.id)).filter(Boolean);
-    const allEmps = this.employeesList() || [];
-    const assignedUnassignedInProject = allEmps.filter(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
-
-    this.assignRole.set(roleForPanel);
-    this.assignList.set(assignedUnassignedInProject);
-    this.showAssignPanel.set(true);
+  closeAssignPanel() {
+    this.activeAssignIndex.set(null);
   }
-
-  closeAssignPanel() { this.showAssignPanel.set(false); }
 
   onAssignSaved(updated: Employee[]) {
-    this.showAssignPanel.set(false);
-    this.employeesService.loadAllEmployees().subscribe({ next: (emps) => { this.employeesList.set(emps); this.recomputeUnassignedFlag(); } });
-  }
+    this.activeAssignIndex.set(null);
+    
+    if (updated && updated.length > 0) {
+      const updatedEmp = updated[0];
+      const resolvedRoleId = this.resolveLookupId(this.jobRolesList(), updatedEmp.jobRole);
+      const resolvedLevelId = this.resolveLookupId(this.jobRoleLevelsList(), updatedEmp.jobRoleLevel);
+      const controls = this.projectEmployees.controls;
+      
+      this.pendingEmployeeAssignments.set(String(updatedEmp.id), updatedEmp);
+      this.employeesList.update((employees) =>
+        employees.map((employee) => String(employee.id) === String(updatedEmp.id) ? updatedEmp : employee)
+      );
 
-  chooseAssignEmployee(id: string | null) {
-    this.assignSelectedEmployeeId.set(id);
-    if (!id) return;
-    const e = (this.employeesList() || []).find(x => String(x.id) === String(id));
-    if (e) {
-      this.assignSelectedLevel.set(e.jobRoleLevel || null);
-      this.assignSelectedRoleId.set(e.jobRole || null);
+      for (let i = 0; i < controls.length; i++) {
+        const ctrl = controls[i];
+        const ctrlId = ctrl.get('employeeId')?.value || ctrl.get('id')?.value;
+        
+        if (String(ctrlId) === String(updatedEmp.id)) {
+          ctrl.patchValue({
+            jobRole: resolvedRoleId,
+            jobRoleLevel: resolvedLevelId,
+          });
+          ctrl.markAsDirty();
+          break;
+        }
+      }
+
+      this.hasMadeInlineAssignment.set(true); 
+      this.newProjectForm.markAsDirty();
+      this.cdr.markForCheck();
     }
   }
 
-  saveAssignSingle() {
-    const empId = this.assignSelectedEmployeeId();
-    if (!empId) return;
-    const emp = (this.employeesList() || []).find(x => String(x.id) === String(empId));
-    if (!emp) return;
-
-    const roleId = this.assignSelectedRoleId();
-    const level = this.assignSelectedLevel() || 'Junior';
-
-    const payload = buildEmployeePayload({ ...emp, jobRoleLevel: level, jobRole: roleId }, {
-      selectedRoleId: roleId,
-      levels: this.jobRoleLevelsList(),
-      companies: this.companiesList(),
-    });
-
-    const uiFallback = buildEmployeeUiFallback({ ...emp, jobRole: roleId ? (this.jobRolesList().find(r => String(r.id) === String(roleId))?.name || '') : '', jobRoleLevel: level }, emp.id);
-
-    this.employeesService.updateEmployee(emp.id, payload, uiFallback).subscribe({
-      next: () => {
-        this.employeesService.loadAllEmployees().subscribe({ next: (emps) => { this.employeesList.set(emps); this.recomputeUnassignedFlag(); } });
-        this.showAssignPanel.set(false);
-      },
-      error: () => {
-        this.statusMessage = { text: 'Errore durante l\'aggiornamento', type: 'error' };
-      }
-    });
-  }
-
   recomputeUnassignedFlag() {
-    const projectEmpIds = (this.projectEmployees.getRawValue() || []).map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);
-    const allEmps = this.employeesList() || [];
-    const has = allEmps.some(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
-    this.hasUnassignedInProject.set(has);
   }
 
   private setupReactiveCalculations() {
@@ -224,6 +218,10 @@ export class NewProgettoComponent implements OnInit {
 
     this.projectJobRoles.valueChanges.subscribe(() => this.recalculateTotals());
     this.projectEmployees.valueChanges.subscribe(() => this.recalculateTotals());
+
+    this.newProjectForm.valueChanges.subscribe(() => {
+      this.checkButtonState();
+    });
   }
 
   private recalculateDateRange() {
@@ -236,7 +234,6 @@ export class NewProgettoComponent implements OnInit {
     }
     if (end < start) {
       this.dateRangeError = true;
-      this.updateSubmitStatus();
       return;
     }
     this.dateRangeError = false;
@@ -250,26 +247,29 @@ export class NewProgettoComponent implements OnInit {
     const totals = calculateProjectTotals([...roles, ...employees]);
 
     this.newProjectForm.patchValue({
-      totalDays: totals.totalDays,
       totalBudget: formatEuroCurrency(totals.totalBudget)
     }, { emitEvent: false });
   }
 
-  updateSubmitStatus() {
-    if (!this.originalFormSnapshot) {
-      this.isSubmitDisabled.set(true);
-      return;
-    }
+  get resourceDaysExceeded(): boolean {
+    const projectDays = Number(this.newProjectForm.get('totalDays')?.value || 0);
+    const roles = this.projectJobRoles.getRawValue() || [];
+    const employees = this.projectEmployees.getRawValue() || [];
+    
+    const totalAllocatedDays = roles.reduce((sum: number, r: any) => sum + Number(r.daysSpent || 0), 0) +
+                               employees.reduce((sum: number, e: any) => sum + Number(e.daysSpent || 0), 0);
+    
+    return totalAllocatedDays > projectDays;
+  }
 
-    const isRangeInvalid = this.dateRangeError;
-    const isFormInvalid = this.newProjectForm.invalid;
-    const areRolesInvalid = !this.hasValidRoles();
-    const areResourcesInvalid = !this.hasValidResources();
-    const isUnchanged = !this.isChanged();
-
-    this.isSubmitDisabled.set(
-      isRangeInvalid || isFormInvalid || areRolesInvalid || areResourcesInvalid || isUnchanged
-    );
+  isSubmitDisabled(): boolean {
+    return this.isSaving() || 
+           this.dateRangeError || 
+           this.resourceDaysExceeded ||
+           this.newProjectForm.invalid || 
+           !this.hasValidRoles() || 
+           !this.hasValidResources() || 
+           !this.isChanged();
   }
 
   get projectJobRoles(): FormArray {
@@ -281,13 +281,11 @@ export class NewProgettoComponent implements OnInit {
   }
 
   addRole() {
-    const roleGroup = this.fb.group(createEmptyProjectRole());
-    this.projectJobRoles.push(roleGroup);
+    this.projectJobRoles.push(this.fb.group(createEmptyProjectRole()));
   }
 
   addEmployee() {
-    const employeeGroup = this.fb.group(createEmptyProjectEmployee());
-    this.projectEmployees.push(employeeGroup);
+    this.projectEmployees.push(this.fb.group(createEmptyProjectEmployee()));
   }
 
   removeRole(index: number) {
@@ -299,19 +297,21 @@ export class NewProgettoComponent implements OnInit {
   }
 
   isChanged(): boolean {
-    return JSON.stringify(this.newProjectForm.getRawValue()) !== this.originalFormSnapshot;
+    if (this.hasMadeInlineAssignment()) return true;
+    const currentFormValue = this.newProjectForm.getRawValue();
+    return getProjectFormComparableSnapshot(currentFormValue) !== this.originalFormSnapshot;
   }
 
   hasValidRoles(): boolean {
     const roles = this.projectJobRoles.getRawValue();
     if (!roles || roles.length === 0) return true;
-    return roles.every((role: any) => isProjectRoleComplete(role));
+    return roles.every((role: any) => isProjectRoleComplete(role) && !this.getWinProbabilityError(role));
   }
 
   hasValidResources(): boolean {
     const employees = this.projectEmployees.getRawValue();
     if (!employees || employees.length === 0) return true;
-    return employees.every((employee: any) => isProjectEmployeeComplete(employee));
+    return employees.every((employee: any) => isProjectEmployeeComplete(employee) && !this.getWinProbabilityError(employee));
   }
 
   onSubmitClick(event: Event) {
@@ -327,7 +327,7 @@ export class NewProgettoComponent implements OnInit {
   submit() {
     if (this.isSubmitDisabled()) return;
 
-    this.isSubmitDisabled.set(true);
+    this.isSaving.set(true);
 
     const formValue = this.newProjectForm.getRawValue();
     const rawTotals = calculateProjectTotals([...formValue.projectJobRoles, ...formValue.projectEmployees]);
@@ -350,27 +350,38 @@ export class NewProgettoComponent implements OnInit {
           detailRequests.push(this.projectsService.addProjectEmployee(newProjectId, [buildProjectEmployeePayload(employee)]));
         });
 
+        this.pendingEmployeeAssignments.forEach((employee) => {
+          detailRequests.push(this.buildPendingEmployeeAssignmentCall(employee));
+        });
+
         if (!detailRequests.length) {
-          this.created.emit(createdProject);
+          this.finalizeSubmit(createdProject);
           return;
         }
 
         forkJoin(detailRequests).subscribe({
           next: () => {
             this.showNotification('Progetto creato con successo!', 'success');
-            this.created.emit(createdProject);
+            this.finalizeSubmit(createdProject);
           },
           error: () => {
             this.showNotification('Progetto creato, ma errore nel salvataggio di ruoli/risorse.', 'error');
-            this.isSubmitDisabled.set(false);
+            this.isSaving.set(false);
           },
         });
       },
       error: () => {
         this.showNotification('Errore nella creazione del progetto.', 'error');
-        this.isSubmitDisabled.set(false);
+        this.isSaving.set(false);
       },
     });
+  }
+
+  private finalizeSubmit(createdProject: Project) {
+    this.isSaving.set(false);
+    this.hasMadeInlineAssignment.set(false);
+    this.pendingEmployeeAssignments.clear();
+    this.created.emit(createdProject);
   }
 
   onCancel() {
@@ -386,13 +397,18 @@ export class NewProgettoComponent implements OnInit {
     return key === 'winProbability' || key === 'totalDays' || key === 'totalBudget';
   }
 
-  getPattern(key: string): string {
-    if (key === 'winProbability') return '^(100|[1-9][0-9]?)$';
-    if (key === 'totalBudget') {
-      return '^\\s*(?:\\u20AC\\s*)?(?:\\d{1,3}(?:[.,]\\d{3})*|\\d+)(?:[.,]\\d{1,2})?\\s*(?:\\u20AC\\s*)?$';
+  onWinProbabilityBlur(control: any) {
+    const val = control?.value;
+    if (!val) return;
+
+    const normalized = String(val).replace(',', '.');
+    const num = parseFloat(normalized);
+
+    if (!isNaN(num) && num >= 1 && num <= 100) {
+      // Imposta il valore a 2 cifre decimali fisse
+      control.setValue(num.toFixed(2), { emitEvent: true });
     }
-    if (this.isNumericField(key)) return '^[0-9]+$';
-    return '';
+    this.onFieldChange();
   }
 
   getOptions(key: string): any[] {
@@ -462,6 +478,35 @@ export class NewProgettoComponent implements OnInit {
 
   getWinProbabilityError(item: any) {
     return getWinProbabilityError(item);
+  }
+
+  private buildPendingEmployeeAssignmentCall(employee: Employee) {
+    const roleId = this.resolveLookupId(this.jobRolesList(), employee.jobRole);
+    const roleName = roleId
+      ? (this.jobRolesList().find((role) => String(role.id) === String(roleId))?.name || employee.jobRole)
+      : employee.jobRole;
+
+    const payload = buildEmployeePayload(employee, {
+      selectedRoleId: roleId,
+      levels: this.jobRoleLevelsList(),
+      companies: this.companiesList(),
+    });
+    const uiFallback = buildEmployeeUiFallback({ ...employee, jobRole: roleName }, employee.id);
+
+    return this.employeesService.updateEmployee(employee.id, payload, uiFallback);
+  }
+
+  private resolveLookupId(options: any[], value: string | null | undefined): string | null {
+    if (!value) return null;
+
+    const valueAsString = String(value);
+    const normalizedValue = valueAsString.trim().toLowerCase();
+    const match = options.find((option) =>
+      String(option.id || option.Id) === valueAsString ||
+      String(option.name || option.Name || '').trim().toLowerCase() === normalizedValue
+    );
+
+    return match ? (match.id || match.Id) : valueAsString;
   }
 
   private showNotification(text: string, type: 'success' | 'error') {

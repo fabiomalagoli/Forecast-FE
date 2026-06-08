@@ -125,10 +125,17 @@
                 }
               </div>
               <div class="np-role-field">
-                <input type="text" inputmode="decimal" class="np-input-direct" formControlName="winProbability" (input)="onFieldChange()" />
-                @if ((roleCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(roleCtrl.value)) {
-                  <span class="error">*valore errato</span>
-                }
+                <input 
+                    type="text" 
+                    inputmode="decimal" 
+                    class="np-input-direct" 
+                    formControlName="winProbability" 
+                    (input)="onFieldChange()" 
+                    (blur)="onWinProbabilityBlur(roleCtrl.get('winProbability'))" />
+                    
+                  @if ((roleCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(roleCtrl.value)) {
+                    <span class="error">*valore errato (1-100 con max 2 decimali)</span>
+                  }
               </div>
               <button type="button" class="btn-remove" (click)="removeRole(i)">×</button>
             </div>
@@ -177,10 +184,17 @@
               </div>
 
               <div class="np-resource-field">
-                <input type="text" inputmode="decimal" class="np-input-direct" formControlName="winProbability" (input)="onFieldChange()" />
-                @if ((empCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(empCtrl.value)) {
-                  <span class="error">*valore errato</span>
-                }
+                <input 
+                    type="text" 
+                    inputmode="decimal" 
+                    class="np-input-direct" 
+                    formControlName="winProbability" 
+                    (input)="onFieldChange()" 
+                    (blur)="onWinProbabilityBlur(empCtrl.get('winProbability'))" />
+                    
+                  @if ((empCtrl.get('winProbability')?.dirty || attemptedSubmit) && getWinProbabilityError(empCtrl.value)) {
+                    <span class="error">*valore errato (1-100 con max 2 decimali)</span>
+                  }
               </div>
 
               <button type="button" class="btn-remove" (click)="removeEmployee(i)">×</button>
@@ -224,9 +238,9 @@
       <div class="actions">
         <button
           type="submit"
-          [disabled]="isSubmitDisabled()"
-          [attr.aria-disabled]="isSubmitDisabled()"
-          [class.btn--disabled]="isSubmitDisabled()"
+          [disabled]="isButtonDisabled()"
+          [attr.aria-disabled]="isButtonDisabled()"
+          [class.btn--disabled]="isButtonDisabled()"
           (click)="onSubmitClick($event)">
           Salva Modifiche
         </button>
