@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, output } from '@angular/core';
+import { Component, ViewEncapsulation, output, signal } from '@angular/core';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { CUSTOMER_HEADERS } from '../customer/customer.headers';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,15 +9,18 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   selector: 'app-new-customer',
   imports: [FormsModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './new-customer.component.html',
+  styleUrls: ['./new-customer.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class NewCustomerComponent {
-readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
+  readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
     .filter(([key, label]) => key !== 'id' && label !== 'Progetti Attivi')
     .map(([key, label]) => ({ key, label }));
   created = output<Customer>();
   cancel = output<void>();
   formData: any = {};
+
+  attemptedSubmit = signal(false);
 
   customerForm!: FormGroup;
 
@@ -41,6 +44,8 @@ readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string]
   }
 
   submit() {
+    this.attemptedSubmit.set(true);
+
     if(this.customerForm.invalid) {
       this.customerForm.markAllAsTouched();
       return;
@@ -50,10 +55,15 @@ readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string]
     this.created.emit(createdCustomer);
 
     this.customerForm.reset();
+    this.attemptedSubmit.set(false);
   }
 
   onCancel() {
     this.cancel.emit();
+  }
+
+  onFieldChange() {
+    this.attemptedSubmit.set(false);
   }
 
   //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali.
