@@ -136,19 +136,8 @@ export function getProjectFormComparableSnapshot(formData: any): string {
     totalBudget: parseCurrencyNumber(formData.totalBudget),
     totalDays: Number(formData.totalDays || 0),
 
-    projectJobRoles: (formData.projectJobRoles || []).map((role: any) => ({
-      ...role,
-      dailyCost: parseCurrencyNumber(role.dailyCost),
-      daysSpent: Number(role.daysSpent || 0),
-      winProbability: parseDecimalNumber(role.winProbability)
-    })).sort((a: any, b: any) => String(a.jobRole).localeCompare(String(b.jobRole))),
-
-    projectEmployees: (formData.projectEmployees || []).map((emp: any) => ({
-      ...emp,
-      dailyCost: parseCurrencyNumber(emp.dailyCost),
-      daysSpent: Number(emp.daysSpent || 0),
-      winProbability: parseDecimalNumber(emp.winProbability)
-    })).sort((a: any, b: any) => String(a.employeeId).localeCompare(String(b.employeeId)))
+    projectJobRoles: getComparableProjectJobRoles(formData.projectJobRoles || []),
+    projectEmployees: getComparableProjectEmployees(formData.projectEmployees || []),
   };
 
   return JSON.stringify(comparable);
@@ -325,14 +314,28 @@ export function findEquivalentProjectEmployee(employees: any[] = [], employee: a
   });
 }
 
+// Helper per confronto dei ruoli
+function getComparableProjectJobRoles(roles: any[]): any[] {
+  return roles
+    .map((role) => getComparableProjectJobRole(role))
+    .sort((left, right) => String(left.jobRole).localeCompare(String(right.jobRole)));
+}
+
+function getComparableProjectJobRole(role: any): any {
+  return {
+    jobRole: role.jobRole || null,
+    jobRoleLevel: role.jobRoleLevel || null,
+    dailyCost: normalizeComparableNumber(parseCurrencyNumber(role.dailyCost)),
+    daysSpent: normalizeComparableNumber(Number(role.daysSpent || 0)),
+    winProbability: normalizeComparableNumber(parseDecimalNumber(role.winProbability)),
+  };
+}
+
+// Helper per confronto delle risorse
 function getComparableProjectEmployees(employees: any[]): any[] {
   return employees
     .map((employee) => getComparableProjectEmployee(employee))
-    .sort((left, right) => {
-      const leftId = left.employeeId || '';
-      const rightId = right.employeeId || '';
-      return leftId.localeCompare(rightId);
-    });
+    .sort((left, right) => String(left.employeeId).localeCompare(String(right.employeeId)));
 }
 
 function getComparableProjectEmployee(employee: any): any {
@@ -342,7 +345,7 @@ function getComparableProjectEmployee(employee: any): any {
     jobRoleLevel: employee.jobRoleLevel || null,
     dailyCost: normalizeComparableNumber(parseCurrencyNumber(employee.dailyCost)),
     daysSpent: normalizeComparableNumber(Number(employee.daysSpent || 0)),
-    winProbability: normalizeComparableNumber(Number(employee.winProbability)),
+    winProbability: normalizeComparableNumber(parseDecimalNumber(employee.winProbability)),
   };
 }
 
