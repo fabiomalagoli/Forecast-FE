@@ -64,6 +64,7 @@ export class ProjectsService {
       head: project.head,
       companyId: project.companyId,
       pmId: project.pmId,
+      isFavorite: project.isFavorite || false,
       startDate: toBackendDate(project.startDate),
       endDate: toBackendDate(project.endDate),
       totalDays: toNumber(project.totalDays),

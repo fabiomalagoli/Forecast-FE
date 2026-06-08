@@ -33,7 +33,9 @@ export class NewCustomerComponent {
     
     this.headers.forEach(header => {
       const validators = [Validators.required]
-      if (this.isNumericField(header.key)) {
+      if (header.key === 'streetNumber') {
+        validators.push(Validators.pattern(/^\d+(\/[a-zA-Z]+)?$/));
+      } else if (this.isNumericField(header.key)) {
         validators.push(Validators.pattern(/^\d+$/));
       }
 
@@ -72,7 +74,7 @@ export class NewCustomerComponent {
   }
 
   isNumericField(key: string): boolean {
-    const numericKeys = ['projects', 'postalCode', 'streetNumber', 'phone']; 
+    const numericKeys = ['projects', 'postalCode']; 
     return numericKeys.includes(key);
   }
 }

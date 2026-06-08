@@ -637,7 +637,7 @@ private finalizeSubmit(formValue: any) {
     const selectedStatus = this.projectStatusesList().find((status) => status.id === formValue.projectStatusId)?.name;
     const selectedPm = this.employeesList().find((employee) => employee.id === formValue.pmId);
 
-    return buildProjectUpdatePayload(formValue, projectId, {
+    return buildProjectUpdatePayload(formValue, projectId, this.selectedProjectToEdit().isFavorite, {
       company: selectedCompany,
       customer: selectedCustomer,
       projectStatus: selectedStatus,

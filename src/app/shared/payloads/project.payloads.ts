@@ -18,6 +18,7 @@ export interface ProjectUpdatePayload {
   winProbability: number;
   totalDays: number;
   totalBudget: number;
+  isFavorite: boolean;
 }
 
 export interface ProjectJobRolePayload {
@@ -41,6 +42,7 @@ export interface ProjectEmployeePayload {
 export function buildProjectUpdatePayload(
   formData: any,
   projectId: string,
+  isFavorite: boolean,
   selectedNames: {
     company?: string;
     customer?: string;
@@ -55,6 +57,7 @@ export function buildProjectUpdatePayload(
     customer: selectedNames.customer,
     projectStatus: selectedNames.projectStatus,
     pm: selectedNames.pm ?? formData.pm,
+    isFavorite: isFavorite,
     winProbability: cleanProbability(formData.winProbability),
     totalDays: Number(formData.totalDays),
     totalBudget: parseCurrencyNumber(formData.totalBudget),

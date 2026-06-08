@@ -75,7 +75,9 @@ export class EditCustomerComponent implements OnInit {
                 validators.push(Validators.maxLength(maxLength));
             }
 
-            if(this.isNumericField(key)) {
+            if (key === 'streetNumber') {
+                validators.push(Validators.pattern(/^\d+(\/[a-zA-Z]+)?$/));
+            } else if(this.isNumericField(key)) {
                 validators.push(Validators.pattern(/^\d+$/));
             }
 
@@ -175,10 +177,10 @@ export class EditCustomerComponent implements OnInit {
     }
 
     isNumericField(key: string): boolean {
-            const numericKeys = ['projects', 'postalCode', 'streetNumber'];
+            const numericKeys = ['projects', 'postalCode'];
             return numericKeys.includes(key);
     }
-    
+
     getRequiredErrorMessage(key: string): string {
         const messages: Record<string, string> = {
             vatNumber: 'Partita IVA obbligatoria',
