@@ -34,8 +34,8 @@ export class EmployeesComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private lookupsService = inject(LookupsService)
     private destroyRef = inject(DestroyRef);
-    private router = inject(Router);
     private snackbarService = inject(SnackbarService);
+    private isFromDetailsPage = signal(false);
 
     private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
 
@@ -69,22 +69,7 @@ export class EmployeesComponent implements OnInit {
     showAllLevelOptions = signal(false);
     showAllCompanyOptions = signal(false);
 
-    filteredEmployees = computed<Employee[]>(() => {
-        const hasFilters = !!(
-            this.filterNameValue() ||
-            this.filterRoleValue() ||
-            this.filterLevelValue() ||
-            this.filterCompanyValue()
-        );
-        const source = hasFilters ? this.allEmployees() : this.employees(); 
-
-        return source.filter(risorsa =>
-            this.fullName(risorsa).toLowerCase().includes(this.filterNameValue()) &&
-            risorsa.jobRole.toLowerCase().includes(this.filterRoleValue()) &&
-            risorsa.jobRoleLevel.toLowerCase().includes(this.filterLevelValue()) &&
-            risorsa.company.toLowerCase().includes(this.filterCompanyValue())
-        );
-    });
+    filteredEmployees = computed<Employee[]>(() => this.employees());
 
     nameFilterOptions = computed<Employee[]>(() => {
         const term = this.showAllNameOptions() ? '' : this.filterNameValue();
@@ -148,8 +133,29 @@ export class EmployeesComponent implements OnInit {
     currentPage = signal(this.employeesService.paginationData()?.currentPage || 1); 
     pageSize = this.employeesService.paginationData()?.pageSize || 10;
     pagination = this.employeesService.paginationData;
+    currentFilters = signal({
+        searchTerm: null as string | null,
+        jobRoleId: null as string | null,
+        jobRoleLevelId: null as string | null,
+        companyId: null as string | null
+     });
 
-    constructor() {
+    constructor(private router: Router) {
+
+        const currentNav = this.router.currentNavigation();
+        const previousUrl = currentNav?.previousNavigation?.finalUrl?.toString() || '';
+
+        this.isFromDetailsPage.set(previousUrl.includes('/risorse/'));
+
+        if(!this.isFromDetailsPage()){
+            (this.employeesService as any).currentFilters = {
+                searchTerm: null,
+                jobRoleId: null,
+                jobRoleLevelId: null,
+                companyId: null
+            }
+        }
+
         effect(() => {
             console.log('IL SEGNALE È CAMBIATO! Nuova lista risorse:', this.employees());
         });
@@ -178,7 +184,9 @@ export class EmployeesComponent implements OnInit {
         this.closePanel();
         this.error.set(null);
 
-        this.employeesService.loadEmployees(page, this.pageSize).pipe(
+        (this.employeesService as any).currentFilters = this.currentFilters();
+
+        this.employeesService.loadEmployees(page, this.pageSize, this.currentFilters()).pipe(
             finalize(() => {
                 this.isFetching.set(false);
                 this.isInitialLoading.set(false);
@@ -218,55 +226,115 @@ export class EmployeesComponent implements OnInit {
         }
     }
 
-    loadInitialData(forceInitialSpinner = false) {
-        const dataAlreadyLoaded = this.employeesService.loadedEmployees().length > 0;
-
-        this.isFetching.set(true);
-        this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
-        this.error.set(null);
-
-        const initRequests = [
-            this.employeesService.loadEmployees(this.currentPage(), this.pageSize),
-            this.employeesService.loadAllEmployees(),
-            this.rolesService.loadAllJobRoles(),
-            this.rolesService.loadJobRoleLevels(),
-            this.lookupsService.loadAvailableCompanies()
-        ];
-
-        forkJoin([
-            this.employeesService.loadEmployees(this.currentPage(), this.pageSize),
-            this.employeesService.loadAllEmployees(),
-            this.rolesService.loadAllJobRoles(),
-            this.rolesService.loadJobRoleLevels(),
-            this.lookupsService.loadAvailableCompanies(),
-            timer(1500)
-        ]).pipe(
-            finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
-            takeUntilDestroyed(this.destroyRef)
-        ).subscribe({
-            next: ([_, _allEmps, roles, levels, companies]) => {
-                this.jobRolesList.set(roles);
-                this.jobRoleLevelsList.set(levels);
-                this.companiesList.set(companies);
-
-                const meta = this.pagination();
-                if (meta) {
-                    this.currentPage.set(meta.currentPage);
-                    this.pageSize = meta.pageSize;
-                }
-            },
-            error: (err) => {
-                this.error.set(this.buildLoadEmployeesErrorMessage(err));               
-                this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
-                .onAction()
-                .subscribe(() => {
-                    this.loadInitialData(true);
-                });
-            }
+    private manageLoadingErrors(err: any) {
+        this.error.set(this.buildLoadEmployeesErrorMessage(err));               
+        this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
+        .onAction()
+        .subscribe(() => {
+            this.loadInitialData(true);
         });
     }
 
+    loadInitialData(forceInitialSpinner = false) {
+        const dataAlreadyLoaded = this.employeesService.loadedEmployees().length > 0;
+        this.error.set(null);
+
+        const reloadFiltersAndInterface = (roles: any[], levels: any[], companies: any[]) => {
+            this.jobRolesList.set(roles);
+            this.jobRoleLevelsList.set(levels);
+            this.companiesList.set(companies);
+
+            const savedFilters = (this.employeesService as any).currentFilters;
+            if (savedFilters) {
+                this.currentFilters.set(savedFilters);
+                
+                if (savedFilters.searchTerm) {
+                    this.filterEmployeeName.setValue(savedFilters.searchTerm, { emitEvent: false });
+                    this.filterNameValue.set(savedFilters.searchTerm.toLowerCase());
+                }
+                
+                const roleName = roles.find((r: any) => r.id === savedFilters.jobRoleId)?.name;
+                if (roleName) {
+                    this.filterRole.setValue(roleName, { emitEvent: false });
+                    this.filterRoleValue.set(roleName.toLowerCase());
+                }
+
+                const levelName = levels.find((l: any) => l.id === savedFilters.jobRoleLevelId)?.name;
+                if (levelName) {
+                    this.filterLevel.setValue(levelName, { emitEvent: false });
+                    this.filterLevelValue.set(levelName.toLowerCase());
+                }
+
+                const companyName = companies.find((c: any) => c.id === savedFilters.companyId)?.name;
+                if (companyName) {
+                    this.filterCompany.setValue(companyName, { emitEvent: false });
+                    this.filterCompanyValue.set(companyName.toLowerCase());
+                }
+            }
+
+            const meta = this.pagination();
+            if (meta) {
+                this.currentPage.set(meta.currentPage);
+                this.pageSize = meta.pageSize;
+            }
+        };
+
+        if (dataAlreadyLoaded && !forceInitialSpinner) {
+            this.isFetching.set(true);
+            this.isInitialLoading.set(false);
+
+            forkJoin([
+                this.employeesService.loadEmployees(this.currentPage(), this.pageSize, this.currentFilters()),
+                this.employeesService.loadAllEmployees(),
+                this.rolesService.loadAllJobRoles(),
+                this.rolesService.loadJobRoleLevels(),
+                this.lookupsService.loadAvailableCompanies()
+            ]).pipe(
+                finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
+                takeUntilDestroyed(this.destroyRef)
+            ).subscribe({
+                next: ([_, _allEmps, roles, levels, companies]) => reloadFiltersAndInterface(roles, levels, companies),
+                error: (err) => this.manageLoadingErrors(err)
+            });
+
+        } 
+
+        else {
+            this.isFetching.set(true);
+            this.isInitialLoading.set(true); // Mostra lo spinner 
+
+            forkJoin([
+                this.employeesService.loadEmployees(this.currentPage(), this.pageSize, this.currentFilters()),
+                this.employeesService.loadAllEmployees(),
+                this.rolesService.loadAllJobRoles(),
+                this.rolesService.loadJobRoleLevels(),
+                this.lookupsService.loadAvailableCompanies(),
+                timer(1500)
+            ]).pipe(
+                finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
+                takeUntilDestroyed(this.destroyRef)
+            ).subscribe({
+                next: ([_, _allEmps, roles, levels, companies]) => reloadFiltersAndInterface(roles, levels, companies),
+                error: (err) => this.manageLoadingErrors(err)
+            });
+        }
+    }
+
     ngOnInit() {
+        this.error.set(null);
+
+        const savedFilters = (this.employeesService as any).currentFilters;
+        if (savedFilters) {
+            this.currentFilters.set(savedFilters);
+        } else {
+            this.currentFilters.set({
+                searchTerm: null,
+                jobRoleId: null,
+                jobRoleLevelId: null,
+                companyId: null
+            });
+        }
+
         this.loadInitialData();
 
         const nameFilterSubscription = this.filterEmployeeName.valueChanges.pipe(
@@ -341,7 +409,7 @@ export class EmployeesComponent implements OnInit {
         this.isFetching.set(true);
         this.error.set(null);
         timer(3000).pipe(
-            switchMap(() => this.employeesService.loadEmployees(this.currentPage(), this.pageSize)),
+            switchMap(() => this.employeesService.loadEmployees(this.currentPage(), this.pageSize, this.currentFilters())),
             finalize(() => this.isFetching.set(false)),
             takeUntilDestroyed(this.destroyRef)
         ).subscribe({
@@ -440,15 +508,23 @@ export class EmployeesComponent implements OnInit {
 
     selectNameFilter(employee: Employee) {
         const employeeName = this.fullName(employee);
-        this.filterEmployeeName.setValue(employeeName);
+        this.filterEmployeeName.setValue(employeeName, { emitEvent: false });
         this.filterNameValue.set(employeeName.toLowerCase());
+
+        this.currentFilters.update(filters => ({ ...filters, searchTerm: employeeName }));
+        this.loadPage(1);
+
         this.nameDropdownOpen.set(false);
         this.showAllNameOptions.set(false);
     }
 
     clearNameFilter() {
-        this.filterEmployeeName.setValue('');
+        this.filterEmployeeName.setValue('', { emitEvent: false });
         this.filterNameValue.set('');
+
+        this.currentFilters.update(filters => ({ ...filters, searchTerm: null }));
+        this.loadPage(1);
+
         this.nameDropdownOpen.set(false);
         this.showAllNameOptions.set(false);
     }
@@ -470,15 +546,23 @@ export class EmployeesComponent implements OnInit {
 
     selectRoleFilter(role: any) {
         const roleName = this.optionName(role);
-        this.filterRole.setValue(roleName);
+        this.filterRole.setValue(roleName, { emitEvent: false });
         this.filterRoleValue.set(roleName.toLowerCase());
+
+        this.currentFilters.update(filters => ({ ...filters, jobRoleId: role.id }));
+        this.loadPage(1);
+
         this.roleDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
     }
 
     clearRoleFilter() {
-        this.filterRole.setValue('');
+        this.filterRole.setValue('', { emitEvent: false });
         this.filterRoleValue.set('');
+
+        this.currentFilters.update(filters => ({ ...filters, jobRoleId: null }));
+        this.loadPage(1);
+
         this.roleDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
     }
@@ -500,15 +584,23 @@ export class EmployeesComponent implements OnInit {
 
     selectLevelFilter(level: any) {
         const levelName = this.optionName(level);
-        this.filterLevel.setValue(levelName);
+        this.filterLevel.setValue(levelName, { emitEvent: false });
         this.filterLevelValue.set(levelName.toLowerCase());
+
+        this.currentFilters.update(filters => ({ ...filters, jobRoleLevelId: level.id }));
+        this.loadPage(1);
+
         this.levelDropdownOpen.set(false);
         this.showAllLevelOptions.set(false);
     }
 
     clearLevelFilter() {
-        this.filterLevel.setValue('');
+        this.filterLevel.setValue('', { emitEvent: false });
         this.filterLevelValue.set('');
+
+        this.currentFilters.update(filters => ({ ...filters, jobRoleLevelId: null }));
+        this.loadPage(1);
+
         this.levelDropdownOpen.set(false);
         this.showAllLevelOptions.set(false);
     }
@@ -530,8 +622,12 @@ export class EmployeesComponent implements OnInit {
 
     selectCompanyFilter(company: any) {
         const companyName = this.optionName(company);
-        this.filterCompany.setValue(companyName);
+        this.filterCompany.setValue(companyName, { emitEvent: false });
         this.filterCompanyValue.set(companyName.toLowerCase());
+
+        this.currentFilters.update(filters => ({ ...filters, companyId: company.id }));
+        this.loadPage(1);
+
         this.companyDropdownOpen.set(false);
         this.showAllCompanyOptions.set(false);
     }
@@ -539,6 +635,10 @@ export class EmployeesComponent implements OnInit {
     clearCompanyFilter() {
         this.filterCompany.setValue('');
         this.filterCompanyValue.set('');
+
+        this.currentFilters.update(filters => ({ ...filters, companyId: null }));
+        this.loadPage(1);
+
         this.companyDropdownOpen.set(false);
         this.showAllCompanyOptions.set(false);
     }

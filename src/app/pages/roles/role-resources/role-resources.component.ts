@@ -1,8 +1,7 @@
-import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Role } from '../../../shared/models/role.model';
 import { Employee } from '../../../shared/models/employee.model';
-import { EditEmployeeForRoleComponent } from './edit-employee-for-role/edit-employee-for-role.component';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { finalize, timer } from 'rxjs';
@@ -15,7 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   selector: 'app-role-resources',
   templateUrl: './role-resources.component.html',
   styleUrls: ['./role-resources.component.scss'],
-  imports: [EditEmployeeForRoleComponent, CommonModule, AppButtonComponent],
+  imports: [CommonModule, AppButtonComponent],
 })
 export class RoleResourcesComponent {
 
@@ -34,7 +33,9 @@ export class RoleResourcesComponent {
     risorseAssociate = input<any[]>([]);
     ruoloSelezionato = input<Role | null>(null);
 
-    risorsaInModifica = signal<Employee | null>(null);
+    editEmployee = output<Employee>();
+
+    // risorsaInModifica = signal<Employee | null>(null);
 
     risorsaPerDettaglio = signal<Employee | null>(null);
 
@@ -87,7 +88,7 @@ export class RoleResourcesComponent {
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
-                this.risorsaInModifica.set(null);
+                // this.risorsaInModifica.set(null);
                 this.statusMessage.set({text: 'Risorsa modificata con successo!', type: 'success'});
             },
             error: (err) => {
@@ -102,18 +103,18 @@ export class RoleResourcesComponent {
     }
 
     OpenEmployeeEditing(risorsa: Employee) {
-        this.risorsaInModifica.set(risorsa); // Fa apparire l' @if nel template
+        this.editEmployee.emit(risorsa);
     }
 
-    closeEmployeeEditing() {
-        this.risorsaInModifica.set(null); // Nasconde l' @if nel template
-    }
+    // closeEmployeeEditing() {
+    //     this.risorsaInModifica.set(null); // Nasconde l' @if nel template
+    // }
 
-    saveEdits() {
-        this.reloadEmployeesforRoleSelected();
-        this.closeEmployeeEditing();
-        this.showNotification('Modifiche salvate correttamente!', 'success');
-    }
+    // saveEdits() {
+    //     this.reloadEmployeesforRoleSelected();
+    //     this.closeEmployeeEditing();
+    //     this.showNotification('Modifiche salvate correttamente!', 'success');
+    // }
 
     showNotification(text: string, type: 'success' | 'error') {
         this.statusMessage.set({ text, type });

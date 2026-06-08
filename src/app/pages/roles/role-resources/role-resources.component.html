@@ -3,14 +3,6 @@
     <h3>Risorse Associate</h3>
   </div>
 
-  @if(risorsaInModifica()) {
-      <app-edit-employee-for-role
-          [risorsaDaModificare]="risorsaInModifica()"
-          (cancel)="closeEmployeeEditing()"
-          (modified)="saveEdits()"
-      ></app-edit-employee-for-role>
-  }
-
   @if (risorseAssociate().length === 0) {
     <div class="empty-state">
       <p>Nessuna risorsa trovata per questo ruolo.</p>

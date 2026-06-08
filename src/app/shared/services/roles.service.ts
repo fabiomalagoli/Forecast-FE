@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of } from 'rxjs';
 import { CreateRoleRequest, Role } from '../models/role.model';
 import { ErrorService } from '../error.service';
@@ -28,9 +28,14 @@ export class RolesService {
   }
 
   // --- JOB ROLES ---
-  loadJobRoles(pageNumber: number = 1, pageSize: number = 10) {
-    const url = `${environment.apiUrl}/jobroles?PageNumber=${pageNumber}&PageSize=${pageSize}`;
-    return this.httpClient.get<any[]>(url, { observe: 'response' }).pipe(
+  loadJobRoles(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
+    let url = `${environment.apiUrl}/jobroles?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+
+    let params = new HttpParams();
+    if (filters?.searchTerm) {
+      params = params.set('SearchTerm', filters.searchTerm);
+    }
+    return this.httpClient.get<any[]>(url, { params, observe: 'response' }).pipe(
       tap(response => {
         const paginationHeader = response.headers.get('X-Pagination');
         if (paginationHeader) {

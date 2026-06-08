@@ -1,10 +1,11 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of } from 'rxjs';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
+import { EmployeeFilters } from '../utils/filters.utils';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeesService {
@@ -31,10 +32,29 @@ export class EmployeesService {
     };
   }
 
-  loadEmployees(pageNumber: number = 1, pageSize: number = 10) {
-    const url = `${environment.apiUrl}/employees?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+  loadEmployees(pageNumber: number = 1, pageSize: number = 10, filters?: EmployeeFilters) {
+    let url = `${environment.apiUrl}/employees?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+
+    let params = new HttpParams()
+    .set('PageNumber', pageNumber.toString())
+    .set('PageSize', pageSize.toString());
     
-    return this.httpClient.get<any[]>(url, { observe: 'response' }).pipe(
+    if (filters) {
+      if (filters.searchTerm) {
+        params = params.set('SearchTerm', filters.searchTerm);
+      }
+      if (filters.jobRoleId) {
+        params = params.set('JobRoleId', filters.jobRoleId);
+      }
+      if (filters.jobRoleLevelId) {
+        params = params.set('JobRoleLevelId', filters.jobRoleLevelId);
+      }
+      if (filters.companyId) {
+        params = params.set('CompanyId', filters.companyId);
+      }
+    }
+
+    return this.httpClient.get<any[]>(url, { params, observe: 'response' }).pipe(
       tap((response) => {
         const paginationHeader = response.headers.get('X-Pagination');
         if (paginationHeader) {

@@ -88,7 +88,8 @@
                 <button class="btn-close-panel" (click)="closeSidePanel()">✖ Chiudi</button>
                 <app-role-resources 
                   [risorseAssociate]="filteredSelectedEmployees()"
-                  [ruoloSelezionato]="selectedRole()">
+                  [ruoloSelezionato]="selectedRole()"
+                  (editEmployee)="editingEmployee.set($event)">
                 </app-role-resources>
             </div>
         } @else {
@@ -137,4 +138,12 @@
   <div class="bottom-actions">
       <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
   </div>
+
+  @if(editingEmployee()) {
+    <app-edit-employee-for-role
+        [risorsaDaModificare]="editingEmployee()"
+        (cancel)="editingEmployee.set(null)"
+        (modified)="safeEditingEmployee()">
+    </app-edit-employee-for-role>
+  }
 }

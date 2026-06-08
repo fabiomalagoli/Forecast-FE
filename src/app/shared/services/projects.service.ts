@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, concatMap, forkJoin, map, switchMap, tap, throwError, of, Observable } from 'rxjs';
 import { Project } from '../models/project.model';
 import { Employee } from '../models/employee.model';
@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment.development';
 import { toBackendDate, toNumber, normalizeWinProbability } from '../utils/shared-utils';
 import { LookupsService } from './lookups.service';
 import { buildEntityError } from '../utils/http-error-message.utils';
+import { ProjectFilters } from '../utils/filters.utils';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
@@ -79,9 +80,29 @@ export class ProjectsService {
     );
   }
 
-  loadProjects(pageNumber: number = 1, pageSize: number = 10) {
-    const url = `${environment.apiUrl}/projects?PageNumber=${pageNumber}&PageSize=${pageSize}`;
-    return this.httpClient.get<any[]>(url, { observe: 'response' }).pipe(
+  loadProjects(pageNumber: number = 1, pageSize: number = 10, filters?: ProjectFilters) {
+    let url = `${environment.apiUrl}/projects?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+
+    let params = new HttpParams()
+    .set('PageNumber', pageNumber.toString())
+    .set('PageSize', pageSize.toString());
+
+    if (filters) {
+      if (filters.companyId) {
+        params = params.set('CompanyId', encodeURIComponent(filters.companyId));
+      }
+      if (filters.customerId) {
+        params = params.set('CustomerId', encodeURIComponent(filters.customerId));
+      }
+      if (filters.projectStatusId) {
+        params = params.set('ProjectStatusId', encodeURIComponent(filters.projectStatusId));
+      }
+      if (filters.searchTerm) {
+        params = params.set('SearchTerm', encodeURIComponent(filters.searchTerm));
+      }
+    }
+
+    return this.httpClient.get<any[]>(url, { params, observe: 'response' }).pipe(
       tap(response => {
         const paginationHeader = response.headers.get('X-Pagination');
         if (paginationHeader) {

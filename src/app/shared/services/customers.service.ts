@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of, Observable } from 'rxjs';
 import { Customer } from '../models/customer.model';
 import { ErrorService } from '../error.service';
@@ -47,8 +47,15 @@ export class CustomersService {
     );
   }
 
-  loadCustomers(pageNumber: number = 1, pageSize: number = 10) {
-    return this.httpClient.get<any[]>(`${environment.apiUrl}/customers?PageNumber=${pageNumber}&PageSize=${pageSize}`, { observe: 'response' }).pipe(
+  loadCustomers(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
+    let url = `${environment.apiUrl}/customers?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+
+    let params = new HttpParams();
+
+    if (filters?.searchTerm) {
+      params = params.set('SearchTerm', filters.searchTerm);
+    }
+    return this.httpClient.get<any[]>(url, { params, observe: 'response' }).pipe(
       tap(response => {
         const paginationHeader = response.headers.get('X-Pagination');
         if (paginationHeader) {
@@ -119,10 +126,9 @@ export class CustomersService {
   }
 
   setCustomerNameFilter(value: string) {
-    this.loadAvailableCustomers().pipe(
+    this.loadCustomers(1, 10, { searchTerm: value }).pipe(
       tap(customers => {
-        const filtered = customers.filter(c => c.name.toLowerCase().includes(value.toLowerCase()));
-        this.customers.set(filtered);
+        this.customers.set(customers);
       })
     ).subscribe();
   }

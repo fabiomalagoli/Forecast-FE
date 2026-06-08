@@ -17,6 +17,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
+import { Employee } from '../../shared/models/employee.model';
+import { EditEmployeeForRoleComponent } from "./role-resources/edit-employee-for-role/edit-employee-for-role.component";
 
 @Component({
   selector: 'app-roles',
@@ -32,8 +34,9 @@ import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message
     ModificaRoleComponent,
     AssignEmployeeComponent,
     AppButtonComponent,
-    MatProgressSpinnerModule
-  ],
+    MatProgressSpinnerModule,
+    EditEmployeeForRoleComponent
+],
 })
 export class RolesComponent implements OnInit {
     isFetching = signal(false);
@@ -45,6 +48,7 @@ export class RolesComponent implements OnInit {
     private snackbarService = inject(SnackbarService);
     
     private showMessage$ = new Subject<{ text: string, type: 'success' | 'error' }>();
+    private isFromDetails = signal(false);
 
     isInitialLoading = signal(this.rolesService.loadedJobRoles().length === 0);
     statusMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
@@ -52,19 +56,9 @@ export class RolesComponent implements OnInit {
     listAllJobRoles = this.rolesService.loadedAllJobRoles;
     roles = this.rolesService.loadedJobRoles;
 
-    filteredRoles = computed<Role[]>(() => {
-        const rolesData = this.roles() ?? [];
-        const AllRolesData = this.listAllJobRoles() ?? [];
-        const filtro = this.filterNameValue().toLowerCase();
+    filteredRoles = computed<Role[]>(() => this.roles());
 
-        // Esclude'Unassigned' dalla lista dei ruoli principali
-        const visibleRoles = rolesData.filter(r => (r?.name || '').toString().trim().toLowerCase() !== 'unassigned');
-
-        if (!filtro) return visibleRoles;
-
-        // Coi filtri, prendiamo comunque TUTTI i ruoli
-        return AllRolesData.filter(r => (r?.name || '').toString().toLowerCase().includes(filtro));
-    });
+    editingEmployee = signal<Employee | null>(null);
 
     filterNameValue = signal<string>('');
     filterNameRole = new FormControl('');
@@ -92,6 +86,9 @@ export class RolesComponent implements OnInit {
     currentPage = signal(this.rolesService.paginationData()?.currentPage || 1);
     pageSize = this.rolesService.paginationData()?.pageSize || 10;
     pagination = this.rolesService.paginationData;
+    currentFilters = signal({
+        searchTerm: null as string | null
+    });
 
     assigningRoleEmployees = computed<any[]>(() => {
         const ruolo = this.assigningRole();
@@ -104,6 +101,21 @@ export class RolesComponent implements OnInit {
     });
 
     constructor(private router: Router) {
+
+        const currentNav = this.router.currentNavigation();
+        const previousUrl = currentNav?.previousNavigation?.finalUrl?.toString() || null;
+
+        this.isFromDetails.set(previousUrl!.includes(`/risorse/`));
+
+        if(!this.isFromDetails()) {
+            (this.rolesService as any).currentFilters = {
+                searchTerm: null as string | null
+            };
+            if (typeof (this.rolesService as any).clearLastRoleSelected === 'function') {
+                (this.rolesService as any).clearLastRoleSelected();
+            }
+        }
+
         effect(() => {
         console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.roles());
         });
@@ -136,7 +148,7 @@ export class RolesComponent implements OnInit {
         this.error.set(null);
 
         forkJoin({
-            paginatedRoles: this.rolesService.loadJobRoles(this.currentPage(), this.pageSize),
+            filteredRoles: this.rolesService.loadJobRoles(this.currentPage(), this.pageSize, this.currentFilters()),
             allRoles: this.rolesService.loadAllJobRoles(),
             employees: this.employeesService.loadAllEmployees(),
             hold: timer(1500) // Aggiunta di un timer per garantire che lo spinner sia visibile per almeno 1.5 secondi
@@ -163,6 +175,20 @@ export class RolesComponent implements OnInit {
 
     ngOnInit() {
         this.error.set(null);
+
+        const savedTerm = (this.rolesService as any).currentFilters?.searchTerm || null;
+
+        if (savedTerm) {
+            this.currentFilters.set({ searchTerm: savedTerm });
+            this.filterNameRole.setValue(savedTerm, { emitEvent: false });
+            this.filterNameValue.set(savedTerm.toLowerCase());
+        }
+        else {
+            this.currentFilters.set({ searchTerm: null });
+            this.filterNameRole.setValue('', { emitEvent: false });
+            this.filterNameValue.set('');
+        }
+
         this.loadInitialData();
 
         this.filterNameRole.valueChanges.pipe(
@@ -175,8 +201,11 @@ export class RolesComponent implements OnInit {
         });
 
         const ruoloSalvato = this.rolesService.lastRoleSelected();
-        if (ruoloSalvato) {
+        if (ruoloSalvato && this.isFromDetails()) {
             this.mostraRisorsePerRuolo(ruoloSalvato);
+        }
+        else {
+            this.closeSidePanel();
         }
     }
 
@@ -191,7 +220,7 @@ export class RolesComponent implements OnInit {
         this.currentPage.set(page);
         this.error.set(null); 
 
-        this.rolesService.loadJobRoles(page, this.pageSize).pipe(
+        this.rolesService.loadJobRoles(page, this.pageSize, this.currentFilters()).pipe(
             finalize(() => {
                 this.isFetching.set(false);
                 this.isInitialLoading.set(false);
@@ -219,7 +248,7 @@ export class RolesComponent implements OnInit {
     ricaricaRuoli() {
         this.isFetching.set(true);
         this.error.set(null);
-        this.rolesService.loadJobRoles().pipe(
+        this.rolesService.loadJobRoles(1, this.pageSize, this.currentFilters()).pipe(
         finalize(() => this.isFetching.set(false)),
         takeUntilDestroyed(this.destroyRef)
         ).subscribe({
@@ -236,7 +265,7 @@ export class RolesComponent implements OnInit {
         
         // RxJS si occupa di gestire l'attesa di 3 secondi prima di far partire la chiamata
         timer(3000).pipe(
-        switchMap(() => this.rolesService.loadJobRoles()),
+        switchMap(() => this.rolesService.loadJobRoles(1, this.pageSize, this.currentFilters())),
         finalize(() => this.isFetching.set(false)),
         takeUntilDestroyed(this.destroyRef)
         ).subscribe({
@@ -248,6 +277,15 @@ export class RolesComponent implements OnInit {
             });
         },
         });
+    }
+
+    safeEditingEmployee() {
+        this.editingEmployee.set(null);
+        const role = this.selectedRole();
+        if(role) {
+            this.mostraRisorsePerRuolo(role);
+        }
+        this.snackbarService.success(NotifyAction.Aggiornamento, 'risorsa');
     }
 
     mostraRisorsePerRuolo(ruolo: any) {
@@ -290,16 +328,26 @@ export class RolesComponent implements OnInit {
 
     selectRoleFilter(role: Role) {
         const roleName = this.optionName(role);
-        this.filterNameRole.setValue(roleName);
+        this.filterNameRole.setValue(roleName, { emitEvent: false });
         this.filterNameValue.set(roleName.toLowerCase());
+
+        this.currentFilters.update(filters => ({ ...filters, searchTerm: roleName }));
+        (this.rolesService as any).currentFilters = { searchTerm: roleName }; // Salva il filtro di ricerca direttamente nel servizio per poterlo recuperare in caso di navigazione lontano dalla pagina e ritorno
+        this.caricaPagina(1); // Ricarica la prima pagina con il nuovo filtro
+
         this.roleFilterDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
         this.closeSidePanel();
     }
 
     clearRoleFilter() {
-        this.filterNameRole.setValue('');
+        this.filterNameRole.setValue('', { emitEvent: false });
         this.filterNameValue.set('');
+
+        this.currentFilters.update(filters => ({ ...filters, searchTerm: null }));
+        (this.rolesService as any).currentFilters = { searchTerm: null }; // Rimuove il filtro di ricerca salvato nel servizio
+        this.caricaPagina(1); // Ricarica la prima pagina senza il filtro
+
         this.roleFilterDropdownOpen.set(false);
         this.showAllRoleOptions.set(false);
         this.closeSidePanel();

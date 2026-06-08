@@ -27,9 +27,10 @@ import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message
 export class CustomersComponent implements OnInit {
 
   private customersService = inject(CustomersService);
-  private router = inject(Router);
+  // private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private snackbarService = inject(SnackbarService);
+  private isFromDetailsPage = signal(false);
 
   customers = this.customersService.loadedCustomers;
 
@@ -46,6 +47,7 @@ export class CustomersComponent implements OnInit {
   currentPage = signal(this.customersService.paginationData()?.currentPage || 1);
   pageSize = this.customersService.paginationData()?.pageSize || 10;
   pagination = this.customersService.paginationData;
+  currentFilters = signal({ searchTerm: null as string | null });
 
   AllCustomers = this.customersService.loadedCustomers;
 
@@ -72,11 +74,7 @@ export class CustomersComponent implements OnInit {
   customerDropDownOpen = signal(false);
   filterNameValue = signal<string>('');
 
-  filteredCustomers = computed<Customer[]>(() => {
-    return this.customers().filter((cliente) => 
-      cliente.name.toLowerCase().includes(this.filterNameValue())
-    );
-  });
+  filteredCustomers = computed<Customer[]>(() => this.customers());
 
   customerFilterOptions = computed<Customer[]>(() => {
     const term = this.showAllCustomersOptions() ? '' : this.filterNameValue().toLowerCase();
@@ -89,7 +87,17 @@ export class CustomersComponent implements OnInit {
     );
   });
 
-  constructor() {
+  constructor(private router: Router) {
+
+    const currentNav = this.router.currentNavigation();
+    const previousUrl = currentNav?.previousNavigation?.finalUrl?.toString() || '';
+
+    this.isFromDetailsPage.set(previousUrl.includes(`/clienti/`));
+
+    if(!this.isFromDetailsPage()) {
+      (this.customersService as any).currentFilters = { searchTerm: null as string | null };
+    }
+
     this.showMessage$.pipe(
       tap(msg => this.statusMessage.set(msg)),
       switchMap(() => timer(3000)),
@@ -107,7 +115,7 @@ export class CustomersComponent implements OnInit {
     this.error.set(null);
 
     forkJoin([
-      this.customersService.loadCustomers(this.currentPage(), this.pageSize),
+      this.customersService.loadCustomers(this.currentPage(), this.pageSize, this.currentFilters()),
       timer(1500)
     ]).pipe(
       finalize(() => {
@@ -127,6 +135,20 @@ export class CustomersComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.error.set(null);
+
+    const savedSearchTerm = (this.customersService as any).currentFilters?.searchTerm || null;
+    if (savedSearchTerm) {
+      this.currentFilters.set({ searchTerm: savedSearchTerm });
+      this.filterCustomerName.setValue(savedSearchTerm, { emitEvent: false });
+      this.filterNameValue.set(savedSearchTerm.toLowerCase());
+    }
+    else {
+      this.currentFilters.set({ searchTerm: null });
+      this.filterCustomerName.setValue('', { emitEvent: false });
+      this.filterNameValue.set('');
+    }
+
     this.loadInitialData();
 
     this.filterCustomerName.valueChanges.pipe(
@@ -141,7 +163,7 @@ export class CustomersComponent implements OnInit {
     this.isFetching.set(true);
 
     timer(3000).pipe(
-      switchMap(() => this.customersService.loadCustomers(this.currentPage(), this.pageSize)),
+      switchMap(() => this.customersService.loadCustomers(this.currentPage(), this.pageSize, this.currentFilters())),
       finalize(() => this.isFetching.set(false)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
@@ -154,7 +176,7 @@ export class CustomersComponent implements OnInit {
 
   reloadCustomers() {
     this.isFetching.set(true);
-    this.customersService.loadCustomers(this.currentPage(), this.pageSize).pipe(
+    this.customersService.loadCustomers(this.currentPage(), this.pageSize, this.currentFilters()).pipe(
       finalize(() => this.isFetching.set(false)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
@@ -176,7 +198,7 @@ export class CustomersComponent implements OnInit {
     this.currentPage.set(page);
     this.error.set(null);
 
-    this.customersService.loadCustomers(page, this.pageSize).pipe(
+    this.customersService.loadCustomers(page, this.pageSize, this.currentFilters()).pipe(
       finalize(() => {
         this.isFetching.set(false);
         this.isInitialLoading.set(false);
@@ -245,15 +267,23 @@ export class CustomersComponent implements OnInit {
 
   selectCustomerFilter(c: Customer) {
     const customerName = this.optionName(c);
-    this.filterCustomerName.setValue(customerName);
+    this.filterCustomerName.setValue(customerName, { emitEvent: false });
     this.filterNameValue.set(customerName.toLowerCase());
+
+    this.currentFilters.update(filters => ({ ...filters, searchTerm: customerName }));
+    (this.customersService as any).currentFilters = { searchTerm: customerName };
+    this.loadPage(1);
+
     this.customerDropDownOpen.set(false);
     this.showAllCustomersOptions.set(false);
   }
 
   clearCustomerFilter() {
-    this.filterCustomerName.setValue('');
+    this.filterCustomerName.setValue('', { emitEvent: false });
     this.filterNameValue.set('');
+    this.currentFilters.update(filters => ({ ...filters, searchTerm: null }));
+    (this.customersService as any).currentFilters = { searchTerm: null };
+    this.loadPage(1);
     this.customerDropDownOpen.set(false);
     this.showAllCustomersOptions.set(false);
   }
