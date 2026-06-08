@@ -116,7 +116,7 @@
     @if (isAddingCustomer()) {
       <app-new-customer 
         (cancel)="cancelCustomerAddition()" 
-        (created)="addCustomer()" />
+        (created)="addCustomer($event)" />
     }
     
     <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>

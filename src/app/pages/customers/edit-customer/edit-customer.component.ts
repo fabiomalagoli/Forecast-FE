@@ -40,8 +40,8 @@ export class EditCustomerComponent implements OnInit {
 
     // Headers dinamici basati su CLIENTE_HEADERS, escludendo campi non editabili come 'id'
     readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
-    .filter(([key]) => key !== 'id')
-    .map(([key, label]) => ({ key, label }));
+        .filter(([key, label]) => key !== 'id' && label !== 'Progetti Attivi')
+        .map(([key, label]) => ({ key, label }));
 
     ngOnInit() {
         this.initForm();
@@ -76,7 +76,7 @@ export class EditCustomerComponent implements OnInit {
             }
 
             if(this.isNumericField(key)) {
-                validators.push(Validators.pattern('^[0-9]+$'));
+                validators.push(Validators.pattern(/^\d+$/));
             }
 
             formControls[key] = [initialValue, validators];
@@ -126,7 +126,7 @@ export class EditCustomerComponent implements OnInit {
                 this.attemptedSubmit = false;
                 this.noChangesMessage = false;
                 this.statusMessage = { text: 'Cliente modificato con successo!', type: 'success' };
-                this.modified.emit(this.formData);
+                this.modified.emit(updateCustomerData);
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;
@@ -175,9 +175,10 @@ export class EditCustomerComponent implements OnInit {
     }
 
     isNumericField(key: string): boolean {
-        return key === 'projects';
+            const numericKeys = ['projects', 'postalCode', 'streetNumber'];
+            return numericKeys.includes(key);
     }
-
+    
     getRequiredErrorMessage(key: string): string {
         const messages: Record<string, string> = {
             vatNumber: 'Partita IVA obbligatoria',

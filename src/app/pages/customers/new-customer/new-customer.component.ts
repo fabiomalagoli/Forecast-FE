@@ -12,8 +12,8 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
   encapsulation: ViewEncapsulation.None
 })
 export class NewCustomerComponent {
-  readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
-    .filter(([key]) => key !== 'id')
+readonly headers = (Object.entries(CUSTOMER_HEADERS) as [keyof Customer, string][])
+    .filter(([key, label]) => key !== 'id' && label !== 'Progetti Attivi')
     .map(([key, label]) => ({ key, label }));
   created = output<Customer>();
   cancel = output<void>();
@@ -29,7 +29,12 @@ export class NewCustomerComponent {
     const formControls: { [key: string]: any } = {};
     
     this.headers.forEach(header => {
-      formControls[header.key] = ['', Validators.required];
+      const validators = [Validators.required]
+      if (this.isNumericField(header.key)) {
+        validators.push(Validators.pattern(/^\d+$/));
+      }
+
+      formControls[header.key] = ['', validators];
     });
 
     this.customerForm = this.fb.group(formControls);
@@ -57,6 +62,7 @@ export class NewCustomerComponent {
   }
 
   isNumericField(key: string): boolean {
-    return key === 'projects';
+    const numericKeys = ['projects', 'postalCode', 'streetNumber', 'phone']; 
+    return numericKeys.includes(key);
   }
 }

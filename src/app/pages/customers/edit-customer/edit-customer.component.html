@@ -13,40 +13,39 @@
     @if (editCustomerForm) {
       <form class="np-form np-form--grid" [formGroup]="editCustomerForm" (ngSubmit)="submit()">
         @for (header of headers; track header.key; let i = $index) {
-          @if(header.label !== 'Progetti Attivi') {
-            <div class="np-field np-field--grid">
-              <app-text-input>
-                <label class="np-label" [attr.for]="toId(header.key, i)">
-                  {{ header.label }}
-                </label>
-                
-                <input
-                  class="np-input"
-                  type="text"
-                  [attr.id]="toId(header.key, i)"
-                  [formControlName]="header.key"
-                  [maxlength]="getMaxLength(header.key)"
-                />
-              </app-text-input>
+          <div class="np-field np-field--grid">
+            <app-text-input>
+              <label class="np-label" [attr.for]="toId(header.key, i)">
+                {{ header.label }}
+              </label>
+              
+              <input
+                class="np-input"
+                type="text"
+                [attr.id]="toId(header.key, i)"
+                [formControlName]="header.key"
+                [maxlength]="getMaxLength(header.key)"
+                (input)="onFieldChange()"
+              />
+            </app-text-input>
 
-              @if (
-                editCustomerForm.get(header.key)?.invalid && 
-                (editCustomerForm.get(header.key)?.touched || attemptedSubmit)
-              ) {
-                <p class="error">
-                  @if (editCustomerForm.get(header.key)?.hasError('required')) {
-                    *{{ getRequiredErrorMessage(header.key) }}
-                  }
-                  @if (editCustomerForm.get(header.key)?.hasError('maxlength')) {
-                    *{{ getMaxLengthErrorMessage(header.key) }}
-                  }
-                  @if (editCustomerForm.get(header.key)?.hasError('pattern')) {
-                    *sono accettati solo numeri
-                  }
-                </p>
-              }
-            </div>
-          }
+            @if (
+              editCustomerForm.get(header.key)?.invalid && 
+              (editCustomerForm.get(header.key)?.touched || attemptedSubmit)
+            ) {
+              <p class="error">
+                @if (editCustomerForm.get(header.key)?.hasError('required')) {
+                  *{{ getRequiredErrorMessage(header.key) }}
+                }
+                @if (editCustomerForm.get(header.key)?.hasError('maxlength')) {
+                  *{{ getMaxLengthErrorMessage(header.key) }}
+                }
+                @if (editCustomerForm.get(header.key)?.hasError('pattern')) {
+                  *sono accettati solo numeri
+                }
+              </p>
+            }
+          </div>
         }
 
         <div class="actions">

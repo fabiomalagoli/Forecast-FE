@@ -226,10 +226,23 @@ export class CustomersComponent implements OnInit {
   onAddingCustomer() { this.isAddingCustomer.set(true); }
   cancelCustomerAddition() { this.isAddingCustomer.set(false); }
 
-  addCustomer() {
-    this.reloadCustomers();
-    this.isAddingCustomer.set(false);
-    this.showNotification('success', NotifyAction.Creazione, 'cliente');
+  addCustomer(newCustomer: Customer) {
+    this.isFetching.set(true);
+
+  this.customersService.addCustomer(newCustomer).pipe(
+    finalize(() => this.isFetching.set(false)),
+    takeUntilDestroyed(this.destroyRef)
+  ).subscribe({
+    next: () => {
+      this.reloadCustomers();
+      this.isAddingCustomer.set(false);
+      this.showNotification('success', NotifyAction.Creazione, 'cliente');
+    },
+    error: (error: Error) => {
+      this.error.set(`Errore durante la creazione: ${error.message}`);
+      this.showNotification('error', NotifyAction.Creazione, 'cliente');
+    }
+  });
   }
 
   openCustomerDetails(id: string) { this.router.navigate(['/clienti', id]); }
