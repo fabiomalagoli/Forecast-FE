@@ -105,7 +105,7 @@ export class RolesComponent implements OnInit {
         const currentNav = this.router.currentNavigation();
         const previousUrl = currentNav?.previousNavigation?.finalUrl?.toString() || null;
 
-        this.isFromDetails.set(previousUrl!.includes(`/risorse/`));
+        this.isFromDetails.set(previousUrl?.includes(`/risorse/`) ?? false);
 
         if(!this.isFromDetails()) {
             (this.rolesService as any).currentFilters = {
@@ -386,13 +386,12 @@ export class RolesComponent implements OnInit {
         this.assigningRole.set(null);
         this.showNotification('success', NotifyAction.Assegnazione, 'risorse');
 
-        const ruolo = this.selectedRole();
-        if (ruolo) {
-        const filteredEmployees = (this.employeesService.loadedAllEmployees() || [])
-            .filter(r => r.isActive !== false)
-            .filter(risorsa => risorsa.jobRole === ruolo.id || risorsa.jobRole === ruolo.name);
-        this.filteredSelectedEmployees.set(filteredEmployees);
-        }
+        this.employeesService.loadAllEmployees().subscribe({
+            error: (err) => {
+                console.error("Errore durante il riallineamento delle risorse:", err);
+                this.snackbarService.error(NotifyAction.Ricaricamento, 'risorse', 'Chiudi');
+            }
+        });
     }
 
     // Map diretto degli enum di SnackbarService
