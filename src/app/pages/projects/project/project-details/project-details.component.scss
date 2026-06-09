@@ -61,6 +61,7 @@
   font-size: 0.95rem;
   cursor: pointer;
   transition: background-color 0.2s ease; // transizione specifica solo sul background
+  -webkit-user-select: none;
   user-select: none;
 }
 

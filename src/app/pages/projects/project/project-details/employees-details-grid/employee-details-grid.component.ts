@@ -77,9 +77,32 @@ export class ResourceDetailsGridComponent {
 
   remainingDays = computed<Number>(() => Math.max(0, ((this.resource()?.daysSpent ?? 0) - this.totalDaysEntered())));
 
+  totaleConsuntivate = computed(() => {
+    const maxDays = this.resource()?.daysSpent ?? 0;
+    return Math.min(maxDays, this.totalDaysEntered());
+  });
+
   isTotalExceeded = computed<boolean>(() => {
     return (this.totalDaysEntered() > (this.resource()?.daysSpent ?? 0));
   })
+
+  budgetTotale = computed(() => {
+    const cost = this.resource()?.dailyCost ?? 0;
+    const days = this.resource()?.daysSpent ?? 0;
+    return cost * days;
+  });
+
+  totaleRicavi = computed(() => {
+    return Math.min(this.budgetTotale(), (this.totalDaysEntered() * (this.resource()?.dailyCost ?? 0)));
+  })
+
+  budgetWin = computed(() => {
+    return this.budgetTotale() * ((this.resource()?.winProbability ?? 0) / 100);
+  })
+
+  delta = computed(() => {
+    return Math.max(0, (this.resource()?.daysSpent ?? 0) - this.totalDaysEntered());
+  });
 
   private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) { // Questa funzione genera una chiave univoca per la cache dei monthly managements in base all'Id del dipendente e all'anno
     return `${projectEmployeeId}_${year}`;
@@ -216,6 +239,21 @@ export class ResourceDetailsGridComponent {
     }
 
     this.editMonthlyManagementsForm.disable({ emitEvent: false });
+  }
+
+  onWheel(event: WheelEvent, controlName: string){
+    if(!this.isEditMode()) return;
+    event.preventDefault();
+
+    const control = this.editMonthlyManagementsForm.get(controlName);
+    if(control) {
+      const currentValue = Number(control.value ?? 0);
+
+      const step = event.deltaY < 0 ? 1 : -1;
+      const newValue = Math.max(0, currentValue + step);
+
+      control.setValue(newValue);
+    }
   }
 
   saveData(){ // Questa funzione viene chiamata quando l'utente clicca sul pulsante di salvataggio. Prepara i dati da salvare e chiama il servizio per inviarli al backend

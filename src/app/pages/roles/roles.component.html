@@ -66,6 +66,12 @@
         
         <div class="table-container">
             <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
                 <tbody>
                 @for (r of filteredRoles(); track r.id) { 
                     <tr
@@ -79,7 +85,7 @@
                     </tr>
                 }
                 </tbody>
-            </table>
+            </table> <p class="count-footer">Numero ruoli: {{ pagination()?.totalCount || 0 }}</p>
         </div>
 
         <div class="right-column">

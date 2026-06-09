@@ -6,29 +6,29 @@
         <div>
             <h3 class="section-title">Recap</h3>
             <div class="recap-grid">
-                <app-text-input>
+                <app-text-input [class.input-recap-active]="isEditMode()">
                     <label>{{resourceDetailsHeaders.BudgetTotale}}</label>
-                    <input type="text" [value]="((resource()?.dailyCost ?? 0) * (resource()?.daysSpent ?? 0))" [readonly] = "!isEditMode()">
+                    <input type="text" [value]="budgetTotale()" readonly>
                 </app-text-input>
-                <app-text-input>
+                <app-text-input [class.input-recap-active]="isEditMode()">
                     <label>{{resourceDetailsHeaders.TotaleRicavi}}</label>
-                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                    <input type="text" [value]="totaleRicavi()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
-                <app-text-input>
+                <app-text-input [class.input-recap-active]="isEditMode()">
                     <label>{{resourceDetailsHeaders.BudgetWin}}</label>
-                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                    <input type="text" [value]="budgetWin()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
-                <app-text-input>
+                <app-text-input [class.input-recap-active]="isEditMode()">
                     <label>{{resourceDetailsHeaders.TotaleConsuntivate}}</label>
-                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                    <input type="text" [value]="totaleConsuntivate()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
-                <app-text-input>
+                <app-text-input [class.input-recap-active]="isEditMode()">
                     <label>{{resourceDetailsHeaders.Delta}}</label>
-                    <input type="text" [value]="(0)" [readonly] = "!isEditMode()"> <!-- Placeholder for actual value -->
+                    <input type="text" [value]="delta()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
-                <app-text-input>
+                <app-text-input [class.input-recap-active]="isEditMode()">
                     <label>{{resourceDetailsHeaders.Tariffa}}</label>
-                    <input type="text" [value]="((resource()?.dailyCost ?? 0))" [readonly] = "!isEditMode()">
+                    <input type="text" [value]="((resource()?.dailyCost ?? 0))" readonly>
                 </app-text-input>
             </div>
             <h3 class="section-title">Gestione Mensile</h3>
@@ -70,7 +70,8 @@
                             <app-text-input>
                                 <input type="number" min="0"
                                     [formControlName]="'month_' + mese.month + '_days'" 
-                                    [readonly]="!isEditMode()">
+                                    [readonly]="!isEditMode()"
+                                    (wheel)="onWheel($event, 'month_' + mese.month + '_days')">
                             </app-text-input>        
                             <div class="checkbox-container">
                                 <input type="checkbox" 
@@ -108,7 +109,8 @@
                             <app-text-input>
                                 <input type="number" min="0"
                                     [formControlName]="'month_' + mese.month + '_days'" 
-                                    [readonly]="!isEditMode()">
+                                    [readonly]="!isEditMode()"
+                                    (wheel)="onWheel($event, 'month_' + mese.month + '_days')">
                             </app-text-input>
                             <div class="checkbox-container">
                                 <input type="checkbox" 

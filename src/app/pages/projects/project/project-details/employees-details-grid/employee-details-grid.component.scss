@@ -154,6 +154,16 @@ app-text-input {
   width: 100%;
 }
 
+.input-recap-active {
+  input[readonly] {
+    background-color: $bg-app-shell;
+    border-color: $text-filter-light;
+    color: $text-filter-dark;
+    cursor: not-allowed;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
 .btn-spinner {
   background: none;
   border: 1px solid #ccc;
