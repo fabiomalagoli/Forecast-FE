@@ -68,15 +68,26 @@
                             <strong class="month-label">{{ mese.name }}</strong>
                             
                             <app-text-input>
-                                <input type="number" 
+                                <input type="number" min="0"
                                     [formControlName]="'month_' + mese.month + '_days'" 
                                     [readonly]="!isEditMode()">
-                            </app-text-input>
-                            
+                            </app-text-input>        
                             <div class="checkbox-container">
                                 <input type="checkbox" 
                                     [formControlName]="'month_' + mese.month + '_confirm'">
                             </div>
+                        </div>
+                        <div>
+                            @if (editMonthlyManagementsForm.get('month_' + mese.month + '_days')?.hasError('max')) {
+                                <span class="error-text">
+                                    Non puoi inserire più di {{ resource()?.daysSpent }} giorni in un solo mese!
+                                </span>
+                            }
+                            @else if (editMonthlyManagementsForm.get('month_' + mese.month + '_days')?.hasError('min')) {
+                                <span class="error-text">
+                                    Non puoi inserire un numero di giorni negativo!
+                                </span>
+                            }       
                         </div>
                     }
                 </div> 
@@ -95,15 +106,26 @@
                             <strong class="month-label">{{ mese.name }}</strong>
                             
                             <app-text-input>
-                                <input type="number" 
+                                <input type="number" min="0"
                                     [formControlName]="'month_' + mese.month + '_days'" 
                                     [readonly]="!isEditMode()">
                             </app-text-input>
-                            
                             <div class="checkbox-container">
                                 <input type="checkbox" 
                                     [formControlName]="'month_' + mese.month + '_confirm'">
                             </div>
+                        </div>
+                        <div>
+                            @if (editMonthlyManagementsForm.get('month_' + mese.month + '_days')?.hasError('max')) {
+                                <span class="error-text">
+                                    Non puoi inserire più di {{ resource()?.daysSpent }} giorni in un solo mese!
+                                </span>
+                            }    
+                            @else if (editMonthlyManagementsForm.get('month_' + mese.month + '_days')?.hasError('min')) {
+                                <span class="error-text">
+                                    Non puoi inserire un numero di giorni negativo!
+                                </span>
+                            }  
                         </div>
                     }
                 </div> 
@@ -111,8 +133,21 @@
             </div>
 
             @if(isEditMode()) {
+                <div class="recap-counter">
+                    <span>Giorni rimanenti: <strong>{{ remainingDays() }}</strong></span>
+                </div>
+                @if (isTotalExceeded()) {
+                    <div class="error-message global-error">
+                        Attenzione: La somma dei giorni inseriti supera i {{ resource()?.daysSpent }} giorni totali disponibili per questa risorsa!
+                    </div>
+                }
                 <div class="actions">
-                    <button appButton type="submit" class="btn-small">Salva</button>
+                    <button appButton 
+                            type="submit" 
+                            class="btn-small" 
+                            [disabled]="editMonthlyManagementsForm.invalid || isTotalExceeded()">
+                        Salva
+                    </button>
                     <button appButton type="button" class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>
                 </div>
             } 

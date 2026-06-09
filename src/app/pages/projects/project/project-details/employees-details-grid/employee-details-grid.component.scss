@@ -188,3 +188,12 @@ app-text-input {
     text-align: center;
   }
 }
+
+button[appButton].btn-small:disabled {
+    background-color: $color-primary-disabled !important;
+    border-color: $color-primary-disabled !important;
+    color: rgba($text-dark, 0.55) !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    transform: none !important;
+} /* Per il momento, questo stile specifico per il tasto di invio del form è impostato nel file .scss del component */

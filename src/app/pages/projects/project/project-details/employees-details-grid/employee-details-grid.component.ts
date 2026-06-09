@@ -1,11 +1,11 @@
-import { Component, EventEmitter, inject, input, output } from '@angular/core';
+import { Component, computed, EventEmitter, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../../../shared/button/button';
 import { signal } from '@angular/core';
-import { ProjectEmployee } from '../../../../../shared/models/project.model';
+import { Project, ProjectEmployee } from '../../../../../shared/models/project.model';
 import { TextInputComponent } from "../../../../../shared/text-input/text-input.component";
 import { EMPLOYEES_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MAT_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/core';
@@ -14,6 +14,8 @@ import { MonthlyManagementsService } from '../../../../../shared/services/monthl
 import { MonthlyManagementSavePayload, MonthlyResourceDetail, MonthlyManagement } from '../../../../../shared/models/monthly-management.model';
 import { buildMonthlyResourceDetails } from '../../../../../shared/utils/monthly-managements.utils';
 import { MONTHS_IN_YEAR, YEAR_FORMATS, FIRST_SEMESTER_LENGTH } from '../../../../../shared/enums/monthly-management.enums';
+import { SnackbarService } from '../../../../../shared/services/snackbar.service';
+import { NotifyAction } from '../../../../../shared/enums/notify.enum';
 
 @Component({
   selector: 'app-resource-details-grid',
@@ -40,6 +42,7 @@ export class ResourceDetailsGridComponent {
   private monthlyManagementsService = inject(MonthlyManagementsService);
   private monthlyManagementsCache = new Map<string, MonthlyManagement[]>();
   private latestMonthlyManagementsRequestKey: string | null = null;
+  private snackbarService = inject(SnackbarService);
  
   resource = input<ProjectEmployee | null>();
   resourceDetailsHeaders = EMPLOYEES_DETAILS_RECAP_HEADERS;
@@ -60,6 +63,8 @@ export class ResourceDetailsGridComponent {
     buildMonthlyResourceDetails(FIRST_SEMESTER_LENGTH + 1, MONTHS_IN_YEAR - FIRST_SEMESTER_LENGTH)
   );
 
+  allMonths = [...this.firstSemester(), ...this.secondSemester()];
+
   isEditMode = signal(false);
 
   confirmed = signal<boolean>(false);
@@ -67,6 +72,14 @@ export class ResourceDetailsGridComponent {
   dailyTariff = signal<number>(0);
 
   closeDrawer = signal(new EventEmitter<void>());
+  
+  totalDaysEntered = signal(0);
+
+  remainingDays = computed<Number>(() => Math.max(0, ((this.resource()?.daysSpent ?? 0) - this.totalDaysEntered())));
+
+  isTotalExceeded = computed<boolean>(() => {
+    return (this.totalDaysEntered() > (this.resource()?.daysSpent ?? 0));
+  })
 
   private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) { // Questa funzione genera una chiave univoca per la cache dei monthly managements in base all'Id del dipendente e all'anno
     return `${projectEmployeeId}_${year}`;
@@ -77,20 +90,36 @@ export class ResourceDetailsGridComponent {
     const formValues = this.buildMonthlyFormValues();
 
     Object.keys(formValues).forEach(controlName => {
-      formControls[controlName] = new FormControl(formValues[controlName]);
+      if(controlName.includes('_days')){
+        formControls[controlName] = new FormControl(
+          formValues[controlName], 
+          [Validators.min(0), Validators.max(this.resource()?.daysSpent ?? 0)]
+        );
+      } else formControls[controlName] = new FormControl(formValues[controlName]);
     });
 
     this.editMonthlyManagementsForm = this.fb.group(formControls);
     this.setMonthlyFormEnabled(this.isEditMode());
+
+    this.editMonthlyManagementsForm.valueChanges.subscribe(() => {
+      this.calculateTotalDaysEntered();
+    })
+  }
+
+  private calculateTotalDaysEntered() {
+    let sumMonthDays = 0;
+    this.allMonths.forEach(monthDetail => {
+      sumMonthDays += Number(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value ?? 0);
+    });
+    this.totalDaysEntered.set(sumMonthDays);
   }
 
   private buildMonthlyFormValues() {
     const formValues: { [key: string]: number | boolean } = {};
 
     const monthlyManagements = this.monthlyManagements();
-    const allMonths = [...this.firstSemester(), ...this.secondSemester()];
 
-    allMonths.forEach(monthDetail => {
+    this.allMonths.forEach(monthDetail => {
       const savedMonth = monthlyManagements.find(monthlyManagement => monthlyManagement.month === monthDetail.month);
 
       formValues[`month_${monthDetail.month}_days`] = savedMonth?.days ?? monthDetail.days; // Se esiste un dato salvato per questo mese, usalo; altrimenti, usa il valore di default
@@ -103,6 +132,7 @@ export class ResourceDetailsGridComponent {
   private updateMonthlyManagementsForm() { // Questa funzione aggiorna i valori del form con i dati correnti dei monthly managements, mantenendo abilitazione/disabilitazione attuale
     const formValues = this.buildMonthlyFormValues();
     this.editMonthlyManagementsForm.reset(formValues, { emitEvent: false });
+    this.calculateTotalDaysEntered();
     this.setMonthlyFormEnabled(this.isEditMode());
     console.log("Valori applicati alla griglia mensile:", this.editMonthlyManagementsForm.getRawValue());
   }
@@ -139,7 +169,7 @@ export class ResourceDetailsGridComponent {
     const requestKey = this.getMonthlyManagementsCacheKey(actualEmployee.id, selectedYear);
     this.latestMonthlyManagementsRequestKey = requestKey;
 
-    this.monthlyManagementsService.caricaMonthsForEmployee(actualEmployee.id, selectedYear).subscribe({
+    this.monthlyManagementsService.loadMonthsForEmployee(actualEmployee.id, selectedYear).subscribe({
       next: (monthlyManagements) => {
         if (this.latestMonthlyManagementsRequestKey !== requestKey) {
           return;
@@ -191,14 +221,18 @@ export class ResourceDetailsGridComponent {
   saveData(){ // Questa funzione viene chiamata quando l'utente clicca sul pulsante di salvataggio. Prepara i dati da salvare e chiama il servizio per inviarli al backend
     console.log("Salvataggio dati modificati per la risorsa:", this.resource());
 
+    if(this.editMonthlyManagementsForm.invalid || this.isTotalExceeded()){
+      this.snackbarService.error(NotifyAction.Salvataggio, 'dati annuali', 'Chiudi');
+      return;
+    }
+
     const actualEmployee = this.resource();
     if (!actualEmployee) {
       console.error("Nessuna risorsa selezionata per il salvataggio.");
       return;
     }
 
-    const allMonths = [...this.firstSemester(), ...this.secondSemester()];
-    const monthsToSave: MonthlyManagementSavePayload[] = allMonths.map(monthDetail => ({
+    const monthsToSave: MonthlyManagementSavePayload[] = this.allMonths.map(monthDetail => ({
       month: monthDetail.month,
       days: Number(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value ?? 0),
       isConfirmed: Boolean(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_confirm`)?.value),
@@ -217,7 +251,7 @@ export class ResourceDetailsGridComponent {
       return;
     }
 
-    this.monthlyManagementsService.salvaMonthsForEmployee(actualEmployee.id, selectedYear, monthsToSave).subscribe({
+    this.monthlyManagementsService.safeMonthsForEmployee(actualEmployee.id, selectedYear, monthsToSave).subscribe({
       next: () => {
         const savedMonthlyManagements: MonthlyManagement[] = monthsToSave.map(month => ({
           id: '',

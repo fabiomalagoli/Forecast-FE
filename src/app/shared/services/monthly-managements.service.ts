@@ -31,13 +31,13 @@ export class MonthlyManagementsService {
         );
     }
 
-    caricaMonthsForEmployee(projectEmployeeId: string, year: number) {
+    loadMonthsForEmployee(projectEmployeeId: string, year: number) {
         return this.fetchMonthsForEmployee(projectEmployeeId, year).pipe(
             tap((managements) => this.MonthlyManagements.set(managements))
         );
     }
 
-    salvaMonthsForEmployee(projectEmployeeId: string, year: number, monthsToSave: MonthlyManagementSavePayload[]) {
+    safeMonthsForEmployee(projectEmployeeId: string, year: number, monthsToSave: MonthlyManagementSavePayload[]) {
         const url = `${environment.apiUrl}/projectemployees/${encodeURIComponent(projectEmployeeId)}/monthlymanagement/${year}`;
 
         const payload = monthsToSave.map(m => ({
