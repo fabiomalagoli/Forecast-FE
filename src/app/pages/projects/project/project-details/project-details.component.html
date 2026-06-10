@@ -15,16 +15,18 @@
 @else {
   @let p = project()!;
 
-  <section class="card-progetto">
-    @for (h of headersArray; track h.key) {
-      @if (h.key !== 'projectJobRoles' && h.key !== 'projectEmployees') {
-        <div class="row">
-          <span class="label">{{ h.label }}</span>
-          <strong class="value">{{ getValue(p, h.key) }}</strong>
-        </div>
-      }
-    }
-  </section>
+  <div class="project-layout">
+    <div class="left-column">
+      <section class="card-progetto">
+        @for (h of headersArray; track h.key) {
+          @if (h.key !== 'projectJobRoles' && h.key !== 'projectEmployees') {
+            <div class="row">
+              <span class="label">{{ h.label }}</span>
+              <strong class="value">{{ getValue(p, h.key) }}</strong>
+            </div>
+          }
+        }
+      </section>
 
   <!-- @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
     <h3 style="margin-top: 2rem; margin-left: 1rem;">Ruoli</h3>
@@ -84,6 +86,33 @@
       </table>
     </section>
   }
+    </div>
+    <aside class="recap-panel">
+      <h3 class="section-title">Recap Progetto</h3>
+      <div class="recap-grid">
+        <app-text-input class="input-recap-active">
+          <label>{{recapDataHeaders.BudgetTotale}}</label>
+          <input type="text" [value]="projectRecapData()?.budgetTotaleRisorsa" readonly>
+        </app-text-input>
+        <app-text-input class="input-recap-active">
+          <label>{{recapDataHeaders.TotaleRicavi}}</label>
+          <input type="text" [value]="formattedTotalRevenues()" readonly>
+        </app-text-input>
+        <app-text-input class="input-recap-active">
+          <label>{{recapDataHeaders.BudgetWin}}</label>
+          <input type="text" [value]="formattedBudgetWin()" readonly>
+        </app-text-input>
+        <app-text-input class="input-recap-active">
+          <label>{{recapDataHeaders.TotaleConsuntivate}}</label>
+          <input type="text" [value]="projectRecapData()?.totalEmployedDays" readonly>
+        </app-text-input>
+        <app-text-input class="input-recap-active" [class.delta-warning]="projectRecapData()?.delta !== 0">
+          <label>{{recapDataHeaders.Delta}}</label>
+          <input type="text" [value]="projectRecapData()?.delta" readonly>
+        </app-text-input>
+      </div>
+    </aside>
+  </div>
   @if(selectedResource()) {
     <div class="drawer-overlay" (click)="selectedResource.set(null)"></div>
 

@@ -53,14 +53,12 @@
   }
 }
 
-// Righe interattive
-.col-risorsa,
 .resource-row {
   padding: 12px 8px;
   border-bottom: 1px solid $border-lighter;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: background-color 0.2s ease; // transizione specifica solo sul background
+  transition: background-color 0.2s ease;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -162,4 +160,98 @@
 @keyframes slideInRight {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
+}
+
+/* RECAP SECTION */ 
+
+.section-title {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+app-text-input {
+  display: block;
+  width: 100%;
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: #f39200;
+      box-shadow: 0 0 0 3px rgba(243, 146, 0, 0.25);
+    }
+
+    &[readonly] {
+      background-color: #f8f9fa;
+      border-color: #e9ecef;
+      color: #6c757d;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.input-recap-active {
+  input[readonly] {
+    background-color: $bg-app-shell;
+    border-color: $text-filter-light;
+    color: $text-filter-dark;
+    cursor: not-allowed;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.delta-warning {
+  input {
+    border-color: #f39200 !important;
+    color: #b76e00 !important;
+    background-color: rgba(243, 146, 0, 0.04) !important;
+    box-shadow: 0 0 0 3px rgba(243, 146, 0, 0.2) !important;
+    font-weight: 600;
+  }
+}
+
+.project-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.recap-panel {
+  background: #ffffff;
+  border: 1px solid $border-light;
+  border-radius: $radius-xl;
+  padding: 16px;
+  box-shadow: $shadow-card;
+  height: fit-content;
+  width: 100%;
+}
+
+.recap-debug {
+  margin-top: 12px;
+  font-size: 13px;
+  color: $text-light;
 }

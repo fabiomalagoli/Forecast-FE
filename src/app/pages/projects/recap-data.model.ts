@@ -1,4 +1,4 @@
-export interface EmployeeDetailsRecap {
+export interface RecapDataHeaders {
     BudgetTotale: number;
     TotaleRicavi: number;
     BudgetWin: number;

@@ -4,7 +4,7 @@ import { AppButtonComponent } from '../../../../../shared/button/button';
 import { signal } from '@angular/core';
 import { Project, ProjectEmployee, RecapData } from '../../../../../shared/models/project.model';
 import { TextInputComponent } from "../../../../../shared/text-input/text-input.component";
-import { EMPLOYEES_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
+import { RECAP_DATA_HEADERS } from '../../../recap-data.headers';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
@@ -51,7 +51,7 @@ export class ResourceDetailsGridComponent {
 
   recapData = signal<RecapData | null>(null);
 
-  resourceDetailsHeaders = EMPLOYEES_DETAILS_RECAP_HEADERS;
+  recapDataHeaders = RECAP_DATA_HEADERS;
 
   monthlyManagements = signal<MonthlyManagement[]>([]);
 

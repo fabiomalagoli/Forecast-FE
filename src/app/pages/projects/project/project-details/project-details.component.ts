@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { Project } from '../../../../shared/models/project.model';
+import { Project, RecapData } from '../../../../shared/models/project.model';
 import { COMPLETE_PROJECT_HEADERS } from '../complete-project.headers';
 import { AppButtonComponent } from '../../../../shared/button/button';
 import { ResourceDetailsGridComponent } from './employees-details-grid/employee-details-grid.component';
@@ -11,11 +11,13 @@ import { ProjectsService } from '../../../../shared/services/projects.service';
 import { EmployeesService } from '../../../../shared/services/employees.service';
 import { RolesService } from '../../../../shared/services/roles.service';
 import { mergeProjectEmployeesWithEmployeeDetails } from '../../../../shared/utils/project-display.utils';
+import { TextInputComponent } from "../../../../shared/text-input/text-input.component";
+import { RECAP_DATA_HEADERS } from '../../recap-data.headers';
 
 @Component({
   selector: 'app-project-details',
   standalone: true,
-  imports: [AppButtonComponent, ResourceDetailsGridComponent],
+  imports: [AppButtonComponent, ResourceDetailsGridComponent, TextInputComponent],
   templateUrl: './project-details.component.html',
   styleUrls: ['./project-details.component.scss'],
 })
@@ -25,10 +27,13 @@ export class ProjectDetailsComponent {
   // Usiamo la history del browser per tornare indietro
   private location = inject(Location);
   private projectsService = inject(ProjectsService);
+  private employeesService = inject(EmployeesService);
+  private rolesService = inject(RolesService);
 
   loading = signal(true);
   error = signal<string | null>(null);
   project = signal<Project | null>(null);
+  projectRecapData = signal<RecapData | null>(null);
   selectedResource = signal<ProjectEmployee | null>(null);
   // Vista con unione fra projectEmployees e la cache degli employees allo stato attuale
   displayedProjectEmployees = signal<ProjectEmployee[]>([]);
@@ -37,12 +42,17 @@ export class ProjectDetailsComponent {
   // Numero di unassigned employees nella view del Progetto
   unassignedCount = computed(() => this.displayedProjectEmployees().filter(e => (e.jobRole || '').toString().toLowerCase() === 'unassigned').length);
 
-  private employeesService = inject(EmployeesService);
-  private rolesService = inject(RolesService);
+  formattedTotalRevenues = computed(() => {
+    const value = this.projectRecapData()?.totalRevenues ?? 0;
+    return parseFloat((value as number).toFixed(2));
+  });
 
-  constructor() {
-    this.setupDisplayedEmployeesEffect();
-  }
+  formattedBudgetWin = computed(() => {
+    const value = this.projectRecapData()?.budgetWin ?? 0;
+    return parseFloat((value as number).toFixed(2));
+  });
+
+  recapDataHeaders = RECAP_DATA_HEADERS;
 
   readonly projectsHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
   readonly headersArray = Object.entries(this.projectsHeaders)
@@ -51,6 +61,19 @@ export class ProjectDetailsComponent {
       key: key as keyof Project,
       label,
     }));
+
+  constructor() {
+    effect(() => {
+      const _ = this.selectedResource();
+      if(_ === null && this.project()?.id) {
+        this.projectsService.loadProjectRecapData(this.project()?.id ?? '').subscribe({
+          next: (data) => {
+            this.projectRecapData.set(data);
+          }
+        });
+      }
+    });
+  }
 
   ngOnInit() {
     console.log("Componente Visualizza Inizializzato");
@@ -67,12 +90,14 @@ export class ProjectDetailsComponent {
       project: this.projectsService.loadProjectById(id),
       employees: this.employeesService.loadAllEmployees(),
       roles: this.rolesService.loadAllJobRoles(),
+      recapData: this.projectsService.loadProjectRecapData(id)
     }).pipe(
       finalize(() => this.loading.set(false))
     ).subscribe({
-      next: ({ project: p }) => {
+      next: ({ project: p, recapData: r }) => {
         console.log('Progetto caricato dal backend:', p);
         this.project.set(p);
+        this.projectRecapData.set(r);
         this.updateDisplayedEmployees();
         console.log('Risorse progetto visualizzate:', this.displayedProjectEmployees());
       },
@@ -115,6 +140,14 @@ export class ProjectDetailsComponent {
   manageSaving(progettoAggiornato: Project) {
     console.log("Ricevuto progetto aggiornato dall'output:", progettoAggiornato);
     this.project.set(progettoAggiornato);
+  }
+
+  onClosingDrawer() {
+    this.projectsService.loadProjectRecapData(this.project()?.id ?? '').subscribe({
+      next: (data) => {
+        this.projectRecapData.set(data);
+      }
+    })
   }
 
   indietro() {

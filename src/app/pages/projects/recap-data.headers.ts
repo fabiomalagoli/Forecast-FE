@@ -1,6 +1,6 @@
-import { EmployeeDetailsRecap } from "./employee-details-recap.model";
+import { RecapDataHeaders } from "./recap-data.model";
 
-export const EMPLOYEES_DETAILS_RECAP_HEADERS: Partial<Record<keyof EmployeeDetailsRecap, string>> = {
+export const RECAP_DATA_HEADERS: Partial<Record<keyof RecapDataHeaders, string>> = {
     BudgetTotale: 'Budget Totale',
     TotaleRicavi: 'Totale Ricavi',
     BudgetWin: 'Budget Win',

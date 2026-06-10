@@ -20,6 +20,7 @@ export class ProjectsService {
   private projectJobRoles = signal<any[]>([]);
   private projectEmployees = signal<any[]>([]);
   private recapData = signal<RecapData | null>(null);
+  private projectRecapData = signal<RecapData | null>(null);
   private projectPagination = signal<any>(null);
 
   loadedProjects = this.projects.asReadonly();
@@ -139,6 +140,20 @@ export class ProjectsService {
         this.projects.set(next);
       }),
       catchError(error => throwError(() => buildEntityError(error, 'progetto', 'caricamento')))
+    );
+  }
+
+  loadProjectRecapData(projectId: string) {
+    return this.httpClient.get<RecapData>(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/recap`).pipe(
+      map((r: RecapData) => ({
+        totalRevenues: r.totalRevenues || 0,
+        budgetTotaleRisorsa: r.budgetTotaleRisorsa || 0,
+        delta: r.delta || 0,
+        budgetWin: r.budgetWin || 0,
+        totalEmployedDays: r.totalEmployedDays || 0
+      })),
+      tap(recap => this.recapData.set(recap)),
+      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }
 
