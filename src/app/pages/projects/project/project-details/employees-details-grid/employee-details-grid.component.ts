@@ -2,7 +2,7 @@ import { Component, computed, EventEmitter, inject, input, output } from '@angul
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../../../shared/button/button';
 import { signal } from '@angular/core';
-import { Project, ProjectEmployee } from '../../../../../shared/models/project.model';
+import { Project, ProjectEmployee, RecapData } from '../../../../../shared/models/project.model';
 import { TextInputComponent } from "../../../../../shared/text-input/text-input.component";
 import { EMPLOYEES_DETAILS_RECAP_HEADERS } from './employee-details-recap.headers';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -16,6 +16,7 @@ import { buildMonthlyResourceDetails } from '../../../../../shared/utils/monthly
 import { MONTHS_IN_YEAR, YEAR_FORMATS, FIRST_SEMESTER_LENGTH } from '../../../../../shared/enums/monthly-management.enums';
 import { SnackbarService } from '../../../../../shared/services/snackbar.service';
 import { NotifyAction } from '../../../../../shared/enums/notify.enum';
+import { ProjectsService } from '../../../../../shared/services/projects.service';
 
 @Component({
   selector: 'app-resource-details-grid',
@@ -40,11 +41,16 @@ export class ResourceDetailsGridComponent {
 
   private fb = inject(FormBuilder);
   private monthlyManagementsService = inject(MonthlyManagementsService);
+  private projectService = inject(ProjectsService);
   private monthlyManagementsCache = new Map<string, MonthlyManagement[]>();
   private latestMonthlyManagementsRequestKey: string | null = null;
   private snackbarService = inject(SnackbarService);
  
   resource = input<ProjectEmployee | null>();
+  project = input<Project | null>()
+
+  recapData = signal<RecapData | null>(null);
+
   resourceDetailsHeaders = EMPLOYEES_DETAILS_RECAP_HEADERS;
 
   monthlyManagements = signal<MonthlyManagement[]>([]);
@@ -75,11 +81,21 @@ export class ResourceDetailsGridComponent {
   
   totalDaysEntered = signal(0);
 
-  remainingDays = computed<Number>(() => Math.max(0, ((this.resource()?.daysSpent ?? 0) - this.totalDaysEntered())));
+  snapshotTotalDaysEntered = signal(0);
+
+  deltaDaysFromSnapshot = computed<number>(() => {
+    return this.totalDaysEntered() - this.snapshotTotalDaysEntered(); //totalDaysEntered farà da offset fra i giorni complessivi già presenti e i giorni aggiunti DELLA GRIGLIA
+                                                                      //Basta farlo anche per uno solo degli anni, dal momento che possiamo editarne solo uno alla volta
+  });
+
+  remainingDays = computed<number>(() => Math.max(0, ((this.resource()?.daysSpent ?? 0) - this.totalDaysEntered())));
 
   totaleConsuntivate = computed(() => {
-    const maxDays = this.resource()?.daysSpent ?? 0;
-    return Math.min(maxDays, this.totalDaysEntered());
+    const backendValue = this.recapData()?.totalEmployedDays ?? 0;
+    if (this.isEditMode()) {
+      return backendValue + this.deltaDaysFromSnapshot();
+    }
+    return backendValue;
   });
 
   isTotalExceeded = computed<boolean>(() => {
@@ -87,25 +103,55 @@ export class ResourceDetailsGridComponent {
   })
 
   budgetTotale = computed(() => {
-    const cost = this.resource()?.dailyCost ?? 0;
-    const days = this.resource()?.daysSpent ?? 0;
-    return cost * days;
+    const valore = this.recapData()?.budgetTotaleRisorsa ?? 0;
+    return valore.toFixed(2);
   });
 
   totaleRicavi = computed(() => {
-    return Math.min(this.budgetTotale(), (this.totalDaysEntered() * (this.resource()?.dailyCost ?? 0)));
-  })
-
-  budgetWin = computed(() => {
-    return this.budgetTotale() * ((this.resource()?.winProbability ?? 0) / 100);
-  })
-
-  delta = computed(() => {
-    return Math.max(0, (this.resource()?.daysSpent ?? 0) - this.totalDaysEntered());
+    const backendValue = this.recapData()?.totalRevenues ?? 0;
+    if (this.isEditMode()) {
+      const dailyCost = this.resource()?.dailyCost ?? 0;
+      return (backendValue + (this.deltaDaysFromSnapshot() * dailyCost)).toFixed(2);
+    }
+    return backendValue.toFixed(2);
   });
 
-  private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) { // Questa funzione genera una chiave univoca per la cache dei monthly managements in base all'Id del dipendente e all'anno
+  budgetWin = computed(() => {
+    const valore = this.recapData()?.budgetWin ?? 0;
+    return valore.toFixed(2);
+  });
+
+  delta = computed(() => {
+    const backendValue = this.recapData()?.delta ?? 0;
+    if (this.isEditMode()) {
+      return backendValue - this.deltaDaysFromSnapshot();
+    }
+    return backendValue;
+  });
+
+  private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) {
     return `${projectEmployeeId}_${year}`;
+  }
+
+  loadRecapData() {
+    const projectId = this.project()?.id;
+    const resourceId = this.resource()?.id;
+    if (!projectId || !resourceId) {
+      return;
+    }
+    this.projectService.loadProjectEmployeeRecapData(projectId, resourceId).subscribe({
+      next: (data) => {
+        console.log('Dati di recap caricati con successo dal backend:', data);
+        this.recapData.set(data);
+      },
+      error: (err) => {
+        console.error(err);
+        this.snackbarService.error(NotifyAction.Caricamento, 'Dati di recap', 'Riprova')
+        .onAction().subscribe(() => {
+          this.loadRecapData();
+        })
+      }
+    });
   }
 
   initForm() {
@@ -116,7 +162,7 @@ export class ResourceDetailsGridComponent {
       if(controlName.includes('_days')){
         formControls[controlName] = new FormControl(
           formValues[controlName], 
-          [Validators.min(0), Validators.max(this.resource()?.daysSpent ?? 0)]
+          Validators.min(0)
         );
       } else formControls[controlName] = new FormControl(formValues[controlName]);
     });
@@ -161,6 +207,7 @@ export class ResourceDetailsGridComponent {
   }
 
   ngOnInit() {
+    this.loadRecapData();
     this.initForm();
     this.loadMonthlyManagementsForSelectedYear();
   }
@@ -223,12 +270,18 @@ export class ResourceDetailsGridComponent {
   toggleEditMode(){
     this.isEditMode.update(value => {
       const nextValue = !value;
+      
+      // Quando entro in edit mode, salvo lo snapshot dei giorni attuali della griglia
+      if (nextValue) {
+        this.snapshotTotalDaysEntered.set(this.totalDaysEntered());
+      }
+      
       this.setMonthlyFormEnabled(nextValue);
       return nextValue;
     });
   }
 
-  private setMonthlyFormEnabled(enabled: boolean) { // Questa funzione abilita o disabilita il form dei monthly managements in base al parametro passato
+  private setMonthlyFormEnabled(enabled: boolean) {
     if (!this.editMonthlyManagementsForm) {
       return;
     }
@@ -259,7 +312,7 @@ export class ResourceDetailsGridComponent {
   saveData(){ // Questa funzione viene chiamata quando l'utente clicca sul pulsante di salvataggio. Prepara i dati da salvare e chiama il servizio per inviarli al backend
     console.log("Salvataggio dati modificati per la risorsa:", this.resource());
 
-    if(this.editMonthlyManagementsForm.invalid || this.isTotalExceeded()){
+    if(this.editMonthlyManagementsForm.invalid){
       this.snackbarService.error(NotifyAction.Salvataggio, 'dati annuali', 'Chiudi');
       return;
     }
@@ -303,11 +356,13 @@ export class ResourceDetailsGridComponent {
         this.monthlyManagements.set(savedMonthlyManagements);
         this.savingComplete.emit(updatedEmployee);
         this.toggleEditMode();
+        this.loadRecapData();
       },
       error: (error) => {
         console.error("Errore durante il salvataggio dei dati:", error);
       }
     });
+
   }
 
   close() {

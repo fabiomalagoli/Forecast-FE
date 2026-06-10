@@ -91,6 +91,7 @@
       <button class="drawer-close-btn" (click)="selectedResource.set(null)">×</button>
       <app-resource-details-grid 
         [resource]="selectedResource()"
+        [project]="project()"
         (closeDrawer)="selectedResource.set(null)"
       ></app-resource-details-grid>
    </div>

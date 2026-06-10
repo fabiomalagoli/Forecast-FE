@@ -22,7 +22,7 @@
                     <label>{{resourceDetailsHeaders.TotaleConsuntivate}}</label>
                     <input type="text" [value]="totaleConsuntivate()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
-                <app-text-input [class.input-recap-active]="isEditMode()">
+                <app-text-input [class.input-recap-active]="isEditMode()" [class.delta-warning]="delta() !== 0">
                     <label>{{resourceDetailsHeaders.Delta}}</label>
                     <input type="text" [value]="delta()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
@@ -138,16 +138,16 @@
                 <div class="recap-counter">
                     <span>Giorni rimanenti: <strong>{{ remainingDays() }}</strong></span>
                 </div>
-                @if (isTotalExceeded()) {
+                <!-- @if (isTotalExceeded()) {
                     <div class="error-message global-error">
                         Attenzione: La somma dei giorni inseriti supera i {{ resource()?.daysSpent }} giorni totali disponibili per questa risorsa!
                     </div>
-                }
+                } -->
                 <div class="actions">
                     <button appButton 
                             type="submit" 
                             class="btn-small" 
-                            [disabled]="editMonthlyManagementsForm.invalid || isTotalExceeded()">
+                            [disabled]="editMonthlyManagementsForm.invalid">
                         Salva
                     </button>
                     <button appButton type="button" class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>

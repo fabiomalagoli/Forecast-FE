@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, concatMap, forkJoin, map, switchMap, tap, throwError, of, Observable } from 'rxjs';
-import { Project } from '../models/project.model';
+import { Project, RecapData } from '../models/project.model';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
@@ -19,6 +19,7 @@ export class ProjectsService {
   private projects = signal<Project[]>([]);
   private projectJobRoles = signal<any[]>([]);
   private projectEmployees = signal<any[]>([]);
+  private recapData = signal<RecapData | null>(null);
   private projectPagination = signal<any>(null);
 
   loadedProjects = this.projects.asReadonly();
@@ -292,6 +293,20 @@ export class ProjectsService {
         monthlyManagements: emp.monthlyManagements || [],
       }))),
       tap(employees => this.projectEmployees.set(employees)),
+      catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
+    );
+  }
+
+  loadProjectEmployeeRecapData(projectId: string, projectEmployeeId: string): Observable<RecapData> {
+    return this.httpClient.get<RecapData>(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(projectEmployeeId)}/recap`).pipe(
+      map((r: RecapData) => ({
+        totalRevenues: r.totalRevenues || 0,
+        budgetTotaleRisorsa: r.budgetTotaleRisorsa || 0,
+        delta: r.delta || 0,
+        budgetWin: r.budgetWin || 0,
+        totalEmployedDays: r.totalEmployedDays || 0
+      })),
+      tap(recap => this.recapData.set(recap)),
       catchError(error => throwError(() => buildEntityError(error, 'risorsa', 'caricamento')))
     );
   }

@@ -39,6 +39,14 @@ export interface ProjectEmployee {
   monthlyManagements?: MonthlyManagement[];
 }
 
+export interface RecapData {
+  totalRevenues: number;
+  budgetTotaleRisorsa: number;
+  delta: number;
+  budgetWin: number;
+  totalEmployedDays: number;
+}
+
 
 export interface ProjectRole {
   id: string;
