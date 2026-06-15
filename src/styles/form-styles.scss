@@ -385,3 +385,26 @@ select.np-input-direct {
   text-align: left; background: $bg-white; cursor: pointer; font: inherit;
   &:hover, &:focus { background-color: $color-primary-light; outline: none; }
 }
+
+.unassigned-warning-text{
+  font-size: 0.875rem;
+  color: #856404;
+  font-weight: 500;
+}
+
+.unassigned-row-container {
+  grid-column: 1 / -1; 
+  margin: 0.5rem 0 1.5rem 0; 
+  padding: 0 0.5rem;
+}
+
+.banner-warning{
+  margin: 0; 
+  padding: 0.6rem 1rem; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-radius: 6px; 
+  background-color: #fff3cd; 
+  border: 1px solid #ffeeba;
+}

@@ -1,3 +1,9 @@
+import { toElementId } from './project-form.utils';
+
+export function toId(prefix: string, key: string, i: number): string {
+  return toElementId(prefix, key, i);
+}
+
 export function parseCustomerAddress(fullAddress: string): {
   address?: string;
   streetNumber?: string;

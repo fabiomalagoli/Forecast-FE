@@ -1,4 +1,10 @@
 import { Employee } from '../models/employee.model';
+import { toElementId } from './project-form.utils';
+
+export function toId(prefix: string, key: string, i: number): string {
+  return toElementId(prefix, key, i);
+}
+
 
 export type AssignableEmployee = Employee & {
   selectedJobRoleLevel: string;

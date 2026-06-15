@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, concatMap, forkJoin, map, switchMap, tap, throwError, of, Observable } from 'rxjs';
-import { Project, RecapData } from '../models/project.model';
+import { Project, ProjectEmployee, ProjectRole, RecapData } from '../models/project.model';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
@@ -9,6 +9,8 @@ import { toBackendDate, toNumber } from '../utils/shared-utils';
 import { LookupsService } from './lookups.service';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { ProjectFilters } from '../utils/filters.utils';
+import { findEquivalentProjectEmployee, findProjectItemById, getProjectEmployeeRequestId, getRemovedProjectItems, hasProjectItemChanged, isTemporaryProjectItem } from '../utils/project-form.utils';
+import { buildProjectEmployeePayload, buildProjectJobRolePayload, ProjectUpdatePayload } from '../payloads/project.payloads';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectsService {
@@ -312,7 +314,10 @@ export class ProjectsService {
     );
   }
 
-  loadProjectEmployeeRecapData(projectId: string, projectEmployeeId: string): Observable<RecapData> {
+  loadProjectEmployeeRecapData(
+    projectId: string, 
+    projectEmployeeId: string
+  ): Observable<RecapData> {
     return this.httpClient.get<RecapData>(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(projectEmployeeId)}/recap`).pipe(
       map((r: RecapData) => ({
         totalRevenues: r.totalRevenues || 0,
@@ -326,7 +331,10 @@ export class ProjectsService {
     );
   }
 
-  addProjectEmployee(projectId: string, data: any) {
+  addProjectEmployee(
+    projectId: string, 
+    data: any
+  ) {
     return this.httpClient.post(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees`, data).pipe(
       tap((created: any) => {
         if (created?.id) {
@@ -340,7 +348,11 @@ export class ProjectsService {
     );
   }
 
-  updateProjectEmployee(projectId: string, projectEmployeeId: string, data: any) {
+  updateProjectEmployee(
+    projectId: string, 
+    projectEmployeeId: string, 
+    data: any
+  ) {
     return this.httpClient.put(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(projectEmployeeId)}`, data).pipe(
       tap(() => {
         this.projectEmployees.update(prev => prev.map(employee =>
@@ -356,7 +368,11 @@ export class ProjectsService {
     );
   }
 
-  replaceProjectEmployee(projectId: string, projectEmployeeId: string, data: any) {
+  replaceProjectEmployee(
+    projectId: string, 
+    projectEmployeeId: string, 
+    data: any
+  ) {
     return this.deleteProjectEmployee(projectId, projectEmployeeId).pipe(
       concatMap(() => this.addProjectEmployee(projectId, data))
     );
@@ -392,7 +408,10 @@ export class ProjectsService {
     );
   }
 
-  deleteProjectEmployee(projectId: string, projectEmployeeId: string) {
+  deleteProjectEmployee(
+    projectId: string, 
+    projectEmployeeId: string
+  ) {
     return this.httpClient.delete(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/employees/${encodeURIComponent(projectEmployeeId)}`).pipe(
       tap(() => this.projectEmployees.update(prev => prev.filter(e => e.id !== projectEmployeeId))),
       catchError(error => {
@@ -402,7 +421,10 @@ export class ProjectsService {
     );
   }
 
-  private isProjectEmployeeForEmployee(projectEmployee: any, employee: Employee): boolean {
+  private isProjectEmployeeForEmployee(
+    projectEmployee: any, 
+    employee: Employee
+  ): boolean {
     if (projectEmployee.employeeId && String(projectEmployee.employeeId) === String(employee.id)) {
       return true;
     }
@@ -416,5 +438,99 @@ export class ProjectsService {
 
   private normalizeEmployeeName(value: string): string {
     return value.toLowerCase().replace(/\s+/g, '');
+  }
+
+  addProjectWithDetails(
+    projectPayload: Project,
+    currentRoles: ProjectRole[],
+    currentEmployees: ProjectEmployee[],
+    pendingEmployeeCalls: Observable<any>[]
+  ): Observable<any>
+  {
+    return this.addProject(projectPayload).pipe(
+      switchMap((createdProject: any) => {
+        const newProjectId = createdProject.id;
+        const detailRequests: Observable<any>[] = [];
+
+        currentRoles.forEach((role: any) => {
+          detailRequests.push(this.addProjectJobRole(newProjectId, [buildProjectJobRolePayload(role)]));
+        });
+
+        currentEmployees.forEach((employee: any) => {
+          detailRequests.push(this.addProjectEmployee(newProjectId, [buildProjectEmployeePayload(employee)]));
+        });
+
+        detailRequests.push(...pendingEmployeeCalls);
+
+        if(detailRequests.length === 0){
+          return of(createdProject);
+        }
+
+        return forkJoin(detailRequests).pipe(
+          map(() => createdProject)
+        );
+      })
+    );
+  }
+
+  updateProjectWithDetails(
+    projectId: string,
+    projectPayload: any,
+    initialData: any,
+    currentRoles: ProjectRole[],
+    currentEmployees: ProjectEmployee[],
+    pendingEmployeeCalls: Observable<any>[]
+  ): Observable<any> {
+    const deleteCalls: Observable<any>[] = [];
+    const saveCalls: Observable<any>[] = [];
+
+    const originalRoles = initialData?.projectJobRoles || [];
+    const rolesToRemove = getRemovedProjectItems(originalRoles, currentRoles);
+    rolesToRemove.forEach((role) => deleteCalls.push(this.deleteProjectJobRole(projectId, role.id)));
+
+    const originalEmployees = initialData?.projectEmployees || [];
+    const employeesToRemove = getRemovedProjectItems(originalEmployees, currentEmployees);
+    employeesToRemove.forEach((employee) => 
+      deleteCalls.push(this.deleteProjectEmployee(projectId, getProjectEmployeeRequestId(employee)))
+    );
+
+    saveCalls.push(this.updateProject(projectPayload));
+    saveCalls.push(...pendingEmployeeCalls);
+
+    currentRoles.forEach((role: any) => {
+      const rolePayload = buildProjectJobRolePayload(role);
+      const originalRole = findProjectItemById(originalRoles, role.id);
+      
+      const isTemporary = isTemporaryProjectItem(role.id, originalRoles);
+
+      if (isTemporary) {
+        saveCalls.push(this.addProjectJobRole(projectId, [rolePayload]));
+      } else if (hasProjectItemChanged(role, originalRole)) {
+        saveCalls.push(this.updateProjectJobRole(projectId, role.id, rolePayload));
+      }
+    });
+
+    currentEmployees.forEach((employee: any) => {
+      const employeePayload = buildProjectEmployeePayload(employee);
+      const originalEmployee = findProjectItemById(originalEmployees, employee.id);
+      const isTemporary = isTemporaryProjectItem(employee.id, originalEmployees);
+
+      if (isTemporary) {
+        const equivalentOriginalEmployee = findEquivalentProjectEmployee(originalEmployees, employee);
+        if (!equivalentOriginalEmployee) {
+          saveCalls.push(this.addProjectEmployee(projectId, [employeePayload]));
+        }
+      } else if (hasProjectItemChanged(employee, originalEmployee)) {
+        saveCalls.push(this.updateProjectEmployee(projectId, getProjectEmployeeRequestId(employee), employeePayload));
+      }
+    });
+
+    if (deleteCalls.length > 0) {
+      return forkJoin(deleteCalls).pipe(
+        switchMap(() => forkJoin(saveCalls))
+      );
+    } else {
+      return forkJoin(saveCalls);
+    }
   }
 }

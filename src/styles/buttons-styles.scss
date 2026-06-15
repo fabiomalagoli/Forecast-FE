@@ -36,6 +36,15 @@
   cursor: pointer;
   transition: $transition-base;
 
+  &.unassigned {
+    padding: 0.3rem 0.85rem; 
+    font-size: 0.8rem; 
+    background-color: #ffc107; 
+    border: none; 
+    color: #212529; 
+    font-weight: 600;
+  }
+
   &:hover {
     background-color: $color-primary-hover;
     border-color: $color-primary-hover;

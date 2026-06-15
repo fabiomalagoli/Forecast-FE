@@ -13,7 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MonthlyManagementsService } from '../../../../../shared/services/monthly-managements.service';
 import { MonthlyManagementSavePayload, MonthlyResourceDetail, MonthlyManagement } from '../../../../../shared/models/monthly-management.model';
 import { buildMonthlyResourceDetails } from '../../../../../shared/utils/monthly-managements.utils';
-import { MONTHS_IN_YEAR, YEAR_FORMATS, FIRST_SEMESTER_LENGTH } from '../../../../../shared/enums/monthly-management.enums';
+import { MONTHS_IN_YEAR, YEAR_FORMATS, FIRST_SEMESTER_LENGTH } from '../../../../../shared/constants/monthly-management.constant';
 import { SnackbarService } from '../../../../../shared/services/snackbar.service';
 import { NotifyAction } from '../../../../../shared/enums/notify.enum';
 import { ProjectsService } from '../../../../../shared/services/projects.service';

@@ -14,6 +14,18 @@ export class DashboardService {
   paginationData = this.dashboardCardsPagination.asReadonly();
 
 
+  private mapToDashboards(card: any): CardModel{
+    return {
+      customer: card.customer,
+      activity: card.activity,
+      projectStatus: card.projectStatus,
+      projectName: card.projectName || card.name || card.title || card.progetto || '',
+      id: card.id || card.Id,
+      employeeCount: card.assignmentSummary?.employeesCount,
+      totalBudget: card.totalBudget,
+    }
+  }
+
   loadFavoriteDashboardCards(pageNumber: number = 1, pageSize: number = 10) {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/favorites/summary?PageNumber=${pageNumber}&PageSize=${pageSize}`, { observe: 'response' }).pipe(
       tap(response => {
@@ -29,26 +41,10 @@ export class DashboardService {
             hasNext: data.HasNext
           });
         }
-        const cards = (response.body || []).map(card => ({
-          customer: card.customer,
-          activity: card.activity,
-          projectStatus: card.projectStatus,
-          projectName: card.projectName || card.name || card.title || card.progetto || '',
-          id: card.id || card.Id,
-          employeeCount: card.assignmentSummary?.employeesCount,
-          totalBudget: card.totalBudget,
-        }));
+        const cards = (response.body || []).map(card => this.mapToDashboards(card));
         this.dashboardCards.set(cards);
       }),
-      map(response => (response.body || []).map(card => ({
-        customer: card.customer,
-        activity: card.activity,
-        projectStatus: card.projectStatus,
-        projectName: card.projectName || card.name || card.title || card.progetto || '',
-        id: card.id || card.Id,
-        employeeCount: card.assignmentSummary?.employeesCount,
-        totalBudget: card.totalBudget,
-      })))
+      map(response => (response.body || []).map(card => this.mapToDashboards(card)))
     );
   }
 
@@ -67,40 +63,16 @@ export class DashboardService {
             hasNext: data.HasNext
           });
         }
-        const cards = (response.body || []).map(card => ({
-          customer: card.customer,
-          activity: card.activity,
-          projectStatus: card.projectStatus,
-          projectName: card.projectName || card.name || card.title || card.progetto || '',
-          id: card.id || card.Id,
-          employeeCount: card.assignmentSummary?.employeesCount,
-          totalBudget: card.totalBudget,
-        }));
+        const cards = (response.body || []).map(card => this.mapToDashboards(card));
         this.dashboardCards.set(cards);
       }),
-      map(response => (response.body || []).map(card => ({
-        customer: card.customer,
-        activity: card.activity,
-        projectStatus: card.projectStatus,
-        projectName: card.projectName || card.name || card.title || card.progetto || '',
-        id: card.id || card.Id,
-        employeeCount: card.assignmentSummary?.employeesCount,
-        totalBudget: card.totalBudget,
-      })))
+      map(response => (response.body || []).map(card => this.mapToDashboards(card)))
     );
   }
 
   loadDashboardCards() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/summary`).pipe(
-      map(summary => summary.map(card => ({
-        customer: card.customer,
-        activity: card.activity,
-        projectStatus: card.projectStatus,
-        projectName: card.projectName || card.name || card.title || card.progetto || '',
-        id: card.id || card.Id,
-        employeeCount: card.assignmentSummary?.employeesCount,
-        totalBudget: card.totalBudget,
-      }))),
+      map(summary => summary.map(card => this.mapToDashboards(card))),
       tap(cards => this.dashboardCards.set(cards)),
       catchError(error => {
         console.error(error);

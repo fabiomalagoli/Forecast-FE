@@ -36,7 +36,7 @@
                   <button class="combo-clear" type="button" aria-label="Cancella PM" (click)="clearPm()">×</button>
                 }
                 <button class="combo-toggle" type="button" aria-label="Apri lista PM" (click)="togglePmDropdown()">▾</button>
-                @if (pmDropdownOpen()) {
+                @if (facade.pmDropdownOpen()) {
                   <div class="combo-menu">
                     <button class="combo-option" type="button" (mousedown)="selectPm(null)">Nessun PM</button>
                     @for (opt of filteredPmOptions(); track (opt.id || opt.Id || opt)) {
@@ -66,7 +66,7 @@
             }
           </app-text-input>
 
-          @if (newProjectForm.get(h.key)?.invalid && (newProjectForm.get(h.key)?.dirty || attemptedSubmit)) {
+          @if (newProjectForm.get(h.key)?.invalid && (newProjectForm.get(h.key)?.touched || attemptedSubmit)) {
             <span class="error">
               @if (newProjectForm.get(h.key)?.errors?.['required']) { *campo obbligatorio }
               @if (h.key === 'winProbability' && (newProjectForm.get(h.key)?.errors?.['min'] || newProjectForm.get(h.key)?.errors?.['max'] || newProjectForm.get(h.key)?.errors?.['pattern'])) { *sono validi solo numeri da 1 a 100 }
@@ -74,13 +74,13 @@
               @if (h.key !== 'winProbability' && h.key !== 'totalDays' && h.key !== 'totalBudget' && newProjectForm.get(h.key)?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
             </span>
           }
-          @if (h.key === 'endDate' && dateRangeError) {
+          @if (h.key === 'endDate' && facade.dateRangeError()) {
             <span class="error">*la data fine deve essere uguale o successiva alla data inizio</span>
           }
         </div>
       }
 
-      <div class="np-roles-section" formArrayName="projectJobRoles">
+      <!-- <div class="np-roles-section" formArrayName="projectJobRoles">
         <div class="roles-header">
           <h3 class="np-title-sm">Ruoli</h3>
           <button type="button" class="btn-add-role" (click)="addRole()">+ Aggiungi Ruolo</button>
@@ -145,7 +145,7 @@
             </div>
           }
         }
-      </div>
+      </div> -->
 
       <div class="np-resources-section" formArrayName="projectEmployees">
         <div class="resources-header">
@@ -163,7 +163,7 @@
               <div class="np-resource-field">
                 <select class="np-input-direct" formControlName="employeeId" (change)="onFieldChange()">
                   <option [ngValue]="null" disabled selected>Scegli una risorsa...</option>
-                  @for (opt of employeesList(); track opt.id) { 
+                  @for (opt of facade.employeesList(); track opt.id) { 
                     <option [value]="opt.id">{{ opt.name }} {{ opt.surname }}</option> 
                   }
                 </select>
@@ -204,22 +204,22 @@
             </div>
 
             @if (isEmployeeUnassigned(empCtrl.get('employeeId')?.value)) {
-              <div class="unassigned-row-container" style="grid-column: 1 / -1; margin: 0.5rem 0 1.5rem 0; padding: 0 0.5rem;">
+              <div class="unassigned-row-container">
                 
                 @if (activeAssignIndex() !== i) {
-                  <div class="banner warning" style="margin: 0; padding: 0.6rem 1rem; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; background-color: #fff3cd; border: 1px solid #ffeeba;">
-                    <span style="font-size: 0.875rem; color: #856404; font-weight: 500;">⚠️ Questa risorsa risulta <strong>Unassigned</strong> nel sistema.</span>
-                    <button appButton class="btn-small" type="button" style="padding: 0.3rem 0.85rem; font-size: 0.8rem; background-color: #ffc107; border: none; color: #212529; font-weight: 600;"
+                  <div class="banner warning">
+                    <span class="unassigned-warning">⚠️ Questa risorsa risulta <strong>Unassigned</strong> nel sistema.</span>
+                    <button appButton class="btn-small unassigned" type="button"
                       (click)="activeAssignIndex.set(i); assignSelectedEmployeeId.set(empCtrl.get('employeeId')?.value)">
                       Assegna Ruolo
                     </button>
                   </div>
                 } @else {
                   <app-assign-single
-                    [employees]="employeesList()"
-                    [levels]="jobRoleLevelsList()"
-                    [roles]="jobRolesList()"
-                    [companies]="companiesList()"
+                    [employees]="facade.employeesList()"
+                    [levels]="facade.jobRoleLevelsList()"
+                    [roles]="facade.jobRolesList()"
+                    [companies]="facade.companiesList()"
                     [selectedEmployeeIdFromForm]="assignSelectedEmployeeId()"
                     (cancel)="closeAssignPanel()"
                     (saved)="onAssignSaved($event)">
@@ -240,9 +240,8 @@
       <div class="actions">
         <button
           type="submit"
-          [disabled]="isButtonDisabled()"
-          [attr.aria-disabled]="isButtonDisabled()"
-          [class.btn--disabled]="isButtonDisabled()"
+          [attr.aria-disabled]="isButtonDisabled"
+          [class.btn--disabled]="isButtonDisabled"
           (click)="onSubmitClick($event)">
           Crea Progetto
         </button>

@@ -11,7 +11,7 @@
     }
 
     <form class="np-form np-form--grid" [formGroup]="editEmployeeForm" (ngSubmit)="submit()">
-      @for (header of headers; track header.key; let i = $index) {
+      @for (header of facade.headers; track header.key; let i = $index) {
         @if(header.key === 'name' || header.key === 'surname') {
           <div class="np-field np-field--grid">
             <app-text-input>
@@ -32,7 +32,7 @@
             ) {
               <p class="error">
                 @if (editEmployeeForm.get(header.key)?.errors?.['required']) {
-                  *{{ getRequiredErrorMessage(header.key) }}
+                  *{{ facade.getRequiredErrorMessage(header.key) }}
                   }
               </p>
               }
@@ -73,14 +73,14 @@
                 (click)="toggleJobRoleDropdown()">
                 ▾
               </button>
-              @if (jobRoleDropdownOpen()) {
+              @if (facade.jobRoleDropdownOpen()) {
                 <div class="combo-menu">
-                  @for (opt of getFilteredJobRoles(); track (opt.id || opt.Id || opt)) {
+                  @for (opt of facade.getFilteredJobRoles(editEmployeeForm); track (opt.id || opt.Id || opt)) {
                     <button
                       class="combo-option"
                       type="button"
                       (mousedown)="selectJobRole(opt)">
-                      {{ optionName(opt) }}
+                      {{ facade.optionName(opt) }}
                     </button>
                   } @empty {
                     <div class="combo-empty">Nessun ruolo trovato</div>
@@ -109,21 +109,32 @@
 
           @if (
             editEmployeeForm.get(header.key)?.invalid && (editEmployeeForm.get(header.key)?.touched || attemptedSubmit)
-          ) {
+          ) 
+          {
             <p class="error">
               @if (editEmployeeForm.get(header.key)?.errors?.['required']) {
-                *{{ getRequiredErrorMessage(header.key) }}
-                }
+                *{{ facade.getRequiredErrorMessage(header.key) }}
+              }
             </p>
-            }
+          }
         </div>
+        }
       }
-    }
-
-      <div class="actions">
-        <button type="submit" [disabled]="isSubmitDisabled()">Modifica risorsa</button>
-        <button type="button" (click)="onCancel()">Annulla</button>
-      </div>
     </form>
+    @if (editEmployeeForm.valid && !isChanged()) {
+      <div class="info-message">
+        <p>ℹ️ La risorsa è identica a prima. Modifica un campo qualsiasi per salvare.</p>
+      </div>
+    }
+    <div class="actions">
+      <button 
+        type="submit" 
+        [attr.aria-disabled]="isButtonDisabled"
+        [class.btn--disabled]="isButtonDisabled"
+        (click)="onSubmitClick($event)">
+        Modifica risorsa
+      </button>
+      <button type="button" (click)="onCancel()">Annulla</button>
+    </div>
   </div>
 </dialog>

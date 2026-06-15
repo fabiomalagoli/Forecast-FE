@@ -1,11 +1,13 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { catchError, map, tap, throwError, of } from 'rxjs';
+import { catchError, map, tap, throwError, of, Observable, switchMap } from 'rxjs';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { EmployeeFilters } from '../utils/filters.utils';
+import { EmployeePayload } from '../payloads/employee.payloads';
+import { ProjectsService } from './projects.service';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeesService {
@@ -20,7 +22,7 @@ export class EmployeesService {
   loadedAllEmployees = this.allEmployees.asReadonly();
   paginationData = this.employeesPagination.asReadonly();
 
-  private normalizeEmployee(emp: any): Employee {
+  private mapToEmployee(emp: any): Employee {
     return {
       id: emp.Id || emp.id,
       name: emp.Name || emp.name,
@@ -68,10 +70,10 @@ export class EmployeesService {
             hasNext: data.HasNext
           });
         }
-        const emps = (response.body || []).map(e => this.normalizeEmployee(e));
+        const emps = (response.body || []).map(e => this.mapToEmployee(e));
         this.employees.set(emps);
       }),
-      map(response => (response.body || []).map(e => this.normalizeEmployee(e))),
+      map(response => (response.body || []).map(e => this.mapToEmployee(e))),
     );
   }
 
@@ -79,10 +81,10 @@ export class EmployeesService {
     const url = `${environment.apiUrl}/employees?PageNumber=1&PageSize=1000`;
     return this.httpClient.get<any[]>(url, { observe: 'response' }).pipe(
       tap((response) => {
-        const emps = (response.body || []).map(e => this.normalizeEmployee(e));
+        const emps = (response.body || []).map(e => this.mapToEmployee(e));
         this.allEmployees.set(emps);
       }),
-      map(response => (response.body || []).map(e => this.normalizeEmployee(e))),
+      map(response => (response.body || []).map(e => this.mapToEmployee(e))),
     );
   }
 
@@ -95,7 +97,7 @@ export class EmployeesService {
         employeeId: id,
       },
     }).pipe(
-      map(e => this.normalizeEmployee(e)),
+      map(e => this.mapToEmployee(e)),
       tap(e => {
         this.upsertEmployee(e);
       }),
@@ -130,7 +132,7 @@ export class EmployeesService {
     return this.httpClient.post(`${environment.apiUrl}/employees`, payload).pipe(
       tap((created: any) => {
         if (created?.id) {
-          this.employees.update(prev => [...prev, this.normalizeEmployee(created)]);
+          this.employees.update(prev => [...prev, this.mapToEmployee(created)]);
         }
       }),
       catchError(error => {
@@ -160,5 +162,21 @@ export class EmployeesService {
         return throwError(() => buildEntityError(error, 'risorsa', 'eliminazione'));
       })
     );
+  }
+
+  updateEmployeeWithProjectCascade(
+    employeeId: string,
+    backendPayload: EmployeePayload,
+    modifiedEmployee: Employee,
+    projectsService: ProjectsService
+  ): Observable<any> {
+    return this.updateEmployee(employeeId, backendPayload, modifiedEmployee).pipe(
+      switchMap(() => projectsService.updateProjectEmployeesForEmployeeRole(
+        modifiedEmployee,
+        backendPayload.jobRoleId,
+        backendPayload.jobRoleLevelId
+      ))
+    )
+
   }
 }

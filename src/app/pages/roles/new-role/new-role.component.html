@@ -4,14 +4,8 @@
   <div class="np-panel">
     <h2 class="np-title">Nuovo Ruolo</h2>
 
-    @if (statusMessage) {
-      <div class="message message--{{ statusMessage.type }}">
-        {{ statusMessage.text }}
-      </div>
-    }
-
     <form class="np-form np-form--grid" [formGroup]="roleCreateForm" (ngSubmit)="submit()">
-      @for (header of headers; track header.key; let i = $index) {
+      @for (header of facade.headers; track header.key; let i = $index) {
         <div class="np-field np-field--grid">
           <app-text-input>
             <label class="np-label" [attr.for]="toId(header.key, i)">
@@ -31,15 +25,27 @@
           ) {
             <p class="error">
               @if (roleCreateForm.get(header.key)?.errors?.['required']) {
-                *{{ getRequiredErrorMessage(header.key) }}
+                *{{ facade.getRequiredErrorMessage(header.key) }}
               }
             </p>
           }
         </div>
       }
 
+      @if (statusMessage) {
+        <div class="message message--{{ statusMessage.type }}">
+          {{ statusMessage.text }}
+        </div>
+      }
+
       <div class="actions">
-        <button type="submit" [disabled]="isSubmitDisabled()" (click)="onSubmitClick($event)">Crea ruolo</button>
+          <button 
+            type="submit" 
+            [attr.aria-disabled]="isButtonDisabled"
+            [class.btn--disabled]="isButtonDisabled"
+            (click)="onSubmitClick($event)">
+            Crea Ruolo
+          </button>
         <button type="button" (click)="onCancel()">Annulla</button>
       </div>
     </form>

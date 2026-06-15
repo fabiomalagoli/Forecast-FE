@@ -4,19 +4,9 @@
   <div class="np-panel">
     <h2 class="np-title">Modifica Ruolo</h2>
 
-    @if (statusMessage) {
-      <div class="message message--{{ statusMessage.type }}">
-        {{ statusMessage.text }}
-      </div>
-    }
-
-    @if (noChangesMessage) {
-      <p class="error">Nessuna modifica da salvare.</p>
-    }
-
     @if(roleEditForm) {
       <form class="np-form" [formGroup]="roleEditForm" (ngSubmit)="submit()">
-        @for (header of headers; track header.key; let i = $index) {
+        @for (header of facade.headers; track header.key; let i = $index) {
           <div class="np-field">
             <app-text-input>
               <label class="np-label" [attr.for]="toId(header.key, i)">
@@ -30,22 +20,41 @@
               />
             </app-text-input>
 
+            @if (statusMessage) {
+              <div class="message message--{{ statusMessage.type }}">
+                {{ statusMessage.text }}
+              </div>
+            }
+
+            @if (noChangesMessage) {
+              <p class="error">Nessuna modifica da salvare.</p>
+            }
+
             @if (
               roleEditForm.get(header.key)?.invalid &&
               (roleEditForm.get(header.key)?.touched || attemptedSubmit)
             ) {
               <p class="error">
                 @if (roleEditForm.get(header.key)?.errors?.['required']) {
-                  *{{ getRequiredErrorMessage(header.key) }}
+                  *{{ facade.getRequiredErrorMessage(header.key) }}
                 }
               </p>
             }
           </div>
         }
+        
+        @if (roleEditForm.valid && !isChanged()) {
+          <div class="info-message">
+            <p>ℹ️ Il ruolo è identico a prima. Modifica il nome per salvare.</p>
+          </div>
+        }
       
-
         <div class="actions">
-          <button type="submit" [disabled]="isSubmitDisabled()" (click)="onSubmitClick($event)">
+          <button 
+            type="submit" 
+            [attr.aria-disabled]="isButtonDisabled"
+            [class.btn--disabled]="isButtonDisabled"
+            (click)="onSubmitClick($event)">
             Salva modifiche
           </button>
           <button type="button" (click)="onCancel()">Annulla</button>

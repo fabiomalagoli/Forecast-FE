@@ -5,7 +5,7 @@
     <h2 class="np-title">Nuovo cliente</h2>
 
     <form class="np-form np-form--grid" [formGroup]="customerForm" (ngSubmit)="submit()">
-      @for (header of headers; track header.key; let i = $index) {
+      @for (header of facade.headers; track header.key; let i = $index) {
         <div class="np-field np-field--grid">
           <app-text-input>
             <label class="np-label" [attr.for]="toId(header.key, i)">
@@ -29,8 +29,11 @@
               @if (customerForm.get(header.key)?.hasError('required')) {
                 *campo obbligatorio
               }
-              @if (customerForm.get(header.key)?.hasError('pattern')) {
+              @if (customerForm.get(header.key)?.hasError('pattern') && header.key !== 'streetNumber') {
                 *sono accettati solo numeri
+              }
+              @if (customerForm.get(header.key)?.hasError('pattern') && header.key === 'streetNumber') {
+                *sono accettati solo civici
               }
             </p>
           }

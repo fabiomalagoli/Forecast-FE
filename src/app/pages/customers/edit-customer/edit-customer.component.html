@@ -12,7 +12,7 @@
 
     @if (editCustomerForm) {
       <form class="np-form np-form--grid" [formGroup]="editCustomerForm" (ngSubmit)="submit()">
-        @for (header of headers; track header.key; let i = $index) {
+        @for (header of facade.headers; track header.key; let i = $index) {
           <div class="np-field np-field--grid">
             <app-text-input>
               <label class="np-label" [attr.for]="toId(header.key, i)">
@@ -24,7 +24,7 @@
                 type="text"
                 [attr.id]="toId(header.key, i)"
                 [formControlName]="header.key"
-                [maxlength]="getMaxLength(header.key)"
+                [maxlength]="facade.getMaxLength(header.key)"
                 (input)="onFieldChange()"
               />
             </app-text-input>
@@ -35,13 +35,16 @@
             ) {
               <p class="error">
                 @if (editCustomerForm.get(header.key)?.hasError('required')) {
-                  *{{ getRequiredErrorMessage(header.key) }}
+                  *{{ facade.getRequiredErrorMessage(header.key) }}
                 }
                 @if (editCustomerForm.get(header.key)?.hasError('maxlength')) {
-                  *{{ getMaxLengthErrorMessage(header.key) }}
+                  *{{ facade.getMaxLengthErrorMessage(header.key) }}
                 }
-                @if (editCustomerForm.get(header.key)?.hasError('pattern')) {
+                @if (editCustomerForm.get(header.key)?.hasError('pattern') && header.key !== 'streetNumber') {
                   *sono accettati solo numeri
+                }
+                @if (editCustomerForm.get(header.key)?.hasError('pattern') && header.key === 'streetNumber') {
+                  *sono accettati solo civici
                 }
               </p>
             }
@@ -51,7 +54,7 @@
         <div class="actions">
           <button 
             type="submit" 
-            [disabled]="isSubmitDisabled()" 
+            [disabled]="isButtonDisabled" 
             (click)="onSubmitClick($event)">
             Modifica cliente
           </button>

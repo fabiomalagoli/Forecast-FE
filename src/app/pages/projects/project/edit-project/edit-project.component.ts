@@ -1,66 +1,58 @@
+import { Component, HostListener, OnInit, inject, input, output, signal, ChangeDetectorRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject, input, output, signal, ChangeDetectorRef, effect, DestroyRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin, Observable, timer } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Project, ProjectEmployee, ProjectRole } from '../../../../shared/models/project.model';
-import {
-  buildProjectEmployeePayload,
-  buildProjectJobRolePayload,
-  buildProjectUpdatePayload,
-  normalizeProjectBudgetForForm,
-} from '../../../../shared/payloads/project.payloads';
+import { Observable } from 'rxjs';
+import { Project } from '../../../../shared/models/project.model';
 import { TextInputComponent } from '../../../../shared/text-input/text-input.component';
-import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
+import { AssignSingleComponent } from '../assign-single/assign-single.component';
 import { Role } from '../../../../shared/models/role.model';
 import { Employee } from '../../../../shared/models/employee.model';
-import {
-  buildEditableProjectHeaders,
-  calculateProjectTotals,
-  cloneProjectForEdit,
-  createEmptyProjectEmployee,
-  createEmptyProjectRole,
-  findEquivalentProjectEmployee,
-  findProjectItemById,
-  formatEuroCurrency,
-  getDateAfterDays,
-  getExclusiveDaysDiff,
-  getProjectEmployeeRequestId,
-  getProjectFormComparableSnapshot,
-  getRemovedProjectItems,
-  getWinProbabilityError,
-  hasProjectItemChanged,
-  isProjectEmployeeComplete,
-  isProjectRoleComplete,
-  isTemporaryProjectItem,
-  normalizeProjectFormData,
-  parseIsoDate,
-  toElementId,
-  getProjectFieldPattern
-} from '../../../../shared/utils/project-form.utils';
-import { CustomersService } from '../../../../shared/services/customers.service';
-import { EmployeesService } from '../../../../shared/services/employees.service';
-import { LookupsService } from '../../../../shared/services/lookups.service';
 import { ProjectsService } from '../../../../shared/services/projects.service';
-import { RolesService } from '../../../../shared/services/roles.service';
-import { AssignSingleComponent } from '../assign-single/assign-single.component';
+import { EmployeesService } from '../../../../shared/services/employees.service';
+import { SnackbarService } from '../../../../shared/services/snackbar.service';
+import { NotifyAction } from '../../../../shared/enums/notify.enum';
+import { ProjectFormFacade } from '../../../../shared/utils/project-form.facade';
+import {
+  cloneProjectForEdit,
+  normalizeProjectFormData,
+  calculateProjectTotals,
+  createEmptyProjectRole,
+  createEmptyProjectEmployee,
+  getWinProbabilityError,
+  toElementId,
+  getProjectFieldPattern,
+  buildEditableProjectHeaders,
+  getProjectFormComparableSnapshot,
+  isProjectRoleComplete,
+  isProjectEmployeeComplete
+} from '../../../../shared/utils/project-form.utils';
+import {
+  buildProjectUpdatePayload,
+  normalizeProjectBudgetForForm, 
+} from '../../../../shared/payloads/project.payloads';
+import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 
 @Component({
   selector: 'app-modifica-progetto',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, TextInputComponent, AssignSingleComponent], // Sostituito FormsModule con ReactiveFormsModule
+  imports: [ReactiveFormsModule, CommonModule, TextInputComponent, AssignSingleComponent],
   templateUrl: './edit-project.component.html',
+  providers: [ProjectFormFacade]
 })
 export class EditProjectComponent implements OnInit {
+  public facade = inject(ProjectFormFacade);
   private projectsService = inject(ProjectsService);
-  private customersService = inject(CustomersService);
-  private rolesService = inject(RolesService);
-  private lookupsService = inject(LookupsService);
   private employeesService = inject(EmployeesService);
+  private snackbarService = inject(SnackbarService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
-  private destroyRef = inject(DestroyRef);
-  private pendingEmployeeAssignments = new Map<string, Employee>();
+
+  selectedProjectToEdit = input.required<Project>();
+  saved = output<Project>();
+  cancel = output<void>();
+
+  editProjectForm!: FormGroup;
+
   showAssignPanel = signal(false);
   assignRole = signal<Role | null>(null);
   assignList = signal<Employee[]>([]);
@@ -68,343 +60,63 @@ export class EditProjectComponent implements OnInit {
   assignSelectedRoleId = signal<string | null>(null);
   assignSelectedLevel = signal<string | null>(null);
   hasUnassignedInProject = signal(false);
-
-  companiesList = signal<any[]>([]);
-  customersList = signal<any[]>([]);
-  projectStatusesList = signal<any[]>([]);
-  employeesList = signal<any[]>([]);
-  jobRolesList = signal<any[]>([]);
-  jobRoleLevelsList = signal<any[]>([]);
-  pmDropdownOpen = signal(false);
-  showAllPmOptions = signal(false);
-  pmFilterValue = signal('');
-
-  selectedProjectToEdit = input.required<Project>();
-  hasMadeInlineAssignment = signal(false);
-
-  saved = output<Project>();
+  activeAssignIndex = signal<number | null>(null);
   isSaving = signal(false);
-  cancel = output<void>();
-
-  editProjectForm!: FormGroup;
-
-  private originalComparableSnapshot = '';
-  private initialFormData: any = null;
-
   attemptedSubmit = false;
   noChangesMessage = false;
   statusMessage: { text: string; type: 'success' | 'error' } | null = null;
-  dateRangeError = false;
-
-  activeAssignIndex = signal<number | null>(null);
 
   readonly headers = buildEditableProjectHeaders();
   readonly getPattern = getProjectFieldPattern;
 
-  isButtonDisabled = signal(false);
-
   constructor() {
     this.initForm();
-    this.setupEmployeesEffect();
-  }
-
-  private setupEmployeesEffect() {
     effect(() => {
-      const _ = this.employeesList();
+      this.facade.employeesList();
       this.recomputeUnassignedFlag();
     });
   }
 
   initForm() {
     const formControls: { [key: string]: any } = {};
-
     this.headers.forEach(h => {
-      if (['name', 'companyId', 'customerId', 'pmId', 'winProbability'].includes(h.key)) {
-              formControls[h.key] = ['', Validators.required];
-      } else {
-        formControls[h.key] = [''];
-      }
+      const isRequired = ['name', 'companyId', 'customerId', 'pmId', 'winProbability'].includes(h.key);
+      formControls[h.key] = ['', isRequired ? Validators.required : null];
     });
-
     formControls['projectJobRoles'] = this.fb.array([]);
     formControls['projectEmployees'] = this.fb.array([]);
-
     this.editProjectForm = this.fb.group(formControls);
   }
 
-  checkButtonState() {
-    if (!this.initialFormData) {
-      this.isButtonDisabled.set(true);
-      return;
-    }
-
-    const disabled = this.isSaving() || 
-                     this.dateRangeError ||
-                     this.resourceDaysExceeded ||
-                     this.editProjectForm.invalid || 
-                     !this.hasValidRoles() || 
-                     !this.hasValidResources() || 
-                     !this.isChanged();
-                     
-    this.isButtonDisabled.set(disabled);
-  }
-
   ngOnInit() {
-    // Cloniamo i dati base del progetto
     const clonedProject = cloneProjectForEdit(this.selectedProjectToEdit());
 
-    const lookupRequests = {
-      companies: this.lookupsService.loadAvailableCompanies(),
-      customers: this.customersService.loadAvailableCustomers(),
-      statuses: this.lookupsService.loadProjectStatuses(),
-      employees: this.employeesService.loadAllEmployees(),
-      roles: this.rolesService.loadAllJobRoles(),
-      levels: this.rolesService.loadJobRoleLevels(),
-    };
+    this.facade.loadAllLookups().subscribe((lookups) => {
+      normalizeProjectFormData(clonedProject, lookups);
+      normalizeProjectBudgetForForm(clonedProject);
 
-    forkJoin(lookupRequests).subscribe((lookups) => {
-        this.companiesList.set(lookups.companies);
-        this.customersList.set(lookups.customers);
-        this.projectStatusesList.set(lookups.statuses);
-        this.employeesList.set(lookups.employees);
-        this.jobRolesList.set(lookups.roles);
-        this.jobRoleLevelsList.set(lookups.levels);
+      this.editProjectForm.patchValue(clonedProject);
+      clonedProject.projectJobRoles?.forEach((role: any) => this.projectJobRoles.push(this.fb.group(role)));
+      clonedProject.projectEmployees?.forEach((emp: any) => this.projectEmployees.push(this.fb.group(emp)));
 
-        // Normalizziamo i dati (ID ecc.) grazie ai lookups
-        normalizeProjectFormData(clonedProject, lookups);
-        normalizeProjectBudgetForForm(clonedProject);
+      this.facade.initialFormData = JSON.parse(JSON.stringify(clonedProject));
 
-        // Salviamo una copia pura per i controlli successivi
-        this.initialFormData = JSON.parse(JSON.stringify(clonedProject));
+      this.facade.originalFormSnapshot.set(getProjectFormComparableSnapshot(this.editProjectForm.getRawValue()));
 
-        // Popoliamo il form
-        this.populateForm(clonedProject);
-
-        // Attiviamo i ricalcoli reattivi solo dopo aver popolato il form
-        this.setupReactiveCalculations();
-        this.saveInitialSnapshot();
-        this.recomputeUnassignedFlag();
-
-        this.checkButtonState();
-        this.cdr.detectChanges();
-      });
-  }
-
-  openAssignPanel() {
-    console.log('[EditProject] openAssignPanel called');
-    const allRoles = this.jobRolesList() || [];
-    const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
-    const roleForPanel: Role = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
-
-    const projectEmps = this.projectEmployees.getRawValue() || [];
-    const projectEmpIds = projectEmps.map((pe: any) => (pe.employeeId || pe.id) && String(pe.employeeId || pe.id)).filter(Boolean);
-    const allEmps = this.employeesList() || [];
-    const assignedUnassignedInProject = allEmps.filter(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
-
-    this.assignRole.set(roleForPanel);
-    this.assignList.set(assignedUnassignedInProject);
-    this.assignSelectedEmployeeId.set(null);
-    this.assignSelectedRoleId.set(null);
-    this.assignSelectedLevel.set(null);
-    this.showAssignPanel.set(true);
-  }
-
-  chooseAssignEmployee(id: string | null) {
-    this.assignSelectedEmployeeId.set(id);
-    if (!id) return;
-    const e = (this.employeesList() || []).find(x => String(x.id) === String(id));
-    if (e) {
-      this.assignSelectedLevel.set(e.jobRoleLevel || null);
-      this.assignSelectedRoleId.set(e.jobRole || null);
-    }
-  }
-
-  saveAssignSingle() {
-    const empId = this.assignSelectedEmployeeId();
-    if (!empId) return;
-    const emp = (this.employeesList() || []).find(x => String(x.id) === String(empId));
-    if (!emp) return;
-
-    const roleId = this.assignSelectedRoleId();
-    const level = this.assignSelectedLevel() || 'Junior';
-    const roleName = roleId ? (this.jobRolesList().find(r => String(r.id) === String(roleId))?.name || '') : '';
-
-    this.onAssignSaved([{ ...emp, jobRole: roleName, jobRoleLevel: level } as Employee]);
-    this.showAssignPanel.set(false);
-  }
-
-  isEmployeeUnassigned(employeeId: string): boolean {
-    if(!employeeId) return false;
-    const emp = this.employeesList().find(e => String(e.id) === String(employeeId));
-    return emp ? (emp.jobRole || '').toString().toLowerCase() === 'unassigned' : false;
-  }
-
-  closeAssignPanel() {
-    this.activeAssignIndex.set(null);
-  }
-
-  recomputeUnassignedFlag() {
-    const projectEmpIds = (this.projectEmployees.getRawValue() || []).map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);
-    const allEmps = this.employeesList() || [];
-    const has = allEmps.some(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
-    this.hasUnassignedInProject.set(has);
-  }
-
-
-  onAssignSaved(updated: Employee[]) {
-    this.activeAssignIndex.set(null);
-    
-    if (updated && updated.length > 0) {
-      const updatedEmp = updated[0];
-      const resolvedRoleId = this.resolveLookupId(this.jobRolesList(), updatedEmp.jobRole);
-      const resolvedLevelId = this.resolveLookupId(this.jobRoleLevelsList(), updatedEmp.jobRoleLevel);
-      const controls = this.projectEmployees.controls;
-      
-      this.pendingEmployeeAssignments.set(String(updatedEmp.id), updatedEmp);
-      this.employeesList.update((employees) =>
-        employees.map((employee) => String(employee.id) === String(updatedEmp.id) ? updatedEmp : employee)
-      );
-
-      for (let i = 0; i < controls.length; i++) {
-        const ctrl = controls[i];
-        const ctrlId = ctrl.get('employeeId')?.value || ctrl.get('id')?.value;
-        
-        if (String(ctrlId) === String(updatedEmp.id)) {
-          ctrl.patchValue({
-            jobRole: resolvedRoleId,
-            jobRoleLevel: resolvedLevelId,
-          });
-          ctrl.markAsDirty();
-          break;
-        }
-      }
-
+      this.facade.setupReactiveCalculations(this.editProjectForm);
       this.recomputeUnassignedFlag();
-      this.hasMadeInlineAssignment.set(true); 
-      this.editProjectForm.markAsDirty();
-      this.cdr.markForCheck();
-    }
-  }
-
-  private populateForm(projectData: any) {
-    this.editProjectForm.patchValue(projectData);
-
-    if (projectData.projectJobRoles && Array.isArray(projectData.projectJobRoles)) {
-      projectData.projectJobRoles.forEach((role: any) => {
-        this.projectJobRoles.push(this.fb.group(role));
-      });
-    }
-
-    if (projectData.projectEmployees && Array.isArray(projectData.projectEmployees)) {
-      projectData.projectEmployees.forEach((emp: any) => {
-        this.projectEmployees.push(this.fb.group(emp));
-      });
-    }
-  }
-
-  private setupReactiveCalculations() {
-    this.editProjectForm.get('startDate')?.valueChanges.subscribe(() => this.recalculateDateRange());
-    this.editProjectForm.get('endDate')?.valueChanges.subscribe(() => this.recalculateDateRange());
-
-    this.editProjectForm.get('totalDays')?.valueChanges.subscribe((days) => {
-      const start = parseIsoDate(this.editProjectForm.get('startDate')?.value);
-      const totalDays = Number(days);
-
-      if (start && Number.isFinite(totalDays) && totalDays > 0) {
-        this.dateRangeError = false;
-        const newEndDate = getDateAfterDays(start, totalDays);
-        this.editProjectForm.patchValue({ endDate: newEndDate }, { emitEvent: false });
-      }
+      this.cdr.detectChanges();
     });
-
-    this.projectJobRoles.valueChanges.subscribe(() => this.recalculateTotals());
-    this.projectEmployees.valueChanges.subscribe(() => this.recalculateTotals());
-
-    this.editProjectForm.valueChanges.subscribe(() => {
-      this.checkButtonState();
-    })
   }
 
-  private recalculateDateRange() {
-    const start = parseIsoDate(this.editProjectForm.get('startDate')?.value);
-    const end = parseIsoDate(this.editProjectForm.get('endDate')?.value);
-
-    if (!start || !end) {
-      this.dateRangeError = false;
-      return;
-    }
-    if (end < start) {
-      this.dateRangeError = true;
-      return;
-    }
-    this.dateRangeError = false;
-    const diff = getExclusiveDaysDiff(start, end);
-    this.editProjectForm.patchValue({ totalDays: diff }, { emitEvent: false });
-  }
-
-  private recalculateTotals() {
-    const roles = this.projectJobRoles.getRawValue() || [];
-    const employees = this.projectEmployees.getRawValue() || [];
-    const totals = calculateProjectTotals([...roles, ...employees]);
-
-    this.editProjectForm.patchValue({
-      totalBudget: formatEuroCurrency(totals.totalBudget)
-    }, { emitEvent: false });
-
-    this.cdr.detectChanges(); // Previene l'errore ExpressionChanged
-  }
-
-  get resourceDaysExceeded(): boolean {
-    const projectDays = Number(this.editProjectForm.get('totalDays')?.value || 0);
-    const roles = this.projectJobRoles.getRawValue() || [];
-    const employees = this.projectEmployees.getRawValue() || [];
-    
-    const totalAllocatedDays = roles.reduce((sum: number, r: any) => sum + Number(r.daysSpent || 0), 0) +
-                               employees.reduce((sum: number, e: any) => sum + Number(e.daysSpent || 0), 0);
-    
-    return totalAllocatedDays > projectDays;
-  }
-
-  isSubmitDisabled(): boolean {
-    if(!this.initialFormData) return true;
-    return this.isSaving() || 
-           this.dateRangeError ||
-           this.resourceDaysExceeded ||
-           this.editProjectForm.invalid || 
-           !this.hasValidRoles() || 
-           !this.hasValidResources() || 
-           !this.isChanged();
-  }
-
-  get projectJobRoles(): FormArray {
-    return this.editProjectForm.get('projectJobRoles') as FormArray;
-  }
-
-  get projectEmployees(): FormArray {
-    return this.editProjectForm.get('projectEmployees') as FormArray;
-  }
-
-  addRole() {
-    this.projectJobRoles.push(this.fb.group(createEmptyProjectRole()));
-  }
-
-  addEmployee() {
-    this.projectEmployees.push(this.fb.group(createEmptyProjectEmployee()));
-  }
-
-  removeRole(index: number) {
-    this.projectJobRoles.removeAt(index);
-  }
-
-  removeEmployee(index: number) {
-    this.projectEmployees.removeAt(index);
+  get isButtonDisabled(): boolean {
+    return this.facade.isButtonDisabled(this.editProjectForm, this.isSaving());
   }
 
   isChanged(): boolean {
-    if (this.hasMadeInlineAssignment()) return true;
-
+    if (this.facade.hasMadeInlineAssignment()) return true;
     const currentFormValue = this.editProjectForm.getRawValue();
-    return getProjectFormComparableSnapshot(currentFormValue) !== this.originalComparableSnapshot;
+    return getProjectFormComparableSnapshot(currentFormValue) !== this.facade.originalFormSnapshot();
   }
 
   hasValidRoles(): boolean {
@@ -419,155 +131,60 @@ export class EditProjectComponent implements OnInit {
     return employees.every((employee: any) => isProjectEmployeeComplete(employee) && !this.getWinProbabilityError(employee));
   }
 
-  onSubmitClick(event: Event) {
-    if (this.isSubmitDisabled()) {
-      event.preventDefault();
-      this.attemptedSubmit = true;
-      if (!this.isChanged()) {
-        this.noChangesMessage = true;
-      }
-    }
-  }
+  submit() {
+    if (this.isButtonDisabled) return;
 
-submit() {
-  if (this.isSubmitDisabled()) return;
+    this.isSaving.set(true);
+    const projectId = this.selectedProjectToEdit().id;
+    const formValue = this.editProjectForm.getRawValue();
 
-  // Blocchiamo il form per evitare click multipli
-  this.isSaving.set(true);
+    const rawTotals = calculateProjectTotals([...formValue.projectJobRoles, ...formValue.projectEmployees]);
+    formValue.totalBudget = rawTotals.totalBudget;
 
-  const projectId = this.selectedProjectToEdit().id;
-  const formValue = this.editProjectForm.getRawValue();
+    const projectPayload = this.buildProjectPayload(projectId, formValue);
+    const pendingEmployeeCalls: Observable<any>[] = [];
+    
+    this.facade.pendingEmployeeAssignments.forEach((employee) => {
+      pendingEmployeeCalls.push(this.buildPendingEmployeeAssignmentCall(employee));
+    });
 
-  // Ricalcolo del budget puro per il backend
-  const rawTotals = calculateProjectTotals([...formValue.projectJobRoles, ...formValue.projectEmployees]);
-  formValue.totalBudget = rawTotals.totalBudget;
-
-  // Liste per separare i compiti
-  const deleteCalls: any[] = [];
-  const saveCalls: any[] = [];
-
-  const originalRoles = this.initialFormData?.projectJobRoles || [];
-  const currentRoles = formValue.projectJobRoles || [];
-  const rolesToRemove = getRemovedProjectItems(originalRoles, currentRoles);
-
-  const originalEmployees = this.initialFormData?.projectEmployees || [];
-  const currentEmployees = formValue.projectEmployees || [];
-  const employeesToRemove = getRemovedProjectItems(originalEmployees, currentEmployees);
-
-  rolesToRemove.forEach((role) => deleteCalls.push(this.projectsService.deleteProjectJobRole(projectId, role.id)));
-  employeesToRemove.forEach((employee) => deleteCalls.push(this.projectsService.deleteProjectEmployee(projectId, getProjectEmployeeRequestId(employee))));
-
-  saveCalls.push(this.projectsService.updateProject(this.buildProjectPayload(projectId, formValue)));
-  this.pendingEmployeeAssignments.forEach((employee) => {
-    saveCalls.push(this.buildPendingEmployeeAssignmentCall(employee));
-  });
-
-  currentRoles.forEach((role: any) => {
-    const rolePayload = buildProjectJobRolePayload(role);
-    const originalRole = findProjectItemById(this.initialFormData?.projectJobRoles || [], role.id);
-
-    if (this.isTemporaryRoleId(role.id)) {
-      saveCalls.push(this.projectsService.addProjectJobRole(projectId, [rolePayload]));
-    } else if (hasProjectItemChanged(role, originalRole)) {
-      saveCalls.push(this.projectsService.updateProjectJobRole(projectId, role.id, rolePayload));
-    }
-  });
-
-  currentEmployees.forEach((employee: ProjectEmployee) => {
-    const employeePayload = buildProjectEmployeePayload(employee);
-    const originalEmployee = findProjectItemById(this.initialFormData?.projectEmployees || [], employee.id);
-
-    if (this.isTemporaryEmployeeId(employee.id)) {
-      const equivalentOriginalEmployee = findEquivalentProjectEmployee(this.initialFormData?.projectEmployees || [], employee);
-      if (!equivalentOriginalEmployee) {
-        saveCalls.push(this.projectsService.addProjectEmployee(projectId, [employeePayload]));
-      }
-    } else if (hasProjectItemChanged(employee, originalEmployee)) {
-      saveCalls.push(this.projectsService.updateProjectEmployee(projectId, getProjectEmployeeRequestId(employee), employeePayload));
-    }
-  });
-
-  if (deleteCalls.length > 0) {
-    // Prima le cancellazioni
-    forkJoin(deleteCalls as Observable<any>[]).subscribe({
+    this.projectsService.updateProjectWithDetails(
+      projectId,
+      projectPayload,
+      this.facade.initialFormData,
+      formValue.projectJobRoles || [],
+      formValue.projectEmployees || [],
+      pendingEmployeeCalls
+    ).subscribe({
       next: () => {
-        // Solo quando le cancellazioni sono completate con successo, passiamo ai salvataggi
-        this.executeSaves(saveCalls, formValue);
+        this.isSaving.set(false);
+        this.facade.hasMadeInlineAssignment.set(false);
+        this.facade.pendingEmployeeAssignments.clear();
+        this.snackbarService.success(NotifyAction.UpdateProject, "progetto");
+        this.saved.emit(formValue);
       },
       error: (error) => {
         this.isSaving.set(false);
-        console.error("Errore durante la pulizia dei dati:", error);
-        this.showNotification("Errore durante la rimozione dei vecchi ruoli/risorse.", 'error');
+        console.error(error);
+        this.snackbarService.error(NotifyAction.UpdateProject, "progetto", "Chiudi");
       }
     });
-  } else {
-    // Se non c'è nulla da cancellare, passiamo direttamente al salvataggio
-    this.executeSaves(saveCalls, formValue);
-  }
-}
-
-// Funzione di supporto per eseguire inserimenti e modifiche
-private executeSaves(saveCalls: any[], formValue: any) {
-  if (saveCalls.length === 0) {
-    this.finalizeSubmit(formValue);
-    return;
   }
 
-  forkJoin(saveCalls as Observable<any>[]).subscribe({
-    next: () => {
-      this.finalizeSubmit(formValue);
-    },
-    error: (error) => {
-      this.isSaving.set(false);
-      console.error("Errore durante il salvataggio dei dati:", error);
-      this.showNotification("Errore durante l'aggiornamento dei dati del progetto.", 'error');
-    }
-  });
-}
+  get projectJobRoles(): FormArray { return this.editProjectForm.get('projectJobRoles') as FormArray; }
+  get projectEmployees(): FormArray { return this.editProjectForm.get('projectEmployees') as FormArray; }
 
-// Funzione di supporto per concludere la procedura
-private finalizeSubmit(formValue: any) {
-  this.isSaving.set(false);
-  this.hasMadeInlineAssignment.set(false);
-  this.pendingEmployeeAssignments.clear();
-  this.showNotification('Progetto e dettagli aggiornati con successo!', 'success');
-  this.saved.emit(formValue);
-  this.saveInitialSnapshot();
-}
-
-  onCancel() {
-    this.cancel.emit();
-  }
-
-  onFieldChange() {
-    this.noChangesMessage = false;
-    this.attemptedSubmit = false;
-  }
-
-  isNumericField(key: string): boolean {
-    return key === 'winProbability' || key === 'totalDays';
-  }
-
-  onWinProbabilityBlur(control: any) {
-    const val = control?.value;
-    if (!val) return;
-
-    const normalized = String(val).replace(',', '.');
-    const num = parseFloat(normalized);
-
-    if (!isNaN(num) && num >= 1 && num <= 100) {
-      // Imposta il valore a 2 cifre decimali fisse
-      control.setValue(num.toFixed(2), { emitEvent: true });
-    }
-    this.onFieldChange();
-  }
+  addRole() { this.projectJobRoles.push(this.fb.group(createEmptyProjectRole())); }
+  addEmployee() { this.projectEmployees.push(this.fb.group(createEmptyProjectEmployee())); }
+  removeRole(index: number) { this.projectJobRoles.removeAt(index); }
+  removeEmployee(index: number) { this.projectEmployees.removeAt(index); }
 
   getOptions(key: string): any[] {
     switch (key) {
-      case 'projectStatusId': return this.projectStatusesList();
-      case 'companyId': return this.companiesList();
-      case 'customerId': return this.customersList();
-      case 'pmId': return this.employeesList();
+      case 'projectStatusId': return this.facade.projectStatusesList();
+      case 'companyId': return this.facade.companiesList();
+      case 'customerId': return this.facade.customersList();
+      case 'pmId': return this.facade.employeesList();
       default: return [];
     }
   }
@@ -577,65 +194,149 @@ private finalizeSubmit(formValue: any) {
   }
 
   pmInputValue(): string {
-    if (this.pmDropdownOpen() && !this.showAllPmOptions()) {
-      return this.pmFilterValue();
-    }
-
+    if (this.facade.pmDropdownOpen() && !this.facade.showAllPmOptions()) return this.facade.pmFilterValue();
     const pmId = this.editProjectForm.get('pmId')?.value;
-    return this.employeeName(this.employeesList().find((employee) => (employee.id || employee.Id) === pmId));
+    return this.employeeName(this.facade.employeesList().find((e) => (e.id || e.Id) === pmId));
   }
 
   filteredPmOptions(): any[] {
-    const term = this.showAllPmOptions() ? '' : this.pmFilterValue().trim().toLowerCase();
-
-    if (!term) {
-      return this.employeesList();
-    }
-
-    return this.employeesList().filter((employee) => this.employeeName(employee).toLowerCase().includes(term));
+    const term = this.facade.showAllPmOptions() ? '' : this.facade.pmFilterValue().trim().toLowerCase();
+    if (!term) return this.facade.employeesList();
+    return this.facade.employeesList().filter((e) => this.employeeName(e).toLowerCase().includes(term));
   }
 
-  onPmFocus() {
-    this.showAllPmOptions.set(true);
-    this.pmDropdownOpen.set(true);
-  }
-
+  onPmFocus() { this.facade.showAllPmOptions.set(true); this.facade.pmDropdownOpen.set(true); }
   onPmInput(event: Event) {
-    this.pmFilterValue.set((event.target as HTMLInputElement).value);
-    this.showAllPmOptions.set(false);
-    this.pmDropdownOpen.set(true);
+    this.facade.pmFilterValue.set((event.target as HTMLInputElement).value);
+    this.facade.showAllPmOptions.set(false);
+    this.facade.pmDropdownOpen.set(true);
   }
-
-  togglePmDropdown() {
-    this.showAllPmOptions.set(true);
-    this.pmDropdownOpen.update((open) => !open);
-  }
-
+  togglePmDropdown() { this.facade.showAllPmOptions.set(true); this.facade.pmDropdownOpen.update((open) => !open); }
   selectPm(employee: any | null) {
     this.editProjectForm.get('pmId')?.setValue(employee ? (employee.id || employee.Id) : null);
-    this.pmFilterValue.set('');
-    this.pmDropdownOpen.set(false);
-    this.showAllPmOptions.set(false);
+    this.facade.pmFilterValue.set('');
+    this.facade.pmDropdownOpen.set(false);
+    this.facade.showAllPmOptions.set(false);
+    this.onFieldChange();
+  }
+  clearPm() { this.selectPm(null); }
+
+  recomputeUnassignedFlag() {
+    const projectEmpIds = (this.projectEmployees.getRawValue() || []).map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);
+    const has = this.facade.employeesList().some(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
+    this.hasUnassignedInProject.set(has);
+  }
+
+  openAssignPanel() {
+    const allRoles = this.facade.jobRolesList() || [];
+    const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
+    const roleForPanel: Role = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
+
+    const projectEmps = this.projectEmployees.getRawValue() || [];
+    const projectEmpIds = projectEmps.map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);
+    const assignedUnassignedInProject = this.facade.employeesList().filter(e => projectEmpIds.includes(String(e.id)) && ((e.jobRole || '').toString().toLowerCase() === 'unassigned'));
+
+    this.assignRole.set(roleForPanel);
+    this.assignList.set(assignedUnassignedInProject);
+    this.assignSelectedEmployeeId.set(null);
+    this.assignSelectedRoleId.set(null);
+    this.assignSelectedLevel.set(null);
+    this.showAssignPanel.set(true);
+  }
+
+  chooseAssignEmployee(id: string | null) {
+    this.assignSelectedEmployeeId.set(id);
+    if (!id) return;
+    const e = this.facade.employeesList().find(x => String(x.id) === String(id));
+    if (e) {
+      this.assignSelectedLevel.set(e.jobRoleLevel || null);
+      this.assignSelectedRoleId.set(e.jobRole || null);
+    }
+  }
+
+  saveAssignSingle() {
+    const empId = this.assignSelectedEmployeeId();
+    if (!empId) return;
+    const emp = this.facade.employeesList().find(x => String(x.id) === String(empId));
+    if (!emp) return;
+
+    const roleId = this.assignSelectedRoleId();
+    const level = this.assignSelectedLevel() || 'Junior';
+    const roleName = roleId ? (this.facade.jobRolesList().find(r => String(r.id) === String(roleId))?.name || '') : '';
+
+    this.onAssignSaved([{ ...emp, jobRole: roleName, jobRoleLevel: level } as Employee]);
+    this.showAssignPanel.set(false);
+  }
+
+  isEmployeeUnassigned(employeeId: string): boolean {
+    if(!employeeId) return false;
+    const emp = this.facade.employeesList().find(e => String(e.id) === String(employeeId));
+    return emp ? (emp.jobRole || '').toString().toLowerCase() === 'unassigned' : false;
+  }
+
+  closeAssignPanel() { this.activeAssignIndex.set(null); }
+
+  onAssignSaved(updated: Employee[]) {
+    this.activeAssignIndex.set(null);
+    if (updated && updated.length > 0) {
+      const updatedEmp = updated[0];
+      const resolvedRoleId = this.facade.resolveLookupId(this.facade.jobRolesList(), updatedEmp.jobRole);
+      const resolvedLevelId = this.facade.resolveLookupId(this.facade.jobRoleLevelsList(), updatedEmp.jobRoleLevel);
+      const controls = this.projectEmployees.controls;
+      
+      this.facade.pendingEmployeeAssignments.set(String(updatedEmp.id), updatedEmp);
+      this.facade.employeesList.update((employees) =>
+        employees.map((employee) => String(employee.id) === String(updatedEmp.id) ? updatedEmp : employee)
+      );
+
+      for (let i = 0; i < controls.length; i++) {
+        const ctrl = controls[i];
+        const ctrlId = ctrl.get('employeeId')?.value || ctrl.get('id')?.value;
+        if (String(ctrlId) === String(updatedEmp.id)) {
+          ctrl.patchValue({ jobRole: resolvedRoleId, jobRoleLevel: resolvedLevelId });
+          ctrl.markAsDirty();
+          break;
+        }
+      }
+
+      this.recomputeUnassignedFlag();
+      this.facade.hasMadeInlineAssignment.set(true); 
+      this.editProjectForm.markAsDirty();
+      this.cdr.markForCheck();
+    }
+  }
+
+  onCancel() { this.cancel.emit(); }
+  onFieldChange() { this.noChangesMessage = false; this.attemptedSubmit = false; }
+  isNumericField(key: string): boolean { return key === 'winProbability' || key === 'totalDays'; }
+  toId(key: string, index: number): string { return toElementId('progetto', key, index); }
+  getWinProbabilityError(item: any) { return getWinProbabilityError(item); }
+
+  onWinProbabilityBlur(control: any) {
+    const val = control?.value;
+    if (!val) return;
+    const num = parseFloat(String(val).replace(',', '.'));
+    if (!isNaN(num) && num >= 1 && num <= 100) {
+      control.setValue(num.toFixed(2), { emitEvent: true });
+    }
     this.onFieldChange();
   }
 
-  clearPm() {
-    this.selectPm(null);
-  }
-
-  toId(key: string, index: number): string {
-    return toElementId('progetto', key, index);
-  }
-
-  getWinProbabilityError(item: any) {
-    return getWinProbabilityError(item);
+  onSubmitClick(event: Event) {
+    if (this.isButtonDisabled) {
+      event.preventDefault();
+      this.attemptedSubmit = true;
+      if (!this.isChanged()) {
+        this.noChangesMessage = true;
+      }
+    }
   }
 
   private buildProjectPayload(projectId: string, formValue: any): any {
-    const selectedCompany = this.companiesList().find((company) => company.id === formValue.companyId)?.name;
-    const selectedCustomer = this.customersList().find((customer) => customer.id === formValue.customerId)?.name;
-    const selectedStatus = this.projectStatusesList().find((status) => status.id === formValue.projectStatusId)?.name;
-    const selectedPm = this.employeesList().find((employee) => employee.id === formValue.pmId);
+    const selectedCompany = this.facade.companiesList().find((company) => company.id === formValue.companyId)?.name;
+    const selectedCustomer = this.facade.customersList().find((customer) => customer.id === formValue.customerId)?.name;
+    const selectedStatus = this.facade.projectStatusesList().find((status) => status.id === formValue.projectStatusId)?.name;
+    const selectedPm = this.facade.employeesList().find((employee) => employee.id === formValue.pmId);
 
     return buildProjectUpdatePayload(formValue, projectId, this.selectedProjectToEdit().isFavorite, {
       company: selectedCompany,
@@ -646,63 +347,22 @@ private finalizeSubmit(formValue: any) {
   }
 
   private buildPendingEmployeeAssignmentCall(employee: Employee) {
-    const roleId = this.resolveLookupId(this.jobRolesList(), employee.jobRole);
-    const roleName = roleId
-      ? (this.jobRolesList().find((role) => String(role.id) === String(roleId))?.name || employee.jobRole)
-      : employee.jobRole;
+    const roleId = this.facade.resolveLookupId(this.facade.jobRolesList(), employee.jobRole);
+    const roleName = roleId ? (this.facade.jobRolesList().find((role) => String(role.id) === String(roleId))?.name || employee.jobRole) : employee.jobRole;
 
-    const payload = buildEmployeePayload(employee, {
-      selectedRoleId: roleId,
-      levels: this.jobRoleLevelsList(),
-      companies: this.companiesList(),
-    });
-    const uiFallback = buildEmployeeUiFallback({ ...employee, jobRole: roleName }, employee.id);
-
-    return this.employeesService.updateEmployee(employee.id, payload, uiFallback);
-  }
-
-  private isTemporaryRoleId(id: string): boolean {
-    return isTemporaryProjectItem(id, this.initialFormData?.projectJobRoles as ProjectRole[]);
-  }
-
-  private isTemporaryEmployeeId(id: string): boolean {
-    return isTemporaryProjectItem(id, this.initialFormData?.projectEmployees as ProjectEmployee[]);
-  }
-
-  private saveInitialSnapshot() {
-    const currentVal = this.editProjectForm.getRawValue();
-    this.initialFormData = JSON.parse(JSON.stringify(currentVal));
-    this.originalComparableSnapshot = getProjectFormComparableSnapshot(currentVal);
-  }
-
-  private showNotification(text: string, type: 'success' | 'error') {
-    this.statusMessage = { text, type };
-    timer(3000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.statusMessage = null;
-    });
-  }
-
-  private resolveLookupId(options: any[], value: string | null | undefined): string | null {
-    if (!value) return null;
-
-    const valueAsString = String(value);
-    const normalizedValue = valueAsString.trim().toLowerCase();
-    const match = options.find((option) =>
-      String(option.id || option.Id) === valueAsString ||
-      String(option.name || option.Name || '').trim().toLowerCase() === normalizedValue
+    return this.employeesService.updateEmployee(
+      employee.id,
+      buildEmployeePayload(employee, { selectedRoleId: roleId, levels: this.facade.jobRoleLevelsList(), companies: this.facade.companiesList() }),
+      buildEmployeeUiFallback({ ...employee, jobRole: roleName }, employee.id)
     );
-
-    return match ? (match.id || match.Id) : valueAsString;
   }
 
   @HostListener('document:mousedown', ['$event'])
   onDocumentMouseDown(event: MouseEvent) {
-    const target = event.target as Element | null;
-
-    if (!target?.closest('.pm-combo-field')) {
-      this.pmDropdownOpen.set(false);
-      this.showAllPmOptions.set(false);
-      this.pmFilterValue.set('');
+    if (!(event.target as Element | null)?.closest('.pm-combo-field')) {
+      this.facade.pmDropdownOpen.set(false);
+      this.facade.showAllPmOptions.set(false);
+      this.facade.pmFilterValue.set('');
     }
   }
 }
