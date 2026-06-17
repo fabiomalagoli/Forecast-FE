@@ -1,5 +1,6 @@
 <div class="page-header">
   <h2>Ruoli</h2>
+  <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
 </div>
 
 <div class="filter-bar">
@@ -142,7 +143,7 @@
   }
 
   <div class="bottom-actions">
-      <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
+
   </div>
 
   @if(editingEmployee()) {

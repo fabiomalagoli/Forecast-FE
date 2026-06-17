@@ -19,36 +19,21 @@
               <span class="label">{{ h.label }}</span>
               <div class="value-container">
                 <strong class="value">{{ getValue(c, h.key) }}</strong>
-                @if(h.key === 'projects'){
-                  <button appButton class="btn btn-primary project-btn" (click)="showProjects()">Progetti del cliente</button>
-                }
               </div>
           </div>
         }
       }
     </div>
-    @if(showActiveProjects()){
-      <div class="card-progetti">
-        @if (customer()!.activeProjects.length === 0) {
-          <p>Nessun progetto attivo.</p>
-        } @else {
-            @for (progetto of customer()!.activeProjects; track progetto.id) {
-              <ul>
-                <h4>{{ progetto.name }}</h4>
-                  @for (h of headersProgettiArray; track h.key) {
-                    @if(h.key !== 'id' && h.key !== 'name') {
-                    <div class="row">
-                      <span class="label">{{ h.label }}</span>
-                        <div class="value-container">
-                          <strong class="value">{{ getProgettoValue(progetto, h.key) }}</strong>
-                        </div>
-                    </div>
-                    }
-                  }                                    
-              </ul>
-            }
-        }      
-      </div>
-    }
+    <div class="card-progetti">
+      @if (customer()!.activeProjects.length === 0) {
+        <p>Nessun progetto attivo.</p>
+      } @else {
+          @if(customer()){
+            <div class="card-progetti">
+              <app-customer-projects [selectedCustomer]="customer()!"></app-customer-projects>
+            </div>
+          }
+      }      
+    </div>
   </div>
 }

@@ -1,16 +1,109 @@
-<header class="detail-header">
-  <button appButton type="button" (click)="indietro()">← Indietro</button>
-</header>
 <h2>Progetti attivi del cliente</h2>
 
-@if (loading()) {
-  <p>Caricamento...</p>
-} @else if (error()) {
+@if (error()) {
   <p class="error">{{ error() }}</p>
-} @else if (projects().length === 0) {
-  <p>Nessun progetto trovato.</p>
 } @else {
-  @for (p of projects(); track p.id) {
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Nome Progetto</label>
+      <div class="combo-field">
+        <input
+          type="text"
+          [formControl]="projectNameFilter"
+          placeholder="Cerca nome progetto..."
+          autocomplete="off">
+        @if (filterNameValue()) {
+          <button class="combo-clear" type="button" (click)="clearProjectNameFilter()">×</button>
+        }
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Azienda</label>
+      <div class="combo-field company-filter-combo">
+        <input
+          type="text"
+          [formControl]="companyFilter"
+          placeholder="Filtra per azienda..."
+          autocomplete="off"
+          (focus)="onCompanyFilterFocus()"
+          (input)="onCompanyFilterInput()">
+        @if (companyFilterValue()) {
+          <button
+            class="combo-clear"
+            type="button"
+            aria-label="Cancella filtro azienda"
+            (click)="clearCompanyFilter()">
+            ×
+          </button>
+        }
+        <button
+          class="combo-toggle"
+          type="button"
+          aria-label="Apri lista aziende"
+          (click)="toggleCompanyFilterDropdown()">
+          ▾
+        </button>
+        @if (companyDropdownOpen()) {
+          <div class="combo-menu">
+            @for (azienda of companyFilterOptions(); track (azienda.id || azienda.Id || azienda)) {
+              <button
+                class="combo-option"
+                type="button"
+                (mousedown)="selectCompanyFilter(azienda)">
+                {{ optionName(azienda) }}
+              </button>
+            } @empty {
+              <div class="combo-empty">Nessuna azienda trovata</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Stato</label>
+      <div class="combo-field status-filter-combo">
+        <input
+          type="text"
+          [formControl]="statusFilter"
+          placeholder="Filtra per stato..."
+          autocomplete="off"
+          (focus)="onStatusFilterFocus()"
+          (input)="onStatusFilterInput()">
+        @if (statusFilterValue()) {
+          <button
+            class="combo-clear"
+            type="button"
+            aria-label="Cancella filtro stato"
+            (click)="clearStatusFilter()">
+            ×
+          </button>
+        }
+        <button
+          class="combo-toggle"
+          type="button"
+          aria-label="Apri lista stati"
+          (click)="toggleStatusFilterDropdown()">
+          ▾
+        </button>
+        @if (statusDropdownOpen()) {
+          <div class="combo-menu">
+            @for (stato of statusFilterOptions(); track (stato.id || stato.Id || stato)) {
+              <button
+                class="combo-option"
+                type="button"
+                (mousedown)="selectStatusFilter(stato)">
+                {{ optionName(stato) }}
+              </button>
+            } @empty {
+              <div class="combo-empty">Nessuno stato trovato</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+  @for (p of allFiltersApplied(); track p.id) {
     <article class="project-container">
       <section class="card">
         <h3>{{ p.name }}</h3>
@@ -25,65 +118,16 @@
           }
         }
       </section>
-    
-
-      @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
-      <h3 class="section-title" style="margin-top: 2rem; margin-left: 1rem;">Ruoli</h3>
-      <section class="card">
-        <table class="roles-table">
-          <thead>
-            <tr>
-              <th>Ruolo</th>
-              <th>Livello</th>
-              <th>Costo Giornaliero</th>
-              <th>Giorni Spesi</th>
-              <th>Win %</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (role of p.projectJobRoles; track role.id) {
-              <tr>
-                <td><strong>{{ role.jobRole }}</strong></td>
-                <td>{{ role.jobRoleLevel }}</td>
-                <td>€{{ role.dailyCost }}</td>
-                <td>{{ role.daysSpent }}</td>
-                <td>{{ role.winProbability }}%</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </section>
-      }
-
-      @if (p.projectEmployees && p.projectEmployees.length > 0) {
-      <h3 class="section-title" style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>
-      <section class="card">
-        <table class="roles-table">
-          <thead>
-            <tr>
-              <th>Risorsa</th>
-              <th>Ruolo</th>
-              <th>Livello</th>
-              <th>Costo Giornaliero</th>
-              <th>Giorni Spesi</th>
-              <th>Win %</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (employee of p.projectEmployees; track employee.id) {
-              <tr>
-                <td><strong>{{ employee.employee }}</strong></td>
-                <td>{{ employee.jobRole }}</td>
-                <td>{{ employee.jobRoleLevel }}</td>
-                <td>€{{ employee.dailyCost }}</td>
-                <td>{{ employee.daysSpent }}</td>
-                <td>{{ employee.winProbability }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </section>
-      }
     </article>
-  }   
+  }
+  @if(pagination()){
+    <mat-paginator
+      [length]="pagination()?.TotalCount || 0"
+      [pageSize]="pagination().PageSize"
+      [pageIndex]="pagination().currentPage - 1"
+      [pageSizeOptions]="[3, 6]"
+      [showFirstLastButtons]="true"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  }
 }

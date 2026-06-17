@@ -7,11 +7,12 @@ import { AppButtonComponent } from '../../../shared/button/button';
 import { Project } from '../../../shared/models/project.model';
 import { finalize } from 'rxjs';
 import { CustomersService } from '../../../shared/services/customers.service';
+import { CustomerProjectsComponent } from "./customer-projects/customer-projects.component";
 
 @Component({
   selector: 'app-customer-details',
   standalone: true,
-  imports: [AppButtonComponent, RouterModule],
+  imports: [AppButtonComponent, RouterModule, CustomerProjectsComponent],
   templateUrl: './customer-details.component.html',
   styleUrls: ['./customer-details.component.scss'],
 })

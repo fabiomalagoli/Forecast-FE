@@ -3,11 +3,7 @@
 /* LAYOUT E CONTENITORI */
 
 .project-container {
-  & + .project-container {
-    margin-top: 60px;
-    border-top: 2px solid $border-card-divider;
-    padding-top: 60px;
-  }
+  margin-bottom: 16px;
 }
 
 .section-title {
@@ -22,7 +18,7 @@
   padding: 16px;
   background: $bg-white;
   box-shadow: $shadow-card;
-  max-width: 900px;
+  max-width: 100%;
 
   & + .section-title {
     margin-top: 32px; 

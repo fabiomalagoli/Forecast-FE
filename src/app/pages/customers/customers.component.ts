@@ -44,9 +44,9 @@ export class CustomersComponent implements OnInit {
   isAddingCustomer = signal(false);
   editingCustomer = signal<Customer | null>(null);
 
-  currentPage = signal(this.customersService.paginationData()?.currentPage || 1);
-  pageSize = this.customersService.paginationData()?.pageSize || 10;
-  pagination = this.customersService.paginationData;
+  currentPage = signal(this.customersService.customerPaginationData()?.currentPage || 1);
+  pageSize = this.customersService.customerPaginationData()?.pageSize || 10;
+  pagination = this.customersService.customerPaginationData;
   currentFilters = signal({ searchTerm: null as string | null });
 
   AllCustomers = this.customersService.loadedCustomers;

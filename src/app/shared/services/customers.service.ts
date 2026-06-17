@@ -5,15 +5,20 @@ import { Customer } from '../models/customer.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
-
+import { Project } from '../models/project.model';
+import { ProjectFilters } from '../utils/filters.utils';
 @Injectable({ providedIn: 'root' })
 export class CustomersService {
   private errorService = inject(ErrorService);
   private httpClient = inject(HttpClient);
   private customersPagination = signal<any>(null);
+  private customerProjectPagination = signal<any>(null);
   private customers = signal<Customer[]>([]);
+  private customerProjects = signal<Project[]>([]);
+  loadedCustomerProjects = this.customerProjects.asReadonly();
   loadedCustomers = this.customers.asReadonly();
-  paginationData = this.customersPagination.asReadonly();
+  customerPaginationData = this.customersPagination.asReadonly();
+  customerProjectsPaginationData = this.customerProjectPagination.asReadonly();
 
   private mapToCustomer(customer: any): Customer {
     return {
@@ -25,6 +30,19 @@ export class CustomersService {
       activeProjects: customer.projects || [],
     };
   }
+
+  private mapToProject(dto: any): Project {
+  return {
+    id: dto.id ?? dto.Id,
+    name: dto.name ?? dto.Name,
+    company: dto.company ?? dto.Company ?? 'N/A',
+    companyId: dto.companyId ?? dto.CompanyId ?? null,
+    projectStatus: dto.projectStatus ?? dto.ProjectStatus ?? 'Initiation',
+    projectStatusId: dto.projectStatusId ?? dto.ProjectStatusId ?? null,
+    totalBudget: dto.totalBudget ?? dto.TotalBudget ?? 0,
+    description: dto.description ?? dto.Description,
+  } as Project;
+}
 
   private toCustomerPayload(customer: Customer) {
     return {
@@ -119,8 +137,38 @@ export class CustomersService {
     );
   }
 
-  loadActiveProjectsForCustomer(customerId: string) {
-    return this.httpClient.get<any[]>(`${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/projects`).pipe(
+  loadActiveProjectsForCustomer(customerId: string, pageNumber: number = 1, pageSize: number = 3, filters?: ProjectFilters): Observable<Project[]> {
+    let url = `${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/projects?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+
+    let params = new HttpParams()
+    .set('PageNumber', pageNumber.toString())
+    .set('PageSize', pageSize.toString());
+
+    if (filters) {
+      if (filters.companyId) {
+        params = params.set('CompanyId', encodeURIComponent(filters.companyId));
+      }
+      if (filters.customerId) {
+        params = params.set('CustomerId', encodeURIComponent(filters.customerId));
+      }
+      if (filters.projectStatusId) {
+        params = params.set('ProjectStatusId', encodeURIComponent(filters.projectStatusId));
+      }
+      if (filters.searchTerm) {
+        params = params.set('SearchTerm', encodeURIComponent(filters.searchTerm));
+      }
+    }
+
+    return this.httpClient.get<Project[]>(url, { params, observe: 'response'}).pipe(
+      map(response => {
+        const paginationHeader = response.headers.get('X-Pagination');
+        if (paginationHeader) {
+          this.customerProjectPagination.set(JSON.parse(paginationHeader));
+        }
+        const projects = (response.body || []).map(dto => this.mapToProject(dto));
+        this.customerProjects.set(projects);
+        return projects;
+      }),
       catchError(error => throwError(() => buildEntityError(error, 'progetto', 'caricamento')))
     );
   }
@@ -132,4 +180,5 @@ export class CustomersService {
       })
     ).subscribe();
   }
+
 }

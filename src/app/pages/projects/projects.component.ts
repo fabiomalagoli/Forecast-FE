@@ -41,8 +41,6 @@ import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message
 })
 
 export class ProjectsComponent {
-  isFetching = signal(false);
-  error = signal<string | null>(null);
   private projectsService = inject(ProjectsService);
   private lookupsService = inject(LookupsService);
   private customersService = inject(CustomersService);
@@ -51,6 +49,8 @@ export class ProjectsComponent {
   private snackbarService = inject(SnackbarService);
   private favouritesService = inject(FavouritesService);
   private isFromDetailsPage = signal(false);
+  isFetching = signal(false);
+  error = signal<string | null>(null);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
   projects = this.projectsService.loadedProjects;
   isInitialLoading = signal(this.projectsService.loadedProjects().length === 0);

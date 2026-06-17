@@ -4,7 +4,7 @@
 
 .main-content-wrapper {
   display: flex;
-  flex-direction: row; 
+  flex-direction: column; 
   gap: 24px;          
   align-items: flex-start; 
   padding: 20px;
@@ -37,14 +37,14 @@
 
 .card-cliente {
   @extend %card-base;
-  max-width: 700px;
-  min-width: 400px; // Sovrascrive il default del placeholder
+  max-width: 100%;
+  width: 100%; // Sovrascrive il default del placeholder
 }
 
 .card-progetti {
   @extend %card-base;
   flex: 1.5;
-  min-width: 500px; // Sovrascrive il default del placeholder
+  width: 100%; // Sovrascrive il default del placeholder
 }
 
 /* HEADER DETTAGLI E BOTTONI */
