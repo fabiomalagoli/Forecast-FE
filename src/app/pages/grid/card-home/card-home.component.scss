@@ -2,8 +2,9 @@
 
 :host {
   max-width: 18rem;
-  margin-bottom: 15px;
+  margin: 10px;
   display: block; // Al posto di max-width su :host
+  padding-top: 5px;
 }
 
 .card {

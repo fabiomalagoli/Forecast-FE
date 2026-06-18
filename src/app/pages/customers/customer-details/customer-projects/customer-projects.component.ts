@@ -74,17 +74,8 @@ export class CustomerProjectsComponent implements OnInit {
   });
 
   constructor() {
-    effect(() => {
-      this.pagination();
-    });
-    effect(() => {
-      const customer = this.selectedCustomer();
-      if (customer?.id) {
-        this.loadInitialData(customer.id);
-      }
-    });
-  }
 
+  }
   private buildLoadCustomerProjectsErrorMessage(error: Error): string {
     return `Errore durante il caricamento dei progetti associati al cliente: ${getHttpErrorStatusMessage(error)}`;
   }
@@ -391,13 +382,7 @@ export class CustomerProjectsComponent implements OnInit {
       this.loading.set(false);
       return;
     }
-
-    if (!id) {
-      this.error.set('ID cliente mancante.');
-      this.loading.set(false);
-      return;
-    }
-
+        this.loadInitialData(id);
         const savedFilters = (this.customersService as any).currentFilters;
         if (savedFilters) {
             this.currentFilters.set(savedFilters);
@@ -437,7 +422,6 @@ export class CustomerProjectsComponent implements OnInit {
             const v = (value || '').toLowerCase();
             this.filterNameValue.set(v);
             this.currentFilters.update(filters => ({ ...filters, searchTerm: v || null }));
-            this.loadCustomerProjectsPage(this.selectedCustomer()?.id, 1);
           }),
           takeUntilDestroyed(this.destroyRef)
         ).subscribe();

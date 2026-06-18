@@ -1,9 +1,26 @@
 @use 'variables' as *;
 
+.scroll-container {
+  width: 100%;
+  max-height: calc(100vh - 30px); 
+  overflow-y: auto; // Attiva la barra di scorrimento verticale
+  padding-right: 10px; // Spazio per non far toccare le card alla scrollbar
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+  }
+}
+
 .griglia {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
   width: 100%;
+  margin: -10px;
   box-sizing: border-box;
 }
 
@@ -86,5 +103,6 @@
   justify-content: center !important;
   align-items: center !important;
   z-index: 999999 !important;
+  -webkit-backdrop-filter: blur(3px) !important;
   backdrop-filter: blur(3px) !important;
 }

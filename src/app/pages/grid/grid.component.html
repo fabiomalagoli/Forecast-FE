@@ -22,26 +22,17 @@
     <span class="star-icon">{{ showFavoriteOnly() ? '📁' : '★' }}</span>
     {{ showFavoriteOnly() ? 'Mostra Tutti' : 'Mostra Preferiti' }}
   </button> -->
-
-  <div class="griglia">
-    @for (card of cards(); track $index) {
-      <app-card-home [cards]="card"></app-card-home>
-    } @empty {
-      <div class="empty-state">
-        Nessun dato disponibile per la Home.
-      </div>
-    }
+  <div class="scroll-container">
+    <div class="griglia">
+      @for (card of cards(); track $index) {
+        <app-card-home [cards]="card"></app-card-home>
+      } @empty {
+        <div class="empty-state">
+          Nessun dato disponibile per la Home.
+        </div>
+      }
+    </div>
   </div>
-
   <!-- <p class="count-footer">Numero Totale Progetti: {{ pagination()?.totalCount || 0 }}</p> -->
-
-  <mat-paginator
-    [length]="pagination()?.totalCount || 0"
-    [pageSize]="pageSize"
-    [pageIndex]="currentPage() - 1"
-    [pageSizeOptions]="[4, 8, 12]"
-    [showFirstLastButtons]="true"
-    (page)="onPageChange($event)">
-  </mat-paginator>
 
 }

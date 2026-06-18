@@ -19,11 +19,22 @@ export class DashboardService {
       customer: card.customer,
       activity: card.activity,
       projectStatus: card.projectStatus,
-      projectName: card.projectName || card.name || card.title || card.progetto || '',
+      projectName: card.name || card.projectName || card.title || card.progetto || '',
       id: card.id || card.Id,
       employeeCount: card.assignmentSummary?.employeesCount,
       totalBudget: card.totalBudget,
     }
+  }
+
+  loadAllFavoriteDashboardCards() {
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/projects/favorites/all/summary`).pipe(
+      map(cards => cards.map(card => this.mapToDashboards(card))),
+      tap(cards => this.dashboardCards.set(cards)),
+      catchError(error => {
+        console.error('Errore nel caricamento preferiti:', error);
+        return throwError(() => buildEntityError(error, 'progetto', 'caricamento'));
+      })
+    );
   }
 
   loadFavoriteDashboardCards(pageNumber: number = 1, pageSize: number = 10) {

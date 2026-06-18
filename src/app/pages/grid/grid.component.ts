@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CardHomeComponent } from './card-home/card-home.component';
 import { CardModel } from './card-home/card-home.model';
-import { finalize, forkJoin, Subject, switchMap, tap, timer } from 'rxjs';
+import { finalize, forkJoin, map, Observable, Subject, switchMap, tap, timer } from 'rxjs';
 import { DashboardService } from '../../shared/services/dashboards.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -57,6 +57,31 @@ export class GridComponent {
   pageSize = this.dashboardService.paginationData()?.pageSize || 10;
   pagination = this.dashboardService.paginationData;
 
+  private executeFetch(request$: Observable<CardModel[]>, showSpinner: boolean) {
+    this.isFetching.set(true);
+    this.isInitialLoading.set(showSpinner);
+    this.error.set(null);
+
+    request$.pipe(
+      map(cards => this.applyFavoriteStatus(cards)),
+      finalize(() => {
+        this.isFetching.set(false);
+        this.isInitialLoading.set(false);
+      }),
+      takeUntilDestroyed(this.destroy)
+    ).subscribe({
+      next: (cards) => this.cards.set(cards),
+      error: (err) => this.handleError(err)
+    });
+  }
+
+  private applyFavoriteStatus(cards: CardModel[]): CardModel[] {
+    return cards.map(card => ({
+      ...card,
+      isFavorite: this.favoritesService.isFavorite(card.id)
+    }));
+  }
+
   constructor() {
     this.showMessage$.pipe(
       tap(message => this.statusMessage.set(message)),
@@ -87,24 +112,14 @@ export class GridComponent {
       this.isFetching.set(true);
 
       this.setExtendedCards(this.dashboardService.loadedCards());
+      this.loadAllFavorites()
 
-      this.dashboardService.loadFavoriteDashboardCards(this.currentPage(), this.pageSize).pipe(
-        finalize(() => {
-          this.isFetching.set(false);
-          this.isInitialLoading.set(false);
-        }),
-        takeUntilDestroyed(this.destroy)
-      ).subscribe({
-        next: (cards) => this.setExtendedCards(cards),
-        error: (error) => this.handleError(error)
-      });
-
-    } else {
+    } else { // Viene mostrato lo Spinner durante il caricamento dei dati dal server
       this.isFetching.set(true);
       this.isInitialLoading.set(true);
 
       forkJoin([
-        this.dashboardService.loadFavoriteDashboardCards(this.currentPage(), this.pageSize),
+        this.dashboardService.loadAllFavoriteDashboardCards(),
         timer(1500)
       ]).pipe(
         finalize(() => {
@@ -141,7 +156,7 @@ export class GridComponent {
     this.isInitialLoading.set(forceInitialSpinner);
     this.error.set(null);
 
-    this.dashboardService.loadFavoriteDashboardCards(this.currentPage(), this.pageSize).pipe(
+    this.dashboardService.loadAllFavoriteDashboardCards().pipe(
       finalize(() => {
         this.isFetching.set(false);
         this.isInitialLoading.set(false);
@@ -168,41 +183,20 @@ export class GridComponent {
     });
   }
 
-  loadPage(pageNumber: number, forceInitialSpinner = false) {
+  loadPage(pageNumber: number, forceSpinner = false) {
     this.currentPage.set(pageNumber);
-    this.isFetching.set(true);
-    this.isInitialLoading.set(forceInitialSpinner);
-    this.error.set(null);
-
-    this.dashboardService.loadFavoriteDashboardCards(pageNumber, this.pageSize).pipe(
-      finalize(() => {
-        this.isFetching.set(false);
-        this.isInitialLoading.set(false);
-      }),
-      takeUntilDestroyed(this.destroy)
-    ).subscribe({
-      next: (cards) => {
-      const extendedCards = cards.map(card => ({
-          ...card,
-          isFavorite: this.favoritesService.isFavorite(card.id)
-        }));
-        this.cards.set(extendedCards);
-        console.log(`Cards caricate per pagina ${pageNumber}: `, extendedCards);
-      },
-      error: (error: Error) => {
-        this.error.set(this.buildLoadHomeErrorMessage(error));
-        this.snackbarService.error(NotifyAction.Caricamento, 'Home', 'Riprova')
-          .onAction().subscribe(() => {
-            this.loadPage(pageNumber, true);
-          });
-        console.error(`Errore durante il caricamento delle cards per pagina ${pageNumber}:`, error);
-      },
-    });
+    const request$ = this.dashboardService.loadFavoriteDashboardCards(pageNumber, this.pageSize);
+    this.executeFetch(request$, forceSpinner);
   }
 
   onPageChange(event: PageEvent) {
     this.pageSize = event.pageSize;
     this.loadPage(event.pageIndex + 1);
+  }
+
+  loadAllFavorites() {
+    const request$ = this.dashboardService.loadAllFavoriteDashboardCards();
+    this.executeFetch(request$, this.isInitialLoading());
   }
 
   showNotification(type: 'success' | 'error', action: NotifyAction, params?: string | string[]) {
