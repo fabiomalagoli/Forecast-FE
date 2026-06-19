@@ -153,6 +153,58 @@
   }
 }
 
+.btn-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px; 
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  .action-icon {
+    font-size: 1.25rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &.btn-details {
+    color: $color-primary;
+    background-color: rgba($color-primary, 0.06);
+    border-color: rgba($color-primary, 0.1);
+    
+    &:hover {
+      background-color: $color-primary;
+      color: white;
+      border-color: $color-primary;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.btn-edit {
+    color: $text-filter-medium;
+    background-color: rgba($text-filter-medium, 0.06);
+    border-color: $border-filter-light;
+    
+    &:hover {
+      background-color: $text-filter-dark;
+      color: white;
+      border-color: $text-filter-dark;
+      transform: translateY(-1px);
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
 /* ACTION CONTAINERS */
 .bottom-actions {
   display: flex;

@@ -157,7 +157,7 @@
             @for (col of columns; track col.header) {
               <th>{{ col.header }}</th>
             }
-            <th class="favorites-header">Preferiti</th>
+            <th class="action-header">Azioni</th>
           </tr>
         </thead>
         <tbody>
@@ -171,12 +171,26 @@
                   class="btn-favorite"
                   [class.favorite]="p.isFavorite"
                   (click)="onToggleFavorite(p)"
-                  aria-label="Aggiungi ai preferiti"
-                  title="Aggiungi ai preferiti">
+                  [matTooltip]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'" 
+                  matTooltipPosition="above"
+                  [aria-label]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'"
+                  [title]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'">
                   ★
                 </button>
-                <button appButton class="btn-small" (click)="openProjectDetails(p.id)">Visualizza</button>
-                <button appButton class="btn-small btn-outline" (click)="openEditProject(p)">Modifica</button>
+                <button class="btn-action-icon btn-details" type="button" (click)="openProjectDetails(p.id)"
+                  matTooltip="Dettagli" 
+                  matTooltipPosition="above"
+                  aria-label="Dettagli">
+                  <mat-icon class="action-icon">visibility</mat-icon>
+                </button>
+                  
+                <button class="btn-action-icon btn-edit" type="button" 
+                  (click)="openEditProject(p)"
+                  matTooltip="Modifica" 
+                  matTooltipPosition="above"
+                  aria-label="Modifica">
+                  <mat-icon class="action-icon">edit</mat-icon>
+                </button>
               </td>
             </tr>
           } @empty {

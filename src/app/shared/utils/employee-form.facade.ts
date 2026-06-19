@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin, Observable, tap } from 'rxjs';
 import { RolesService } from '../services/roles.service';
 import { LookupsService } from '../services/lookups.service';
-import { EMPLOYEES_HEADERS } from '../../pages/employees/employee.headers';
+import { EMPLOYEES_HEADERS_FORM } from '../../pages/employees/employee.headers';
 import { Employee } from '../models/employee.model';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class EmployeeFormFacade {
   // Snapshot per tracciare le modifiche
   originalFormSnapshot = signal('');
 
-  readonly headers = (Object.entries(EMPLOYEES_HEADERS) as [keyof Employee, string][])
+  readonly headers = (Object.entries(EMPLOYEES_HEADERS_FORM) as [keyof Employee, string][])
     .filter(([key]) => key !== 'id' && key !== 'isActive') 
     .map(([key, label]) => ({ key, label }));
 

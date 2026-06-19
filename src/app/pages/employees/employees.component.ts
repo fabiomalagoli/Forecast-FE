@@ -17,7 +17,10 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
+import { EMPLOYEES_HEADERS_TABLE } from './employee.headers';
+import { Column } from '../../shared/table-row/table.types';
 
+type HeaderKey = keyof typeof EMPLOYEES_HEADERS_TABLE;
 
 @Component({
   selector: 'app-employees',
@@ -139,6 +142,24 @@ export class EmployeesComponent implements OnInit {
         jobRoleLevelId: null as string | null,
         companyId: null as string | null
      });
+
+    employeeHeaders: Record<keyof typeof EMPLOYEES_HEADERS_TABLE, string> = EMPLOYEES_HEADERS_TABLE;
+    
+    columns: Column<Employee>[] = (Object.keys(this.employeeHeaders) as HeaderKey[])
+    .filter(key => key === 'jobRole' || key === 'employee' || key === 'jobRoleLevel' || key === 'company')
+    .map(key => ({
+        header: this.employeeHeaders[key] ?? '',
+        value: (e: Employee) => {
+        if (key === 'employee') {
+            return `${e.name} ${e.surname}`; 
+        }
+        return (e as any)[key] ?? '';
+        }
+    }));
+
+    get projectColumnsCount(): number {
+        return this.columns.length;
+    }     
 
     constructor(private router: Router) {
 

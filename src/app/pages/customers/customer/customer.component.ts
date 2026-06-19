@@ -4,10 +4,11 @@ import { TableRowComponent } from "../../../shared/table-row/table-row.component
 import { Customer } from '../../../shared/models/customer.model';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { Router, RouterModule } from '@angular/router';
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: 'app-cliente',
-  imports: [AppButtonComponent, TableRowComponent, RouterModule],
+  imports: [TableRowComponent, RouterModule, MatIconModule],
   templateUrl: './customer.component.html',
   styleUrl: './customer.component.scss',
   host: {

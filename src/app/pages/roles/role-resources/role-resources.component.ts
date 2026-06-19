@@ -24,6 +24,8 @@ export class RoleResourcesComponent {
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private location = inject(Location);
+
+    viewEmployeeDetails = output<any>()
     
     isFetching = signal(false);
     error = signal('');
@@ -121,6 +123,10 @@ export class RoleResourcesComponent {
         timer(3000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
             this.statusMessage.set(null);
         });
+    }
+
+    apriOverlayRisorsa(r: Employee){
+        this.viewEmployeeDetails.emit(r);
     }
 
     apriDettagliRisorsa(r: Employee) {

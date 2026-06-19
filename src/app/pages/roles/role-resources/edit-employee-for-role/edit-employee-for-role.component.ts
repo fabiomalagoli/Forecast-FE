@@ -3,7 +3,7 @@ import { TextInputComponent } from '../../../../shared/text-input/text-input.com
 import { FormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Employee } from '../../../../shared/models/employee.model';
-import { EMPLOYEES_HEADERS } from '../../../employees/employee.headers';
+import { EMPLOYEES_HEADERS_FORM } from '../../../employees/employee.headers';
 import { forkJoin } from 'rxjs';
 import { EmployeesService } from '../../../../shared/services/employees.service';
 import { RolesService } from '../../../../shared/services/roles.service';
@@ -47,7 +47,7 @@ export class EditEmployeeForRoleComponent {
     private OriginalData: string = '';
 
     // Headers dinamici basati su RISORSE_HEADERS, escludendo campi non editabili come 'id'
-    readonly headers = (Object.entries(EMPLOYEES_HEADERS) as [keyof Employee, string][])
+    readonly headers = (Object.entries(EMPLOYEES_HEADERS_FORM) as [keyof Employee, string][])
     .filter(([key]) => key !== 'id' && key !== 'isActive') // Escludiamo anche IsActive se non vogliamo modificarlo qui
     .map(([key, label]) => ({ key, label }));
 

@@ -25,9 +25,9 @@ export class EmployeesService {
   private mapToEmployee(emp: any): Employee {
     return {
       id: emp.Id || emp.id,
+      jobRole: emp.JobRole || emp.jobRole || 'N/A',
       name: emp.Name || emp.name,
       surname: emp.Surname || emp.surname,
-      jobRole: emp.JobRole || emp.jobRole || 'N/A',
       jobRoleLevel: emp.JobRoleLevel || emp.jobRoleLevel || 'N/A',
       company: emp.Company || emp.company || 'N/A',
       isActive: emp.IsActive !== undefined ? emp.IsActive : emp.isActive,

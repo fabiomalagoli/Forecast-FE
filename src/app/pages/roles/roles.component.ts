@@ -57,6 +57,7 @@ export class RolesComponent implements OnInit {
     roles = this.rolesService.loadedJobRoles;
 
     filteredRoles = computed<Role[]>(() => this.roles());
+    selectedEmployeeForDrawer = signal<any | null>(null);
 
     editingEmployee = signal<Employee | null>(null);
 

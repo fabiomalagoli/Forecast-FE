@@ -121,6 +121,20 @@
       color: $text-filter-dark;
       font-size: 0.9rem;
       white-space: nowrap;
+
+      &:last-of-type {
+        text-align: right; /* Sposta la parola "Azioni" a destra */
+        padding-right: calc(0.875rem + 12px); /* un leggero offset per allinearlo visivamente con l'ultimo tasto senza gap */
+      }
+     
+      &:nth-child(1) { width: 20%; }    /* Ruolo */
+      &:nth-child(2) { width: 25%; }    /* Risorsa */
+      &:nth-child(3) { width: 12%; }    /* Livello */
+      &:nth-child(4) { width: 23%; }    /* Azienda */
+      
+      &:last-of-type { 
+        width: 200px; 
+      }
     }
   }
 

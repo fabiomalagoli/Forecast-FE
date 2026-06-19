@@ -1,10 +1,11 @@
 import { Component, input, output, ViewEncapsulation } from '@angular/core';
-import { AppButtonComponent } from '../../../shared/button/button';
 import { Role } from '../../../shared/models/role.model';
+import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'tr[app-role-row]',
-  imports: [AppButtonComponent],
+  imports: [MatIconModule, MatTooltipModule],
   templateUrl: './role.component.html',
   styleUrls: ['./role.component.scss'],
   encapsulation: ViewEncapsulation.None,

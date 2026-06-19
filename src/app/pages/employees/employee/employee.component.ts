@@ -1,10 +1,12 @@
 import { Component, input, output, ViewEncapsulation } from '@angular/core';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { Employee } from '../../../shared/models/employee.model';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'tr[app-employee-row]',
-  imports: [AppButtonComponent],
+  imports: [MatIconModule, MatTooltipModule],
   templateUrl: './employee.component.html',
   styleUrl: './employee.component.scss',
   encapsulation: ViewEncapsulation.None,

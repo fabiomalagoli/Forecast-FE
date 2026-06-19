@@ -22,7 +22,7 @@
 
 .roles-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr; 
+  grid-template-columns: 1fr; 
   gap: 24px;
   align-items: start;
   transition: $transition-layout;
@@ -36,29 +36,72 @@
 }
 
 // Rende il pannello laterale sticky
-.right-column {
-  position: sticky;
-  top: 1.5rem;
-  align-self: start;
-  max-height: calc(100dvh - 3rem);
-  overflow-y: auto;
-}
+// .right-column {
+//   position: sticky;
+//   top: 1.5rem;
+//   align-self: start;
+//   max-height: calc(100dvh - 3rem);
+//   overflow-y: auto;
+// }
 
 /* SIDE PANEL */
 
-.placeholder-panel {
-  position: relative;
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4); 
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.side-panel {
-  background-color: $bg-white;
-  border-radius: $radius-lg;
-  border: 1px solid $border-filter-light;
-  box-shadow: $shadow-side-panel; 
-  padding: 1.5rem;
-  position: relative;
-  animation: slideInRight 0.3s ease-out;
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 700px; /* Da regolare */
+  height: 100vh;
+  background-color: $bg-white; /* Sfondo bianco side-panel */
+  border-left: 1px solid $border-filter-light;
+  z-index: 1001;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  padding: 3rem 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
+
+.drawer-close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+  color: $text-filter-muted;
+
+  &:hover {
+    color: $text-dark;
+  }
+}
+
+// .placeholder-panel {
+//   position: relative;
+// }
+
+// .side-panel {
+//   background-color: $bg-white;
+//   border-radius: $radius-lg;
+//   border: 1px solid $border-filter-light;
+//   box-shadow: $shadow-side-panel; 
+//   padding: 1.5rem;
+//   position: relative;
+//   animation: slideInRight 0.3s ease-out;
+// }
 
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(30px); }
@@ -152,6 +195,11 @@
       color: $text-filter-dark;
       font-size: 0.9rem;
       white-space: nowrap;
+
+      &.action-header {
+        text-align: right;
+        padding-right: calc(0.875rem + 8px); 
+      }
     }
   }
 

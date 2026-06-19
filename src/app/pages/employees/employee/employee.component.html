@@ -1,12 +1,21 @@
-<td>{{ employee().name }} {{ employee().surname }}</td>
 <td>{{ employee().jobRole }}</td>
+<td>{{ employee().name }} {{ employee().surname }}</td>
 <td>{{ employee().jobRoleLevel }}</td>
 <td>{{ employee().company }}</td>
 <td class="actions-cell">
-  <button appButton class="btn-small" type="button" (click)="viewEmployee.emit(employee())">
-    Dettagli
+  <button class="btn-action-icon btn-details" type="button" 
+          (click)="viewEmployee.emit(employee())" 
+          matTooltip="Dettagli" 
+          matTooltipPosition="above"
+          aria-label="Dettagli">
+    <mat-icon class="action-icon">visibility</mat-icon>
   </button>
-  <button appButton class="btn-small btn-outline" type="button" (click)="editEmployee.emit(employee())">
-    Modifica
+    
+  <button class="btn-action-icon btn-edit" type="button" 
+          (click)="editEmployee.emit(employee())" 
+          matTooltip="Modifica" 
+          matTooltipPosition="above"
+          aria-label="Modifica">
+    <mat-icon class="action-icon">edit</mat-icon>
   </button>
 </td>

@@ -16,6 +16,7 @@ import { toId } from '../../../shared/utils/employee-form.utils';
   standalone: true,
   imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
   templateUrl: './edit-employee.component.html',
+  styleUrl: 'edit-employee.component.scss',
   providers: [EmployeeFormFacade]
 })
 export class EditEmployeeComponent implements OnInit {

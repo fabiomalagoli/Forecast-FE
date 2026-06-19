@@ -62,15 +62,13 @@
         {{ statusMessage()?.text }}
       </div>
     }
-
-    <div class="roles-layout" [class.panel-open]="selectedRoleId() !== null">
-        
+    <div class="roles-layout">       
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Azioni</th>
+                        <th class="action-header">Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,25 +86,23 @@
                 </tbody>
             </table> <p class="count-footer">Numero ruoli: {{ pagination()?.totalCount || 0 }}</p>
         </div>
-
-        <div class="right-column">
-        @if (selectedRoleId() !== null) {
-            <div class="side-panel">
-                <button class="btn-close-panel" (click)="closeSidePanel()">✖ Chiudi</button>
-                <app-role-resources 
-                  [risorseAssociate]="filteredSelectedEmployees()"
-                  [ruoloSelezionato]="selectedRole()"
-                  (editEmployee)="editingEmployee.set($event)">
-                </app-role-resources>
-            </div>
-        } @else {
-            <div class="placeholder-panel">
-                <p>Seleziona "Risorse Associate" da un ruolo per visualizzare i dettagli qui.</p>
-            </div>
-        }
-    </div>
     </div>
 
+    @if (selectedRoleId() !== null) {
+      <div class="drawer-overlay" (click)="closeSidePanel()"></div>
+
+      <div class="drawer-panel">
+        <!-- Il tasto di chiusura ereditato dallo stile del progetto -->
+        <button class="drawer-close-btn" (click)="closeSidePanel()">×</button>
+        
+        <!-- Stesso identico component e dati di prima -->
+        <app-role-resources 
+          [risorseAssociate]="filteredSelectedEmployees()"
+          [ruoloSelezionato]="selectedRole()"
+          (editEmployee)="editingEmployee.set($event)">
+        </app-role-resources>
+      </div>
+    }
 
   <mat-paginator
       [length]="pagination()?.totalCount || 0"
@@ -141,10 +137,6 @@
           (saved)="salvaAssegnazioneRisorse()"
       ></app-assegna-risorse>
   }
-
-  <div class="bottom-actions">
-
-  </div>
 
   @if(editingEmployee()) {
     <app-edit-employee-for-role

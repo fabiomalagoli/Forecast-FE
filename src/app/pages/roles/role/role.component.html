@@ -1,10 +1,18 @@
 <td>{{ role().name }}</td>
 <td class="actions-cell">
-  <button appButton class="btn-small" type="button" (click)="showResources.emit(role())">
-    Risorse Associate
-  </button>
-  <button appButton class="btn-small btn-outline" type="button" (click)="editRole.emit(role())">
-    Modifica
+  <button class="btn-action-icon btn-details" type="button" 
+    (click)="showResources.emit(role())"
+    matTooltip="Risorse Associate" 
+    matTooltipPosition="above"
+    aria-label="Dettagli">
+    <mat-icon class="action-icon">visibility</mat-icon>
+  </button>   
+  <button class="btn-action-icon btn-edit" type="button" 
+    (click)="editRole.emit(role())"
+    matTooltip="Modifica" 
+    matTooltipPosition="above"
+    aria-label="Modifica">
+    <mat-icon class="action-icon">edit</mat-icon>
   </button>
   <button
     class="icon-btn tooltip-container"

@@ -16,11 +16,23 @@ import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
+import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-customers',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AppButtonComponent, NewCustomerComponent, EditCustomerComponent, MatProgressSpinnerModule, MatPaginatorModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    AppButtonComponent, 
+    NewCustomerComponent, 
+    EditCustomerComponent, 
+    MatProgressSpinnerModule, 
+    MatPaginatorModule, 
+    MatIconModule,
+    MatTooltipModule
+  ],
   templateUrl: './customers.component.html',
   styleUrls: ['./customers.component.scss'],
 })

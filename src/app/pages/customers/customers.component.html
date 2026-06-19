@@ -80,8 +80,21 @@
               <td>{{ col.value(cliente) }}</td>
             }
             <td class="actions-cell">
-              <button appButton class="btn-small" (click)="openCustomerDetails(cliente.id)">Visualizza</button>
-              <button appButton class="btn-small btn-outline" (click)="openCustomerEditing(cliente)">Modifica</button>
+              <button class="btn-action-icon btn-details" type="button" 
+                (click)="openCustomerDetails(cliente.id)"
+                matTooltip="Dettagli" 
+                matTooltipPosition="above"
+                aria-label="Dettagli">
+                <mat-icon class="action-icon">visibility</mat-icon>
+              </button>
+                
+              <button class="btn-action-icon btn-edit" type="button" 
+                (click)="openCustomerEditing(cliente)"
+                matTooltip="Modifica" 
+                matTooltipPosition="above"
+                aria-label="Modifica">
+                <mat-icon class="action-icon">edit</mat-icon>
+              </button>
             </td>
           </tr>
         } @empty {

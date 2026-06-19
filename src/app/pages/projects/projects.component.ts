@@ -22,19 +22,23 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { A11yModule } from "@angular/cdk/a11y";
 import { FavouritesService } from '../../shared/services/favourites.service';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
+import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 
 @Component({
   selector: 'app-projects',
   imports: [
     AppButtonComponent,
-    NewProgettoComponent, 
-    EditProjectComponent, 
-    ReactiveFormsModule, 
-    MatProgressSpinnerModule, 
-    MatPaginatorModule, 
-    A11yModule
-  ],
+    NewProgettoComponent,
+    EditProjectComponent,
+    ReactiveFormsModule,
+    MatProgressSpinnerModule,
+    MatPaginatorModule,
+    A11yModule,
+    MatIconModule,
+    MatTooltipModule
+],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.scss'],
   

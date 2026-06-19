@@ -5,34 +5,6 @@
 
 <div class="filter-bar">
   <div class="filter-group">
-    <label>Risorsa</label>
-    <div class="combo-field resource-name-filter-combo">
-      <input
-        type="text"
-        [formControl]="filterEmployeeName"
-        placeholder="Filtra per nome..."
-        autocomplete="off"
-        (focus)="onNameFilterFocus()"
-        (input)="onNameFilterInput()">
-      @if (filterNameValue()) {
-        <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
-      }
-      <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleNameFilterDropdown()">▾</button>
-      @if (nameDropdownOpen()) {
-        <div class="combo-menu">
-          @for (employee of nameFilterOptions(); track employee.id) {
-            <button class="combo-option" type="button" (mousedown)="selectNameFilter(employee)">
-              {{ fullName(employee) }}
-            </button>
-          } @empty {
-            <div class="combo-empty">Nessuna risorsa trovata</div>
-          }
-        </div>
-      }
-    </div>
-  </div>
-
-  <div class="filter-group">
     <label>Ruolo</label>
     <div class="combo-field resource-role-filter-combo">
       <input
@@ -54,6 +26,34 @@
             </button>
           } @empty {
             <div class="combo-empty">Nessun ruolo trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <label>Risorsa</label>
+    <div class="combo-field resource-name-filter-combo">
+      <input
+        type="text"
+        [formControl]="filterEmployeeName"
+        placeholder="Filtra per nome..."
+        autocomplete="off"
+        (focus)="onNameFilterFocus()"
+        (input)="onNameFilterInput()">
+      @if (filterNameValue()) {
+        <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
+      }
+      <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleNameFilterDropdown()">▾</button>
+      @if (nameDropdownOpen()) {
+        <div class="combo-menu">
+          @for (employee of nameFilterOptions(); track employee.id) {
+            <button class="combo-option" type="button" (mousedown)="selectNameFilter(employee)">
+              {{ fullName(employee) }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessuna risorsa trovata</div>
           }
         </div>
       }
@@ -137,10 +137,9 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Risorsa</th>
-                        <th>Ruolo</th>
-                        <th>Livello</th>
-                        <th>Azienda</th>
+                        @for (col of columns; track col.header) {
+                          <th>{{ col.header }}</th>
+                        }
                         <th>Azioni</th>
                     </tr>
                 </thead>
@@ -190,7 +189,4 @@
       ></app-new-employee>
   }
 
-  <div class="bottom-actions">
-
-  </div>
 }

@@ -120,7 +120,6 @@
         </div>
         }
       }
-    </form>
     @if (editEmployeeForm.valid && !isChanged()) {
       <div class="info-message">
         <p>ℹ️ La risorsa è identica a prima. Modifica un campo qualsiasi per salvare.</p>
@@ -136,5 +135,6 @@
       </button>
       <button type="button" (click)="onCancel()">Annulla</button>
     </div>
+  </form>
   </div>
 </dialog>

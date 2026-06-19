@@ -4,11 +4,13 @@ import { Column } from '../../../shared/table-row/table.types';
 import { TableRowComponent } from "../../../shared/table-row/table-row.component";
 import { AppButtonComponent } from '../../../shared/button/button';
 import { Router, RouterModule } from '@angular/router';
+import { MatIconModule } from "@angular/material/icon";
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 
 @Component({
   selector: 'app-progetto',
-  imports: [TableRowComponent, AppButtonComponent, RouterModule],
+  imports: [TableRowComponent, RouterModule, MatIconModule, MatTooltipModule],
   templateUrl: './project.component.html',
   styleUrl: './project.component.scss',
   host: {
