@@ -41,6 +41,7 @@ export class CustomersService {
     projectStatusId: dto.projectStatusId ?? dto.ProjectStatusId ?? null,
     totalBudget: dto.totalBudget ?? dto.TotalBudget ?? 0,
     description: dto.description ?? dto.Description,
+    year: dto.year ?? dto.Year ?? null
   } as Project;
 }
 

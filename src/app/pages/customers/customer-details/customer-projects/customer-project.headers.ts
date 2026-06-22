@@ -6,4 +6,5 @@ export const CUSTOMER_PROJECT_HEADERS: Partial<Record<keyof CustomerProjectSumma
   description: 'Descrizione',
   totalBudget: 'Budget Totale',
   projectStatus: 'Stato',
+  year: 'Anno'
 };

@@ -22,6 +22,7 @@ export interface CustomerProjectSummaryPayload {
   projectStatus: string;
   totalBudget: number;
   description?: string;
+  year: number;
 }
 
 export function buildCustomerPayload(formData: any): CustomerPayload {
@@ -45,6 +46,7 @@ export function buildCustomerProjectPayload(formData: any): CustomerProjectSumma
       company: formData.company || formData.Company, 
       projectStatus: formData.projectStatus || formData.ProjectStatus,
       totalBudget: formData.totalBudget || formData.TotalBudget,
-      description: formData.description || formData.Description
+      description: formData.description || formData.Description,
+      year: formData.year || formData.Year
   };
 }

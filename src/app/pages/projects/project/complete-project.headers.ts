@@ -12,6 +12,7 @@ export const COMPLETE_PROJECT_HEADERS: Partial<Record<keyof Project, string>> = 
   projectStatus: 'Stato',
   startDate: 'Data Inizio',
   endDate: 'Data Fine',
+  year: 'Anno',
   totalDays: 'Giorni',
   winProbability: 'Win %',
   projectEmployees: 'Risorse',

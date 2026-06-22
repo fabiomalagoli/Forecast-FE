@@ -48,6 +48,7 @@ export class CustomerDetailsComponent {
       company: 'Azienda',
       totalBudget: 'Budget Totale',
       projectStatus: 'Stato',
+      year: 'Anno'
     };
     readonly headersProgettiArray = Object.entries(this.projectsHeaders)
     .filter(([key]) => key !== 'description') // Escludi campi non necessari
