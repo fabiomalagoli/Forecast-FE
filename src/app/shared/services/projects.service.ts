@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment.development';
 import { toBackendDate, toNumber } from '../utils/shared-utils';
 import { LookupsService } from './lookups.service';
 import { buildEntityError } from '../utils/http-error-message.utils';
-import { ProjectFilters } from '../utils/filters.utils';
+import { ProjectFilters, ProjectFiltersWithYear } from '../utils/filters.utils';
 import { findEquivalentProjectEmployee, findProjectItemById, getProjectEmployeeRequestId, getRemovedProjectItems, hasProjectItemChanged, isTemporaryProjectItem } from '../utils/project-form.utils';
 import { buildProjectEmployeePayload, buildProjectJobRolePayload, ProjectUpdatePayload } from '../payloads/project.payloads';
 
@@ -41,6 +41,7 @@ export class ProjectsService {
       pm: project.pm || 'N/A',
       startDate: project.startDate || '',
       endDate: project.endDate || '',
+      year: project.year || null,
       totalDays: project.totalDays || 0,
       winProbability: project.winProbability ? project.winProbability : 0,
       isFavorite: project.isFavorite || false,
@@ -88,7 +89,7 @@ export class ProjectsService {
     );
   }
 
-  loadProjects(pageNumber: number = 1, pageSize: number = 10, filters?: ProjectFilters) {
+  loadProjects(pageNumber: number = 1, pageSize: number = 10, filters?: ProjectFiltersWithYear) {
     let url = `${environment.apiUrl}/projects?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
     let params = new HttpParams()
@@ -104,6 +105,9 @@ export class ProjectsService {
       }
       if (filters.projectStatusId) {
         params = params.set('ProjectStatusId', encodeURIComponent(filters.projectStatusId));
+      }
+      if (filters.year) {
+        params = params.set('Year', encodeURIComponent(filters.year));
       }
       if (filters.searchTerm) {
         params = params.set('SearchTerm', encodeURIComponent(filters.searchTerm));

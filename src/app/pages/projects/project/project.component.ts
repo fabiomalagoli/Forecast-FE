@@ -1,12 +1,10 @@
-import { Component, inject, input, Input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, Input, output, signal } from '@angular/core';
 import { Project } from '../../../shared/models/project.model';
 import { Column } from '../../../shared/table-row/table.types';
 import { TableRowComponent } from "../../../shared/table-row/table-row.component";
-import { AppButtonComponent } from '../../../shared/button/button';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
-
 
 @Component({
   selector: 'app-progetto',

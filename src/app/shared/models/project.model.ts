@@ -9,6 +9,7 @@ export interface Project {
   pm: string;
   startDate: string;
   endDate: string;
+  year: number
   totalDays: number;
   winProbability: number;
   projectEmployees: ProjectEmployee[]; // array di ID (vuoto nel JSON)

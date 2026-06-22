@@ -24,6 +24,7 @@ import { FavouritesService } from '../../shared/services/favourites.service';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { toBackendDate } from '../../shared/utils/shared-utils';
 
 
 @Component({
@@ -71,8 +72,6 @@ export class ProjectsComponent {
   statusesList = signal<any[]>([]);
   customersList = signal<any[]>([]);
 
-  // dummyProgetti = PROGETTI_DUMMY;
-
   readonly projectHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
 
   constructor(private router: Router) {
@@ -105,17 +104,21 @@ export class ProjectsComponent {
   companyFilter = new FormControl('');
   customerFilter = new FormControl('');
   statusFilter = new FormControl('');
+  yearFilter = new FormControl<string | null>(null);
 
   companyFilterValue = signal<string>('');
   customerFilterValue = signal<string>('');
   statusFilterValue = signal<string>('');
+  yearFilterValue = signal<number | null>(null)
 
   companyDropdownOpen = signal(false);
   customerDropdownOpen = signal(false);
   statusDropdownOpen = signal(false);
+  yearDropdownOpen = signal(false);
   showAllCompanyOptions = signal(false);
   showAllCustomerOptions = signal(false);
   showAllStatusOptions = signal(false);
+  showAllYearOptions = signal(false);
 
   currentPage = signal(this.projectsService.paginationData()?.currentPage || 1);
   pageSize = this.projectsService.paginationData()?.pageSize || 10;
@@ -123,12 +126,27 @@ export class ProjectsComponent {
   currentFilters = signal({
     companyId: null as string | null,
     customerId: null as string | null,
-    projectStatusId: null as string | null
+    projectStatusId: null as string | null,
+    year: null as number | null
   });
 
   AllProjects = this.projectsService.loadedProjects;
 
   filteredProjects = computed<Project[]>(() => this.projects());
+
+  yearFilterOptions = computed<any[]>(() => {
+    const projects = this.AllProjects();
+
+    const allYears = projects.map(p => {
+      return p.year ? p.year : null
+    }).filter((year) : year is number => !!year) // Rimossi i valori null o undefined
+
+    const uniqueYears = [...new Set(allYears)].sort((a, b) => b.toString().localeCompare(a.toString()));
+    const term = this.showAllYearOptions() ? '' : this.yearFilterValue();
+
+    if(!term) return uniqueYears;
+    return uniqueYears.filter(year => year.toString().includes(term.toString()));
+  })
 
   companyFilterOptions = computed<any[]>(() => {
     const term = this.showAllCompanyOptions()
@@ -273,7 +291,8 @@ export class ProjectsComponent {
         this.currentFilters.set({
             companyId: null,
             customerId: null,
-            projectStatusId: null
+            projectStatusId: null,
+            year: null
         });
     }
 
@@ -314,16 +333,40 @@ export class ProjectsComponent {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe();
 
+    this.yearFilter.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => {
+        const parsedYear = value ? parseInt(value, 10) : null; // Consenti solo numeri nel segnale di ricerca
+        this.yearFilterValue.set(isNaN(parsedYear!) ? null : parsedYear);
+        this.showAllYearOptions.set(false);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
   }
 
-  columns: Column<Project>[] =
-    (Object.keys(this.projectHeaders) as (keyof Project)[])
-      .filter(key => key !== 'id' && key in PROGETTO_HEADERS) // Escludi il campo 'id' e tieni solo quelli visibili
+  columns: Column<Project>[] = [
+    ...(Object.keys(this.projectHeaders) as (keyof Project)[])
+      .filter(key => key !== 'id' && key in PROGETTO_HEADERS)
       .map(key => ({
         header: this.projectHeaders[key] ?? '',
-        value: (p: Project) => p[key] as any,
+        value: (p: Project) => {
+          const rawValue = p[key];
+          if (key === 'startDate' || key === 'endDate') {
+            return toBackendDate(rawValue as string) ?? '';
+          }
+          return rawValue as any;
+        }
       }))
-      .filter(column => column.header !== '');
+      .filter(column => column.header !== ''),
+
+    {
+      header: 'Anno',
+      align: 'center', 
+      value: (p: Project) => p.year ?? '-'
+    }
+  ]; //Da adattare alle altre Tabelle!
 
   get projectColumnsCount(): number{
     return this.columns.length;
@@ -548,6 +591,48 @@ export class ProjectsComponent {
     this.showAllStatusOptions.set(false);
   }
 
+  onYearFilterFocus() {
+  this.showAllYearOptions.set(true);
+  this.yearDropdownOpen.set(true);
+}
+
+onYearFilterInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  // Forza la pulizia da caratteri non numerici in tempo reale mentre scrive
+  input.value = input.value.replace(/[^0-9]/g, '');
+  this.yearFilter.setValue(input.value, { emitEvent: true });
+  
+  this.showAllYearOptions.set(false);
+  this.yearDropdownOpen.set(true);
+}
+
+toggleYearFilterDropdown() {
+  this.showAllYearOptions.set(true);
+  this.yearDropdownOpen.update(open => !open);
+}
+
+selectYearFilter(year: number) {
+  this.yearFilter.setValue(year.toString(), { emitEvent: false });
+  this.yearFilterValue.set(year);
+
+  this.currentFilters.update(filters => ({ ...filters, year: year }));
+  this.loadPage(1); // Ricarica la tabella filtrata
+
+  this.yearDropdownOpen.set(false);
+  this.showAllYearOptions.set(false);
+}
+
+clearYearFilter() {
+  this.yearFilter.setValue(null, { emitEvent: false });
+  this.yearFilterValue.set(null);
+
+  this.currentFilters.update(filters => ({ ...filters, year: null }));
+  this.loadPage(1);
+
+  this.yearDropdownOpen.set(false);
+  this.showAllYearOptions.set(false);
+}
+
   @HostListener('document:mousedown', ['$event'])
   onDocumentMouseDown(event: MouseEvent) {
     const target = event.target as Element | null;
@@ -565,6 +650,10 @@ export class ProjectsComponent {
     if (!target?.closest('.status-filter-combo')) {
       this.statusDropdownOpen.set(false);
       this.showAllStatusOptions.set(false);
+    }
+    if (!target?.closest('.year-filter-combo')) {
+      this.yearDropdownOpen.set(false);
+      this.showAllYearOptions.set(false);
     }
   }
 

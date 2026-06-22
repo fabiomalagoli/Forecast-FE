@@ -5,6 +5,10 @@ export interface ProjectFilters {
   searchTerm?: string | null;
 }
 
+export interface ProjectFiltersWithYear extends ProjectFilters {
+  year: number | null
+}
+
 export interface EmployeeFilters {
     companyId?: string | null;
     jobRoleId?: string | null;

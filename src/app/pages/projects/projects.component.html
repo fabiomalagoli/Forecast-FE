@@ -132,6 +132,39 @@
       }
     </div>
   </div>
+
+  <div class="filter-group">
+    <label>Anno</label>
+    <div class="combo-field year-filter-combo">
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        [formControl]="yearFilter"
+        placeholder="Es. 2026"
+        autocomplete="off"
+        (focus)="onYearFilterFocus()"
+        (input)="onYearFilterInput($event)">
+        
+      @if (yearFilterValue()) {
+        <button class="combo-clear" type="button" aria-label="Cancella filtro anno" (click)="clearYearFilter()">×</button>
+      }
+      
+      <button class="combo-toggle" type="button" aria-label="Apri lista anni" (click)="toggleYearFilterDropdown()">▾</button>
+      
+      @if (yearDropdownOpen()) {
+        <div class="combo-menu">
+          @for (anno of yearFilterOptions(); track anno) {
+            <button class="combo-option" type="button" (mousedown)="selectYearFilter(anno)">
+              {{ anno }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun anno trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
 </div>
 
 @if (isInitialLoading()) {
