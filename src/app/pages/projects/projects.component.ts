@@ -24,6 +24,7 @@ import { FavouritesService } from '../../shared/services/favourites.service';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { toBackendDate } from '../../shared/utils/shared-utils';
 
 
@@ -38,7 +39,8 @@ import { toBackendDate } from '../../shared/utils/shared-utils';
     MatPaginatorModule,
     A11yModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatCheckboxModule
 ],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.scss'],
@@ -67,6 +69,9 @@ export class ProjectsComponent {
   isAddingProject = signal<boolean | null>(null);
 
   editingProject = signal<Project | null>(null);
+
+  isDeletingMode = signal<boolean>(false);
+  selectedProjectsIds = signal<string[]>([]);
 
   companiesList = signal<any[]>([]);
   statusesList = signal<any[]>([]);
@@ -428,6 +433,58 @@ export class ProjectsComponent {
     });
   }
 
+  onBulkDelete(): void {
+    const idsToDelete = this.selectedProjectsIds();
+    if(idsToDelete.length === 0) return;
+
+    this.isFetching.set(true);
+    const deleteRequests = idsToDelete.map(id => this.projectsService.toggleEliminatedState(id, true));
+
+    forkJoin(deleteRequests).pipe(
+      finalize(() => 
+        {
+          this.isFetching.set(false);
+          this.selectedProjectsIds.set([]);
+          this.toggleEliminationMode();
+        }
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: () => {
+        this.snackbarService.success(NotifyAction.Eliminazione, 'progetti');
+        this.loadPage(this.currentPage());
+      },
+      error: (error) => {
+        this.manageLoadingErrors(error);
+      }
+    })
+
+  }
+  
+  toggleEliminationMode() {
+    this.isDeletingMode.update(value => !value);
+  }
+
+  toggleSelection(id: string): void {
+    this.selectedProjectsIds.update(ids => 
+      ids.includes(id) ? ids.filter(item => item !== id) : [...ids, id]
+    );
+  }
+
+  toggleAllProjects(projectsInPage: Project[]): void {
+    const allSelected = projectsInPage.every(p => this.selectedProjectsIds().includes(p.id));
+    
+    if (allSelected) {
+      const pageIds = projectsInPage.map(p => p.id);
+      this.selectedProjectsIds.update(ids => ids.filter(id => !pageIds.includes(id)));
+    } else {
+      this.selectedProjectsIds.update(ids => {
+        const newIds = projectsInPage.map(p => p.id).filter(id => !ids.includes(id));
+        return [...ids, ...newIds]; 
+      });
+    }
+  }
+
   loadPage(page: number, forceInitialSpinner = false) {
     this.currentPage.set(page);
     this.isFetching.set(true);
@@ -459,13 +516,13 @@ export class ProjectsComponent {
   }
 
   showNotification(type: 'success' | 'error', action: NotifyAction, params?: string | string[]) {
-  if (type === 'success') {
-    this.snackbarService.success(action, params);
-  } else {
-    this.snackbarService.error(action, params ?? []);
+    if (type === 'success') {
+      this.snackbarService.success(action, params);
+    } else {
+      this.snackbarService.error(action, params ?? []);
+    }
   }
-}
-
+  
   optionName(option: any): string {
     return option?.name || option?.Name || option || '';
   }

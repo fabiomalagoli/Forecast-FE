@@ -6,4 +6,6 @@ export interface Employee {
     jobRoleLevel: string; // Es. "Junior", "Middle", "Senior"
     company: string;
     isActive: boolean;
+    isEliminated: boolean;
+
 }

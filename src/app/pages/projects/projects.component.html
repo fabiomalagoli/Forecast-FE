@@ -175,7 +175,76 @@
   <div class="error-state">
     <p>{{ error() }}</p>
   </div>
-} @else {
+} @else if (isDeletingMode()){
+  <!-- Stato di Eliminazione dei progetti nella tabella -->
+  <div class="table-container">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            @for (col of columns; track col.header) {
+              <th>{{ col.header }}</th>
+            }
+            <th class="action-header">Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filteredProjects(); track p.id) {
+            <tr>
+              @for (col of columns; track col.header) {
+                <td>{{ col.value(p) }}</td>
+              }
+              <td class="actions-cell">
+                <mat-checkbox
+                  (click)="toggleSelection(p.id)"
+                  matTooltip="Seleziona" 
+                  matTooltipPosition="above"
+                  aria-label="Selezione">
+                </mat-checkbox>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="projectColumnsCount + 1" class="empty-message">
+                Nessun progetto trovato con i filtri selezionati.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div> 
+    <div class="table-footer">
+      <p class="count-footer">Numero progetti: {{ pagination()?.totalCount || 0 }}</p>
+      
+      <div class="footer-actions">
+        <button 
+          class="btn-remove outline" 
+          type="button"
+          (click)="toggleEliminationMode()">
+          Annulla
+        </button>
+        <button 
+          class="btn-remove" 
+          type="button"
+          (click)="onBulkDelete()">
+          Conferma
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <mat-paginator
+    [length]="pagination()?.totalCount || 0"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage() - 1"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [showFirstLastButtons]="true"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+}
+
+@else {
+  <!-- Stato Normale di visualizzazione dei progetti nella tabella -->
   @if (statusMessage()) {
     <div class="notification" [class]="statusMessage()?.type">
       {{ statusMessage()?.text }}
@@ -235,7 +304,17 @@
           }
         </tbody>
       </table>
-    </div> <p class="count-footer">Numero progetti: {{ pagination()?.totalCount || 0 }}</p>
+    </div> 
+    <div class="table-footer">
+      <p class="count-footer">Numero progetti: {{ pagination()?.totalCount || 0 }}</p>
+      
+      <button 
+        class="btn-remove" 
+        type="button"
+        (click)="toggleEliminationMode()">
+        Elimina Progetti
+      </button>
+    </div>
   </div>
 
   <mat-paginator

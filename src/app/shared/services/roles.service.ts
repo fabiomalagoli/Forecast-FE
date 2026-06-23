@@ -27,9 +27,18 @@ export class RolesService {
     this.lastSelectedRole.set(role);
   }
 
+  private mapToJobRole(role: any): Role {
+    return {
+      id: role.id,
+      name: role.name || role.Name,
+      isDefault: role.isDefault || role.IsDefault,
+      isEliminated: role.isEliminated || role.isEliminated,
+    }
+  }
+
   // --- JOB ROLES ---
   loadJobRoles(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
-    let url = `${environment.apiUrl}/jobroles?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    let url = `${environment.apiUrl}/jobroles/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
     let params = new HttpParams();
     if (filters?.searchTerm) {
@@ -66,15 +75,10 @@ export class RolesService {
     return this.httpClient.post(`${environment.apiUrl}/jobroles`, { name: role.name }, {
       headers: { 'Content-Type': 'application/json-patch+json' },
     }).pipe(
-      tap((created: any) => {
-        const newId = created?.id || created?.Id;
-        const newName = created?.name || created?.Name;
-        const newIsDefault = created?.isDefault || created?.IsDefault || false;
-
-        if (newId) {
-          const newRole = { id: newId, name: newName, isDefault: newIsDefault };
-          this.jobRoles.update(prev => [...prev, newRole]);
-          this.allJobRoles.update(prev => [...prev, newRole]);
+    tap((created: any) => {
+        if (created?.id) {
+          this.allJobRoles.update(prev => [...prev, this.mapToJobRole(created)]);
+          this.jobRoles.update(prev => [...prev, this.mapToJobRole(created)]);
         }
       }),
       catchError(error => {
@@ -100,7 +104,7 @@ export class RolesService {
   // --- JOB ROLE LEVELS ---
   loadJobRoleLevels() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobrolelevels`).pipe(
-      map(levels => levels.map(level => ({ id: level.id, name: level.name, isDefault: level.isDefault }))),
+      map(levels => levels.map(level => ({ id: level.id, name: level.name, isDefault: level.isDefault, isEliminated: level.isEliminated }))),
       tap(levels => this.jobRoleLevels.set(levels)),
       catchError(error => throwError(() => buildEntityError(error, 'ruolo', 'caricamento')))
     );

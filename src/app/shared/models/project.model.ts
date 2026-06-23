@@ -23,6 +23,8 @@ export interface Project {
   projectStatusId?: string;
   totalBudget: number;
   isFavorite: boolean;
+  isEliminated: boolean;
+
 }
 
 

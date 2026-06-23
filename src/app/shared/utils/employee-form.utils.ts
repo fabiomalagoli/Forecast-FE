@@ -24,6 +24,12 @@ export function normalizeEmployeeForForm(employee: any): Employee {
         : employee?.IsActive !== undefined
           ? employee.IsActive
           : true,
+    isEliminated:
+      employee?.isEliminated !== undefined
+        ? employee.isEliminated
+        : employee?.isEliminated !== undefined
+          ? employee.isEliminated
+          : true,
   };
 } // Tipo di formato dati per i form della schermata Risorse
 

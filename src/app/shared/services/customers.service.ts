@@ -26,6 +26,7 @@ export class CustomersService {
       vatNumber: customer.vatNumber,
       name: customer.name,
       fullAddress: customer.fullAddress,
+      isEliminated: customer.isEliminated,
       projects: customer.projects ? customer.projects.length : 0,
       activeProjects: customer.projects || [],
     };
@@ -67,7 +68,7 @@ export class CustomersService {
   }
 
   loadCustomers(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
-    let url = `${environment.apiUrl}/customers?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    let url = `${environment.apiUrl}/customers/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
     let params = new HttpParams();
 

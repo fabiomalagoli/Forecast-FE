@@ -46,6 +46,7 @@ export function buildEmployeeUiFallback(formData: any, fallbackId: string): Empl
     jobRoleLevel: formData.jobRoleLevel,
     company: formData.company,
     isActive: formData.isActive ?? true,
+    isEliminated: formData.isEliminated ?? false,
   };
 }
 

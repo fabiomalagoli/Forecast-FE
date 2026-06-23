@@ -31,11 +31,12 @@ export class EmployeesService {
       jobRoleLevel: emp.JobRoleLevel || emp.jobRoleLevel || 'N/A',
       company: emp.Company || emp.company || 'N/A',
       isActive: emp.IsActive !== undefined ? emp.IsActive : emp.isActive,
+      isEliminated: emp.isEliminated !== undefined ? emp.isEliminated : emp.isEliminated,
     };
   }
 
   loadEmployees(pageNumber: number = 1, pageSize: number = 10, filters?: EmployeeFilters) {
-    let url = `${environment.apiUrl}/employees?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    let url = `${environment.apiUrl}/employees/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
     let params = new HttpParams()
     .set('PageNumber', pageNumber.toString())

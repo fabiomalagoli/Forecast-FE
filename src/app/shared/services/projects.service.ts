@@ -45,6 +45,7 @@ export class ProjectsService {
       totalDays: project.totalDays || 0,
       winProbability: project.winProbability ? project.winProbability : 0,
       isFavorite: project.isFavorite || false,
+      isEliminated: project.isEliminated || false,
       projectEmployees: project.projectEmployees || [],
       projectJobRoles: project.projectJobRoles || [],
       projectStatus: project.projectStatus || 'Initiation',
@@ -70,6 +71,7 @@ export class ProjectsService {
       companyId: project.companyId,
       pmId: project.pmId,
       isFavorite: project.isFavorite || false,
+      isEliminated: project.isEliminated || false,
       startDate: toBackendDate(project.startDate),
       endDate: toBackendDate(project.endDate),
       totalDays: toNumber(project.totalDays),
@@ -90,7 +92,7 @@ export class ProjectsService {
   }
 
   loadProjects(pageNumber: number = 1, pageSize: number = 10, filters?: ProjectFiltersWithYear) {
-    let url = `${environment.apiUrl}/projects?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+    let url = `${environment.apiUrl}/projects/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
     let params = new HttpParams()
     .set('PageNumber', pageNumber.toString())
@@ -193,7 +195,7 @@ export class ProjectsService {
   toggleFavoriteState(projectId: string, isFavorite: boolean) {
 
     const patchPayload = [
-    { op: 'replace', path: '/isFavorite', value: isFavorite }
+    { op: 'replace', path: '/isFavorite', value: isFavorite } 
     ];
 
     const headers = new HttpHeaders({
@@ -207,6 +209,21 @@ export class ProjectsService {
     );
   }
 
+  toggleEliminatedState(projectId: string, isEliminated: boolean) {
+    const patchPayload = [
+      { op: 'replace', path: '/isEliminated', value: isEliminated }
+    ];
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json-patch+json'
+    });
+
+    return this.httpClient.patch(`${environment.apiUrl}/projects/${encodeURIComponent(projectId)}/isEliminated`, patchPayload, { headers }).pipe(
+      tap(() => {
+        this.projects.update(prev => prev.map(p => p.id === projectId ? {...p, isEliminated} : p));
+      })
+    );
+  }
   // Filters...
   setCompanyFilter(value: string) {
     this.loadAvailableProjects().pipe(

@@ -13,5 +13,6 @@ export interface Customer {
     province?: string,
     country?: string,
     projects: number,
+    isEliminated: boolean;
     activeProjects: Project[],
 }

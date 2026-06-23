@@ -122,16 +122,29 @@
   color: $color-error;
   border-radius: $radius-md;
   height: 36px;
+  padding: 0 1.25rem;
   cursor: pointer;
   font-weight: bold;
-  font-size: 1.2rem;
-  display: flex;
+  font-size: 0.9rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  transition: $transition-base;
 
   &:hover {
     background: $color-error-hover;
     color: $color-error-text;
+  }
+
+  &.outline {
+    background-color: transparent;
+    border: 1px solid $color-error;
+    color: $color-error;
+
+    &:hover {
+      background: rgba($color-error, 0.08);
+    }
   }
 }
 
