@@ -76,8 +76,8 @@
       <tbody>
         @for (cliente of filteredCustomers(); track cliente.id) {
           <tr>
-            @for (col of columns; track col.header) {
-              <td>{{ col.value(cliente) }}</td>
+            @for (col of columns; track col.header; let first = $first) {
+              <td [class.customer-name-cell]="first">{{ col.value(cliente) }}</td>
             }
             <td class="actions-cell">
               <button class="btn-action-icon btn-details" type="button" 

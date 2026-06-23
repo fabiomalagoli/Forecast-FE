@@ -127,6 +127,10 @@
       padding: 1rem 0.875rem;
       color: $text-filter-medium;
       font-size: 0.9375rem;
+
+      &.customer-name-cell {
+        font-weight: 700;
+      }
     }
 
   }
