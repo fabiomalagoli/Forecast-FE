@@ -145,8 +145,7 @@ export class EmployeesComponent implements OnInit {
 
     employeeHeaders: Record<keyof typeof EMPLOYEES_HEADERS_TABLE, string> = EMPLOYEES_HEADERS_TABLE;
     
-    columns: Column<Employee>[] = (Object.keys(this.employeeHeaders) as HeaderKey[])
-    .filter(key => key === 'jobRole' || key === 'employee' || key === 'jobRoleLevel' || key === 'company')
+    columns: Column<Employee>[] = (['employee', 'jobRole', 'jobRoleLevel', 'company'] as HeaderKey[])
     .map(key => ({
         header: this.employeeHeaders[key] ?? '',
         value: (e: Employee) => {
