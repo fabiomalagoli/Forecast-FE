@@ -1,0 +1,13 @@
+<h2 mat-dialog-title>Conferma Eliminazione</h2>
+    <mat-dialog-content>
+      Sei sicuro di voler eliminare il progetto <strong>"{{ data.name }}"</strong>?<br>
+      Questa azione non può essere annullata.
+    </mat-dialog-content>
+    <mat-dialog-actions align="end" style="gap: 10px; padding: 1rem 0 0 0;">
+      <button class="btn-remove outline" type="button" (click)="dialogRef.close(false)">
+        Annulla
+      </button>
+      <button class="btn-remove" type="button" (click)="dialogRef.close(true)">
+        Conferma
+      </button>
+    </mat-dialog-actions>

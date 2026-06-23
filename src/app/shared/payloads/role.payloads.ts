@@ -10,7 +10,6 @@ export function buildUpdateRolePayload(formData: any, fallbackId: string): Role 
   return {
     id: formData.id || fallbackId,
     name: formData.name,
-    isDefault: formData.isDefault ?? false,
-    isEliminated: formData.isEliminated ?? false
+    isEliminated: formData.isEliminated ?? formData.IsEliminated ?? false
   };
 }

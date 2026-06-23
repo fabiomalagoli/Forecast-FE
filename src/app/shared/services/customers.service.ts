@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of, Observable } from 'rxjs';
 import { Customer } from '../models/customer.model';
 import { ErrorService } from '../error.service';
@@ -26,7 +26,7 @@ export class CustomersService {
       vatNumber: customer.vatNumber,
       name: customer.name,
       fullAddress: customer.fullAddress,
-      isEliminated: customer.isEliminated,
+      isEliminated: customer.IsEliminated ?? customer.isEliminated ?? false,
       projects: customer.projects ? customer.projects.length : 0,
       activeProjects: customer.projects || [],
     };
@@ -135,6 +135,26 @@ export class CustomersService {
       catchError(error => {
         this.errorService.showError('Errore durante l\'aggiornamento del cliente.');
         return throwError(() => buildEntityError(error, 'cliente', 'aggiornamento'));
+      })
+    );
+  }
+
+  toggleEliminatedState(customerId: string, isEliminated: boolean) {
+    const patchPayload = [
+      { op: 'replace', path: '/isEliminated', value: isEliminated }
+    ];
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json-patch+json'
+    });
+
+    return this.httpClient.patch(`${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/isEliminated`, patchPayload, { headers }).pipe(
+      tap(() => {
+        if (isEliminated) {
+        this.customers.update(prev => prev.filter(c => c.id !== customerId));
+        } else {
+          this.customers.update(prev => prev.map(c => c.id === customerId ? {...c, isEliminated} : c));
+        }
       })
     );
   }

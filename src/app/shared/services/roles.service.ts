@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of } from 'rxjs';
 import { CreateRoleRequest, Role } from '../models/role.model';
 import { ErrorService } from '../error.service';
@@ -30,9 +30,8 @@ export class RolesService {
   private mapToJobRole(role: any): Role {
     return {
       id: role.id,
-      name: role.name || role.Name,
-      isDefault: role.isDefault || role.IsDefault,
-      isEliminated: role.isEliminated || role.isEliminated,
+      name: role.name ?? role.Name,
+      isEliminated: role.isEliminated ?? role.IsEliminated,
     }
   }
 
@@ -58,16 +57,20 @@ export class RolesService {
             hasNext: data.HasNext
           });
         }
-        this.jobRoles.set(response.body || []);
+        const roles = (response.body || []).map(r => this.mapToJobRole(r));
+        this.jobRoles.set(roles);
       }),
-      map(response => response.body || []),
+      map(response => (response.body || []).map(r => this.mapToJobRole(r))),
     );
   }
 
   loadAllJobRoles() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/jobroles?PageNumber=1&PageSize=1000`, { observe: 'response' }).pipe(
-      tap(response => this.allJobRoles.set(response.body || [])),
-      map(response => response.body || []),
+      tap(response => {
+        const roles = (response.body || []).map(r => this.mapToJobRole(r));
+        this.allJobRoles.set(roles);
+      }),
+      map(response => (response.body || []).map(r => this.mapToJobRole(r))),
     );
   }
 
@@ -97,6 +100,22 @@ export class RolesService {
       catchError(error => {
         this.errorService.showError('Errore durante l\'aggiornamento del ruolo.');
         return throwError(() => buildEntityError(error, 'ruolo', 'aggiornamento'));
+      })
+    );
+  }
+
+  toggleEliminatedState(jobRoleId: string, isEliminated: boolean) {
+    const patchPayload = [
+      { op: 'replace', path: '/isEliminated', value: isEliminated }
+    ];
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json-patch+json'
+    });
+
+    return this.httpClient.patch(`${environment.apiUrl}/jobRoles/${encodeURIComponent(jobRoleId)}/isEliminated`, patchPayload, { headers }).pipe(
+      tap(() => {
+        this.jobRoles.update(prev => prev.map(j => j.id === jobRoleId ? {...j, isEliminated} : j));
       })
     );
   }

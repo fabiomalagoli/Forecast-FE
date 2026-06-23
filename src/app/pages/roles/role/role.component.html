@@ -21,4 +21,11 @@
     (click)="assignResourcesToRoles.emit(role())">
     <span class="material-symbols-outlined bold-icon">add</span>
   </button>
+
+  <button class="btn-action-icon btn-remove-single" type="button" 
+    (click)="deleteRole.emit(role())"
+    matTooltip="Elimina Ruolo" 
+    matTooltipPosition="above">
+    <mat-icon class="action-icon">delete</mat-icon>
+  </button>
 </td>

@@ -57,6 +57,7 @@
     <p>{{ error() }}</p>
   </div>
 } @else {
+  <!-- Stato Normale di visualizzazione della tabella dei Ruoli -->
     @if (statusMessage()) {
       <div class="notification" [class]="statusMessage()?.type">
         {{ statusMessage()?.text }}
@@ -80,11 +81,15 @@
                       [class.active-role-highlight]="selectedRoleId() === r.id"
                       (showResources)="mostraRisorsePerRuolo($event)"
                       (editRole)="apriModifica($event)"
-                      (assignResourcesToRoles)="apriAssegnaRisorse($event)">
+                      (assignResourcesToRoles)="apriAssegnaRisorse($event)"
+                      (deleteRole)="onDeleteRole($event)">
                     </tr>
                 }
                 </tbody>
-            </table> <p class="count-footer">Numero ruoli: {{ pagination()?.totalCount || 0 }}</p>
+            </table>
+            <div class="table-footer">
+              <p class="count-footer">Numero ruoli: {{ pagination()?.totalCount || 0 }}</p>
+            </div>
         </div>
     </div>
 

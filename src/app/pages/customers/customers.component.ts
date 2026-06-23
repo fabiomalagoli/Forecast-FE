@@ -18,6 +18,9 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
 
 @Component({
   selector: 'app-customers',
@@ -31,7 +34,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatProgressSpinnerModule, 
     MatPaginatorModule, 
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatCheckboxModule
   ],
   templateUrl: './customers.component.html',
   styleUrls: ['./customers.component.scss'],
@@ -43,6 +47,7 @@ export class CustomersComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private snackbarService = inject(SnackbarService);
   private isFromDetailsPage = signal(false);
+  private dialog = inject(MatDialog);
 
   customers = this.customersService.loadedCustomers;
 
@@ -55,6 +60,9 @@ export class CustomersComponent implements OnInit {
 
   isAddingCustomer = signal(false);
   editingCustomer = signal<Customer | null>(null);
+
+  deletingCustomerId = signal<string | null>(null);
+  selectedCustomersIds = signal<string[]>([]);
 
   currentPage = signal(this.customersService.customerPaginationData()?.currentPage || 1);
   pageSize = this.customersService.customerPaginationData()?.pageSize || 10;
@@ -86,7 +94,9 @@ export class CustomersComponent implements OnInit {
   customerDropDownOpen = signal(false);
   filterNameValue = signal<string>('');
 
-  filteredCustomers = computed<Customer[]>(() => this.customers());
+  filteredCustomers = computed<Customer[]>(() => {
+    return this.customers().filter(c => !c.isEliminated);
+  });
 
   customerFilterOptions = computed<Customer[]>(() => {
     const term = this.showAllCustomersOptions() ? '' : this.filterNameValue().toLowerCase();
@@ -202,6 +212,45 @@ export class CustomersComponent implements OnInit {
   onPageChange(event: PageEvent) {
     this.pageSize = event.pageSize;
     this.loadPage(event.pageIndex + 1);
+  }
+
+  onDeleteCustomer(customer: Customer): void {
+    const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
+      data: { name: customer.name },
+      disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
+    });
+
+    // Risultato alla chiusura del form
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.deletingCustomerId.set(customer.id)
+        this.onCustomerDeleted();
+      }
+    });
+  }
+
+  onCustomerDeleted(): void {
+    const idToDelete = this.deletingCustomerId();
+    if(idToDelete === null) return;
+
+    this.isFetching.set(true);
+    this.customersService.toggleEliminatedState(idToDelete, true).pipe(
+      finalize(() => 
+        {
+          this.isFetching.set(false);
+          this.deletingCustomerId.set(null);
+        }
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: () => {
+        this.snackbarService.success(NotifyAction.Eliminazione, 'clienti');
+        this.loadPage(this.currentPage());
+      },
+      error: () => {
+        this.snackbarService.error(NotifyAction.Eliminazione, 'clienti', 'Chiudi');
+      }
+    })
   }
 
   loadPage(page: number, forceInitialSpinner = false) {

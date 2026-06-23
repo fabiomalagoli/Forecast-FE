@@ -19,6 +19,9 @@ import { NotifyAction } from '../../shared/enums/notify.enum';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 import { Employee } from '../../shared/models/employee.model';
 import { EditEmployeeForRoleComponent } from "./role-resources/edit-employee-for-role/edit-employee-for-role.component";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
 
 @Component({
   selector: 'app-roles',
@@ -35,7 +38,8 @@ import { EditEmployeeForRoleComponent } from "./role-resources/edit-employee-for
     AssignEmployeeComponent,
     AppButtonComponent,
     MatProgressSpinnerModule,
-    EditEmployeeForRoleComponent
+    EditEmployeeForRoleComponent,
+    MatCheckboxModule
 ],
 })
 export class RolesComponent implements OnInit {
@@ -46,6 +50,7 @@ export class RolesComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private destroyRef = inject(DestroyRef);
     private snackbarService = inject(SnackbarService);
+    private dialog = inject(MatDialog);
     
     private showMessage$ = new Subject<{ text: string, type: 'success' | 'error' }>();
     private isFromDetails = signal(false);
@@ -53,10 +58,13 @@ export class RolesComponent implements OnInit {
     isInitialLoading = signal(this.rolesService.loadedJobRoles().length === 0);
     statusMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
 
+    deletingRoleId = signal<string | null>(null);
+    selectedRolesIds = signal<string[]>([]);
+
     listAllJobRoles = this.rolesService.loadedAllJobRoles;
     roles = this.rolesService.loadedJobRoles;
 
-    filteredRoles = computed<Role[]>(() => this.roles());
+    filteredRoles = computed<Role[]>(() => { return this.roles().filter(r => !r.isEliminated); });
     selectedEmployeeForDrawer = signal<any | null>(null);
 
     editingEmployee = signal<Employee | null>(null);
@@ -213,6 +221,45 @@ export class RolesComponent implements OnInit {
     onPageChange(event: PageEvent) {
         this.pageSize = event.pageSize;
         this.caricaPagina(event.pageIndex + 1);
+    }
+
+    onDeleteRole(role: Role): void {
+        const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
+        data: { name: role.name },
+        disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
+        });
+
+        // Risultato alla chiusura del form
+        dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+        if (confirmed) {
+            this.deletingRoleId.set(role.id)
+            this.onRoleDeleted();
+        }
+        });
+    }
+
+    onRoleDeleted(): void {
+        const idToDelete = this.deletingRoleId();
+        if(idToDelete === null) return;
+
+        this.isFetching.set(true);
+        this.rolesService.toggleEliminatedState(idToDelete, true).pipe(
+        finalize(() => 
+            {
+            this.isFetching.set(false);
+            this.deletingRoleId.set(null);
+            }
+        ),
+        takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+        next: () => {
+            this.snackbarService.success(NotifyAction.Eliminazione, 'progetti');
+            this.caricaPagina(this.currentPage());
+        },
+        error: () => {
+            this.snackbarService.error(NotifyAction.Eliminazione, 'ruolo', 'Chiudi');
+        }
+        })
     }
 
     caricaPagina(page: number, forceInitialSpinner = false) {

@@ -1,0 +1,41 @@
+@use 'variables' as *;
+
+mat-dialog-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: $text-filter-dark;
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem !important;
+}
+
+mat-dialog-content { 
+  font-size: 1rem; 
+  color: $text-filter-medium; 
+  line-height: 1.5;
+  padding: 0.5rem 1.5rem 1rem 1.5rem !important;
+}
+
+strong { 
+  color: $text-filter-dark; 
+  font-weight: 700;
+}
+
+/* CONTENITORE DEI BOTTONI */
+mat-dialog-actions {
+  gap: 12px;                     
+  padding: 0 1.5rem 1.5rem 1.5rem !important;
+  margin: 0 !important;
+}
+
+/* PULSANTI DIALOG */
+.dialog-btn {
+  height: 36px !important;       
+  min-width: 110px;
+  padding: 0 1.5rem !important;
+  font-size: 0.9rem !important;
+  font-weight: bold !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}

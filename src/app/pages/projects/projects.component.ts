@@ -26,6 +26,8 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { toBackendDate } from '../../shared/utils/shared-utils';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
 
 
 @Component({
@@ -56,6 +58,7 @@ export class ProjectsComponent {
   private snackbarService = inject(SnackbarService);
   private favouritesService = inject(FavouritesService);
   private isFromDetailsPage = signal(false);
+  private dialog = inject(MatDialog);
   isFetching = signal(false);
   error = signal<string | null>(null);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
@@ -70,8 +73,7 @@ export class ProjectsComponent {
 
   editingProject = signal<Project | null>(null);
 
-  isDeletingMode = signal<boolean>(false);
-  selectedProjectsIds = signal<string[]>([]);
+  deletingProjectId = signal<string | null>(null);
 
   companiesList = signal<any[]>([]);
   statusesList = signal<any[]>([]);
@@ -423,29 +425,31 @@ export class ProjectsComponent {
     this.editingProject.set(null);
   }
 
-  onProjectSaved() {
-    this.editingProject.set(null);
-    // Qui potresti chiamare un metodo del service per salvare le modifiche sul backend, ad esempio:
-    this.projectsService.loadProjects(this.currentPage(), this.pageSize, this.currentFilters()).subscribe({
-      next: () => {
-        this.showNotification('success', NotifyAction.Salvataggio, 'progetto');
+  onDeleteProject(project: Project): void {
+    const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
+      data: { name: project.name },
+      disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
+    });
+
+    // Risultato alla chiusura del form
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        this.deletingProjectId.set(project.id)
+        this.onProjectDeleted();
       }
     });
   }
 
-  onBulkDelete(): void {
-    const idsToDelete = this.selectedProjectsIds();
-    if(idsToDelete.length === 0) return;
+  onProjectDeleted(): void {
+    const idToDelete = this.deletingProjectId();
+    if(idToDelete === null) return;
 
     this.isFetching.set(true);
-    const deleteRequests = idsToDelete.map(id => this.projectsService.toggleEliminatedState(id, true));
-
-    forkJoin(deleteRequests).pipe(
+    this.projectsService.toggleEliminatedState(idToDelete, true).pipe(
       finalize(() => 
         {
           this.isFetching.set(false);
-          this.selectedProjectsIds.set([]);
-          this.toggleEliminationMode();
+          this.deletingProjectId.set(null);
         }
       ),
       takeUntilDestroyed(this.destroyRef)
@@ -458,31 +462,15 @@ export class ProjectsComponent {
         this.manageLoadingErrors(error);
       }
     })
-
-  }
-  
-  toggleEliminationMode() {
-    this.isDeletingMode.update(value => !value);
   }
 
-  toggleSelection(id: string): void {
-    this.selectedProjectsIds.update(ids => 
-      ids.includes(id) ? ids.filter(item => item !== id) : [...ids, id]
-    );
-  }
-
-  toggleAllProjects(projectsInPage: Project[]): void {
-    const allSelected = projectsInPage.every(p => this.selectedProjectsIds().includes(p.id));
-    
-    if (allSelected) {
-      const pageIds = projectsInPage.map(p => p.id);
-      this.selectedProjectsIds.update(ids => ids.filter(id => !pageIds.includes(id)));
-    } else {
-      this.selectedProjectsIds.update(ids => {
-        const newIds = projectsInPage.map(p => p.id).filter(id => !ids.includes(id));
-        return [...ids, ...newIds]; 
-      });
-    }
+  onProjectSaved() {
+    this.editingProject.set(null);
+    this.projectsService.loadProjects(this.currentPage(), this.pageSize, this.currentFilters()).subscribe({
+      next: () => {
+        this.showNotification('success', NotifyAction.Salvataggio, 'progetto');
+      }
+    });
   }
 
   loadPage(page: number, forceInitialSpinner = false) {

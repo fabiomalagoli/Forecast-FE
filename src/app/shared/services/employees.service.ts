@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of, Observable, switchMap } from 'rxjs';
 import { Employee } from '../models/employee.model';
 import { ErrorService } from '../error.service';
@@ -161,6 +161,22 @@ export class EmployeesService {
       catchError(error => {
         this.errorService.showError('Errore durante l\'eliminazione della risorsa.');
         return throwError(() => buildEntityError(error, 'risorsa', 'eliminazione'));
+      })
+    );
+  } // Delete on database (Non implementato lato backend)
+
+  toggleEliminatedState(employeeId: string, isEliminated: boolean) {
+    const patchPayload = [
+      { op: 'replace', path: '/isEliminated', value: isEliminated }
+    ];
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json-patch+json'
+    });
+
+    return this.httpClient.patch(`${environment.apiUrl}/employees/${encodeURIComponent(employeeId)}/isEliminated`, patchPayload, { headers }).pipe(
+      tap(() => {
+        this.employees.update(prev => prev.map(e => e.id === employeeId ? {...e, isEliminated} : e));
       })
     );
   }

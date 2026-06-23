@@ -56,7 +56,10 @@
   <div class="error-state">
     <p>{{ error() }}</p>
   </div>
-} @else {
+}
+
+@else {
+  <!-- Stato Normale di visualizzazione della tabella dei Clienti -->
   @if (statusMessage()) {
     <div class="notification" [class]="statusMessage()?.type">
       {{ statusMessage()?.text }}
@@ -86,14 +89,19 @@
                 matTooltipPosition="above"
                 aria-label="Dettagli">
                 <mat-icon class="action-icon">visibility</mat-icon>
-              </button>
-                
+              </button>               
               <button class="btn-action-icon btn-edit" type="button" 
                 (click)="openCustomerEditing(cliente)"
                 matTooltip="Modifica" 
                 matTooltipPosition="above"
                 aria-label="Modifica">
                 <mat-icon class="action-icon">edit</mat-icon>
+              </button>
+                <button class="btn-action-icon btn-remove-single" type="button" 
+                (click)="onDeleteCustomer(cliente)"
+                matTooltip="Elimina" 
+                matTooltipPosition="above">
+                <mat-icon>delete</mat-icon>
               </button>
             </td>
           </tr>
@@ -106,7 +114,9 @@
         }
       </tbody>
     </table>
-    <p class="count-footer">Numero clienti: {{ pagination()?.totalCount || 0 }}</p>
+    <div class="table-footer">
+      <p class="count-footer">Numero clienti: {{ pagination()?.totalCount || 0 }}</p>
+    </div>
   </div>
 
 
