@@ -7,11 +7,11 @@
             <h3 class="section-title">Recap Risorsa</h3>
             <div class="recap-grid">
                 <app-text-input [class.input-recap-active]="isEditMode()">
-                    <label>{{recapDataHeaders.BudgetTotale}}</label>
+                    <label>{{recapDataHeaders.BudgetTotale}} €</label>
                     <input type="text" [value]="budgetTotale()" readonly>
                 </app-text-input>
                 <app-text-input [class.input-recap-active]="isEditMode()">
-                    <label>{{recapDataHeaders.TotaleRicavi}}</label>
+                    <label>{{recapDataHeaders.TotaleRicavi}} €</label>
                     <input type="text" [value]="totaleRicavi()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
                 <app-text-input [class.input-recap-active]="isEditMode()">
@@ -22,13 +22,13 @@
                     <label>{{recapDataHeaders.TotaleConsuntivate}}</label>
                     <input type="text" [value]="totaleConsuntivate()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
-                <app-text-input [class.input-recap-active]="isEditMode()" [class.delta-warning]="delta() !== 0">
+                <app-text-input [class.input-recap-active]="isEditMode()" [class.delta-warning]="deltaValue() !== 0">
                     <label>{{recapDataHeaders.Delta}}</label>
                     <input type="text" [value]="delta()" readonly> <!-- Placeholder for actual value -->
                 </app-text-input>
                 <app-text-input [class.input-recap-active]="isEditMode()">
-                    <label>{{recapDataHeaders.Tariffa}}</label>
-                    <input type="text" [value]="((resource()?.dailyCost ?? 0))" readonly>
+                    <label>{{recapDataHeaders.Tariffa}} €</label>
+                    <input type="text" [value]="formattedDailyTariff()" readonly>
                 </app-text-input>
             </div>
             <h3 class="section-title">Gestione Mensile</h3>
@@ -68,10 +68,11 @@
                             <strong class="month-label">{{ mese.name }}</strong>
                             
                             <app-text-input>
-                                <input type="number" min="0"
+                                <input type="text" inputmode="decimal"
                                     [formControlName]="'month_' + mese.month + '_days'" 
                                     [readonly]="!isEditMode()"
-                                    (wheel)="onWheel($event, 'month_' + mese.month + '_days')">
+                                    (blur)="normalizeDayControl('month_' + mese.month + '_days')"
+                                    (wheel)="onWheel($event)">
                             </app-text-input>        
                             <div class="checkbox-container">
                                 <input type="checkbox" 
@@ -107,10 +108,11 @@
                             <strong class="month-label">{{ mese.name }}</strong>
                             
                             <app-text-input>
-                                <input type="number" min="0"
+                                <input type="text" inputmode="decimal"
                                     [formControlName]="'month_' + mese.month + '_days'" 
                                     [readonly]="!isEditMode()"
-                                    (wheel)="onWheel($event, 'month_' + mese.month + '_days')">
+                                    (blur)="normalizeDayControl('month_' + mese.month + '_days')"
+                                    (wheel)="onWheel($event)">
                             </app-text-input>
                             <div class="checkbox-container">
                                 <input type="checkbox" 
@@ -136,7 +138,7 @@
 
             @if(isEditMode()) {
                 <div class="recap-counter">
-                    <span>Giorni rimanenti: <strong>{{ remainingDays() }}</strong></span>
+                    <span>Giorni rimanenti: <strong>{{ formattedRemainingDays() }}</strong></span>
                 </div>
                 <!-- @if (isTotalExceeded()) {
                     <div class="error-message global-error">

@@ -43,13 +43,23 @@ export class ProjectDetailsComponent {
   unassignedCount = computed(() => this.displayedProjectEmployees().filter(e => (e.jobRole || '').toString().toLowerCase() === 'unassigned').length);
 
   formattedTotalRevenues = computed(() => {
-    const value = this.projectRecapData()?.totalRevenues ?? 0;
-    return parseFloat((value as number).toFixed(2));
+    return this.formatDecimal(this.projectRecapData()?.totalRevenues);
   });
 
   formattedBudgetWin = computed(() => {
-    const value = this.projectRecapData()?.budgetWin ?? 0;
-    return parseFloat((value as number).toFixed(2));
+    return this.formatDecimal(this.projectRecapData()?.budgetWin);
+  });
+
+  formattedBudgetTotale = computed(() => {
+    return this.formatDecimal(this.projectRecapData()?.budgetTotaleRisorsa);
+  });
+
+  formattedTotalEmployedDays = computed(() => {
+    return this.formatDecimal(this.projectRecapData()?.totalEmployedDays);
+  });
+
+  formattedDelta = computed(() => {
+    return this.formatDecimal(this.projectRecapData()?.delta);
   });
 
   recapDataHeaders = RECAP_DATA_HEADERS;
@@ -152,6 +162,10 @@ export class ProjectDetailsComponent {
 
   indietro() {
     this.location.back();
+  }
+
+  private formatDecimal(value: number | null | undefined): string {
+    return (value ?? 0).toFixed(2);
   }
 
   private setupDisplayedEmployeesEffect() {

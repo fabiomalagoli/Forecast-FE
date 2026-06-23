@@ -5,7 +5,7 @@ import { signal } from '@angular/core';
 import { Project, ProjectEmployee, RecapData } from '../../../../../shared/models/project.model';
 import { TextInputComponent } from "../../../../../shared/text-input/text-input.component";
 import { RECAP_DATA_HEADERS } from '../../../recap-data.headers';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MAT_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/core';
@@ -90,12 +90,14 @@ export class ResourceDetailsGridComponent {
 
   remainingDays = computed<number>(() => Math.max(0, ((this.resource()?.daysSpent ?? 0) - this.totalDaysEntered())));
 
+  formattedRemainingDays = computed(() => this.formatDecimal(this.remainingDays()));
+
   totaleConsuntivate = computed(() => {
     const backendValue = this.recapData()?.totalEmployedDays ?? 0;
     if (this.isEditMode()) {
-      return backendValue + this.deltaDaysFromSnapshot();
+      return this.formatDecimal(backendValue + this.deltaDaysFromSnapshot());
     }
-    return backendValue;
+    return this.formatDecimal(backendValue);
   });
 
   isTotalExceeded = computed<boolean>(() => {
@@ -104,30 +106,34 @@ export class ResourceDetailsGridComponent {
 
   budgetTotale = computed(() => {
     const valore = this.recapData()?.budgetTotaleRisorsa ?? 0;
-    return valore.toFixed(2);
+    return this.formatDecimal(valore);
   });
 
   totaleRicavi = computed(() => {
     const backendValue = this.recapData()?.totalRevenues ?? 0;
     if (this.isEditMode()) {
       const dailyCost = this.resource()?.dailyCost ?? 0;
-      return (backendValue + (this.deltaDaysFromSnapshot() * dailyCost)).toFixed(2);
+      return this.formatDecimal(backendValue + (this.deltaDaysFromSnapshot() * dailyCost));
     }
-    return backendValue.toFixed(2);
+    return this.formatDecimal(backendValue);
   });
 
   budgetWin = computed(() => {
     const valore = this.recapData()?.budgetWin ?? 0;
-    return valore.toFixed(2);
+    return this.formatDecimal(valore);
   });
 
-  delta = computed(() => {
+  deltaValue = computed(() => {
     const backendValue = this.recapData()?.delta ?? 0;
     if (this.isEditMode()) {
       return backendValue - this.deltaDaysFromSnapshot();
     }
     return backendValue;
   });
+
+  delta = computed(() => this.formatDecimal(this.deltaValue()));
+
+  formattedDailyTariff = computed(() => this.formatDecimal(this.resource()?.dailyCost));
 
   private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) {
     return `${projectEmployeeId}_${year}`;
@@ -162,7 +168,7 @@ export class ResourceDetailsGridComponent {
       if(controlName.includes('_days')){
         formControls[controlName] = new FormControl(
           formValues[controlName], 
-          Validators.min(0)
+          [this.dayValueValidator]
         );
       } else formControls[controlName] = new FormControl(formValues[controlName]);
     });
@@ -178,20 +184,20 @@ export class ResourceDetailsGridComponent {
   private calculateTotalDaysEntered() {
     let sumMonthDays = 0;
     this.allMonths.forEach(monthDetail => {
-      sumMonthDays += Number(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value ?? 0);
+      sumMonthDays += this.parseDayValue(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value);
     });
-    this.totalDaysEntered.set(sumMonthDays);
+    this.totalDaysEntered.set(this.roundDayValue(sumMonthDays));
   }
 
   private buildMonthlyFormValues() {
-    const formValues: { [key: string]: number | boolean } = {};
+    const formValues: { [key: string]: string | boolean } = {};
 
     const monthlyManagements = this.monthlyManagements();
 
     this.allMonths.forEach(monthDetail => {
       const savedMonth = monthlyManagements.find(monthlyManagement => monthlyManagement.month === monthDetail.month);
 
-      formValues[`month_${monthDetail.month}_days`] = savedMonth?.days ?? monthDetail.days; // Se esiste un dato salvato per questo mese, usalo; altrimenti, usa il valore di default
+      formValues[`month_${monthDetail.month}_days`] = this.formatDecimal(savedMonth?.days ?? monthDetail.days); // Se esiste un dato salvato per questo mese, usalo; altrimenti, usa il valore di default
       formValues[`month_${monthDetail.month}_confirm`] = savedMonth?.isConfirmed ?? monthDetail.confirm;
     });
 
@@ -294,19 +300,23 @@ export class ResourceDetailsGridComponent {
     this.editMonthlyManagementsForm.disable({ emitEvent: false });
   }
 
-  onWheel(event: WheelEvent, controlName: string){
-    if(!this.isEditMode()) return;
+  onWheel(event: WheelEvent){
     event.preventDefault();
+    (event.target as HTMLElement | null)?.blur();
+  }
 
+  normalizeDayControl(controlName: string) {
     const control = this.editMonthlyManagementsForm.get(controlName);
-    if(control) {
-      const currentValue = Number(control.value ?? 0);
-
-      const step = event.deltaY < 0 ? 1 : -1;
-      const newValue = Math.max(0, currentValue + step);
-
-      control.setValue(newValue);
+    if (!control) {
+      return;
     }
+
+    if (control.invalid) {
+      return;
+    }
+
+    const normalizedValue = this.roundDayValue(this.parseDayValue(control.value));
+    control.setValue(this.formatDecimal(normalizedValue));
   }
 
   saveData(){ // Questa funzione viene chiamata quando l'utente clicca sul pulsante di salvataggio. Prepara i dati da salvare e chiama il servizio per inviarli al backend
@@ -317,6 +327,8 @@ export class ResourceDetailsGridComponent {
       return;
     }
 
+    this.normalizeAllDayControls();
+
     const actualEmployee = this.resource();
     if (!actualEmployee) {
       console.error("Nessuna risorsa selezionata per il salvataggio.");
@@ -325,7 +337,7 @@ export class ResourceDetailsGridComponent {
 
     const monthsToSave: MonthlyManagementSavePayload[] = this.allMonths.map(monthDetail => ({
       month: monthDetail.month,
-      days: Number(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value ?? 0),
+      days: this.roundDayValue(this.parseDayValue(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_days`)?.value)),
       isConfirmed: Boolean(this.editMonthlyManagementsForm.get(`month_${monthDetail.month}_confirm`)?.value),
     }));
 
@@ -367,5 +379,51 @@ export class ResourceDetailsGridComponent {
 
   close() {
     this.closeDrawer().emit(); // Emissione dell'evento per chiudere il drawer
+  }
+
+  private formatDecimal(value: number | null | undefined): string {
+    return (value ?? 0).toFixed(2);
+  }
+
+  private parseDayValue(value: unknown): number {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    const normalized = String(value ?? '').trim().replace(',', '.');
+    if (!normalized) {
+      return 0;
+    }
+
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private roundDayValue(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
+  }
+
+  private normalizeAllDayControls() {
+    this.allMonths.forEach(monthDetail => {
+      this.normalizeDayControl(`month_${monthDetail.month}_days`);
+    });
+  }
+
+  private dayValueValidator(control: AbstractControl): ValidationErrors | null {
+    const normalized = String(control.value ?? '').trim().replace(',', '.');
+    if (!normalized) {
+      return null;
+    }
+
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed)) {
+      return { number: true };
+    }
+
+    if (parsed < 0) {
+      return { min: true };
+    }
+
+    return null;
   }
 }

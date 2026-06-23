@@ -91,11 +91,11 @@
       <h3 class="section-title">Recap Progetto</h3>
       <div class="recap-grid">
         <app-text-input class="input-recap-active">
-          <label>{{recapDataHeaders.BudgetTotale}}</label>
-          <input type="text" [value]="projectRecapData()?.budgetTotaleRisorsa" readonly>
+          <label>{{recapDataHeaders.BudgetTotale}} €</label>
+          <input type="text" [value]="formattedBudgetTotale()" readonly>
         </app-text-input>
         <app-text-input class="input-recap-active">
-          <label>{{recapDataHeaders.TotaleRicavi}}</label>
+          <label>{{recapDataHeaders.TotaleRicavi}} €</label>
           <input type="text" [value]="formattedTotalRevenues()" readonly>
         </app-text-input>
         <app-text-input class="input-recap-active">
@@ -104,11 +104,11 @@
         </app-text-input>
         <app-text-input class="input-recap-active">
           <label>{{recapDataHeaders.TotaleConsuntivate}}</label>
-          <input type="text" [value]="projectRecapData()?.totalEmployedDays" readonly>
+          <input type="text" [value]="formattedTotalEmployedDays()" readonly>
         </app-text-input>
         <app-text-input class="input-recap-active" [class.delta-warning]="projectRecapData()?.delta !== 0">
           <label>{{recapDataHeaders.Delta}}</label>
-          <input type="text" [value]="projectRecapData()?.delta" readonly>
+          <input type="text" [value]="formattedDelta()" readonly>
         </app-text-input>
       </div>
     </aside>
