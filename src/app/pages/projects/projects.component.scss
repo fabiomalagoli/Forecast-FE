@@ -150,6 +150,10 @@
       color: $text-filter-medium;
       font-size: 0.9375rem;
       white-space: nowrap;
+
+      &.project-primary-cell {
+        font-weight: 700;
+      }
     }
   }
 }

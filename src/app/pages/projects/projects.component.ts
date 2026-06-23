@@ -2,7 +2,6 @@ import { Component, DestroyRef, HostListener, computed, inject, signal } from '@
 import { Project } from '../../shared/models/project.model';
 import { Column } from '../../shared/table-row/table.types';
 import { AppButtonComponent } from "../../shared/button/button";
-import { PROGETTO_HEADERS } from './project/project.headers';
 import { COMPLETE_PROJECT_HEADERS } from './project/complete-project.headers';
 import { NewProgettoComponent } from "./new-project/new-project.component";
 import { Router } from '@angular/router';
@@ -352,8 +351,17 @@ export class ProjectsComponent {
   }
 
   columns: Column<Project>[] = [
-    ...(Object.keys(this.projectHeaders) as (keyof Project)[])
-      .filter(key => key !== 'id' && key in PROGETTO_HEADERS)
+    ...([
+      'customer',
+      'company',
+      'pm',
+      'head',
+      'name',
+      'description',
+      'projectStatus',
+      'totalDays',
+      'winProbability',
+    ] as (keyof Project)[])
       .map(key => ({
         header: this.projectHeaders[key] ?? '',
         value: (p: Project) => {

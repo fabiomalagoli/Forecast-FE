@@ -191,8 +191,8 @@
         <tbody>
           @for (p of filteredProjects(); track p.id) {
             <tr>
-              @for (col of columns; track col.header) {
-                <td>{{ col.value(p) }}</td>
+              @for (col of columns; track col.header; let first = $first) {
+                <td [class.project-primary-cell]="first">{{ col.value(p) }}</td>
               }
               <td class="actions-cell">
                 <mat-checkbox
@@ -265,8 +265,8 @@
         <tbody>
           @for (p of filteredProjects(); track p.id) {
             <tr>
-              @for (col of columns; track col.header) {
-                <td>{{ col.value(p) }}</td>
+              @for (col of columns; track col.header; let first = $first) {
+                <td [class.project-primary-cell]="first">{{ col.value(p) }}</td>
               }
               <td class="actions-cell">
                 <button 
