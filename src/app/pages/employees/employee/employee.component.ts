@@ -16,4 +16,5 @@ export class EmployeeRowComponent {
 
   viewEmployee = output<Employee>();
   editEmployee = output<Employee>();
+  deleteEmployee = output<Employee>();
 }

@@ -149,7 +149,8 @@
                       app-employee-row
                       [employee]="r"
                       (viewEmployee)="openEmployeeDetails($event)"
-                      (editEmployee)="openEmployeeEdit($event)">
+                      (editEmployee)="openEmployeeEdit($event)"
+                      (deleteEmployee)="onDeleteEmployee($event)">
                     </tr>
                 } @empty {
                     <tr>

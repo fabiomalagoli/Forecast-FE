@@ -18,4 +18,11 @@
           aria-label="Modifica">
     <mat-icon class="action-icon">edit</mat-icon>
   </button>
+
+  <button class="btn-action-icon btn-remove-single" type="button" 
+    (click)="deleteEmployee.emit(employee())"
+    matTooltip="Elimina" 
+    matTooltipPosition="above">
+    <mat-icon class="action-icon">delete</mat-icon>
+  </button>
 </td>

@@ -19,6 +19,8 @@ import { NotifyAction } from '../../shared/enums/notify.enum';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 import { EMPLOYEES_HEADERS_TABLE } from './employee.headers';
 import { Column } from '../../shared/table-row/table.types';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
 
 type HeaderKey = keyof typeof EMPLOYEES_HEADERS_TABLE;
 
@@ -39,12 +41,14 @@ export class EmployeesComponent implements OnInit {
     private destroyRef = inject(DestroyRef);
     private snackbarService = inject(SnackbarService);
     private isFromDetailsPage = signal(false);
-
+    private dialog = inject(MatDialog);
     private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
 
     isInitialLoading = signal(this.employeesService.loadedEmployees().length === 0);
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
     
+    deletingEmployeeId = signal<string | null>(null);
+
     employees = this.employeesService.loadedEmployees;
     allEmployees = this.employeesService.loadedAllEmployees;
 
@@ -491,6 +495,45 @@ export class EmployeesComponent implements OnInit {
         this.reloadEmployees(); 
         this.editingEmployee.set(null);
         this.showNotification('success', NotifyAction.Salvataggio, 'risorse');
+    }
+
+    onDeleteEmployee(employee: Employee): void {
+        const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
+            data: { name: employee.name + ' ' + employee.surname},
+            disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
+        });
+
+        // Risultato alla chiusura del form
+        dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+            if (confirmed) {
+            this.deletingEmployeeId.set(employee.id)
+            this.onEmployeeDeleted();
+            }
+        });
+    }
+
+    onEmployeeDeleted(): void {
+    const idToDelete = this.deletingEmployeeId();
+        if(idToDelete === null) return;
+
+        this.isFetching.set(true);
+        this.employeesService.toggleEliminatedState(idToDelete, true).pipe(
+            finalize(() => 
+            {
+                this.isFetching.set(false);
+                this.deletingEmployeeId.set(null);
+            }
+            ),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+            next: () => {
+            this.snackbarService.success(NotifyAction.Eliminazione, 'clienti');
+            this.loadPage(this.currentPage());
+            },
+            error: () => {
+            this.snackbarService.error(NotifyAction.Eliminazione, 'clienti', 'Chiudi');
+            }
+        })
     }
 
     openEmployeeDetails(r: Employee){
