@@ -1,6 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { AppButtonComponent } from '../../../shared/button/button';
+
+export interface ConfirmDeleteDialogData {
+  name: string;
+  entityLabel?: string;
+}
 
 @Component({
   selector: 'app-confirm-delete-dialog',
@@ -11,6 +15,9 @@ import { AppButtonComponent } from '../../../shared/button/button';
 })
 export class ConfirmDeleteDialogComponent {
   readonly dialogRef = inject(MatDialogRef<ConfirmDeleteDialogComponent>);
-  // Riceve i dati passati dal componente padre
-  readonly data = inject<{ name: string }>(MAT_DIALOG_DATA);
+  readonly data = inject<ConfirmDeleteDialogData>(MAT_DIALOG_DATA);
+
+  get entityLabel(): string {
+    return this.data.entityLabel ?? 'l\'elemento';
+  }
 }

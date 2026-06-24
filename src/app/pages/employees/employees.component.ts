@@ -499,7 +499,10 @@ export class EmployeesComponent implements OnInit {
 
     onDeleteEmployee(employee: Employee): void {
         const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
-            data: { name: employee.name + ' ' + employee.surname},
+            data: {
+                name: `${employee.name} ${employee.surname}`,
+                entityLabel: 'la risorsa'
+            },
             disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
         });
 
@@ -527,11 +530,11 @@ export class EmployeesComponent implements OnInit {
             takeUntilDestroyed(this.destroyRef)
         ).subscribe({
             next: () => {
-            this.snackbarService.success(NotifyAction.Eliminazione, 'clienti');
+            this.snackbarService.success(NotifyAction.Eliminazione, 'risorse');
             this.loadPage(this.currentPage());
             },
             error: () => {
-            this.snackbarService.error(NotifyAction.Eliminazione, 'clienti', 'Chiudi');
+            this.snackbarService.error(NotifyAction.Eliminazione, 'risorse', 'Chiudi');
             }
         })
     }

@@ -435,7 +435,10 @@ export class ProjectsComponent {
 
   onDeleteProject(project: Project): void {
     const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
-      data: { name: project.name },
+      data: {
+        name: project.name,
+        entityLabel: 'il progetto'
+      },
       disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
     });
 

@@ -216,7 +216,10 @@ export class CustomersComponent implements OnInit {
 
   onDeleteCustomer(customer: Customer): void {
     const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
-      data: { name: customer.name },
+      data: {
+        name: customer.name,
+        entityLabel: 'il cliente'
+      },
       disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
     });
 

@@ -225,7 +225,10 @@ export class RolesComponent implements OnInit {
 
     onDeleteRole(role: Role): void {
         const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
-        data: { name: role.name },
+        data: {
+            name: role.name,
+            entityLabel: 'il ruolo'
+        },
         disableClose: true // Impedisce di chiuderlo cliccando fuori per errore
         });
 
@@ -253,7 +256,7 @@ export class RolesComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
         ).subscribe({
         next: () => {
-            this.snackbarService.success(NotifyAction.Eliminazione, 'progetti');
+            this.snackbarService.success(NotifyAction.Eliminazione, 'ruoli');
             this.caricaPagina(this.currentPage());
         },
         error: () => {
