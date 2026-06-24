@@ -203,6 +203,16 @@ select.np-input-direct {
 
 .field-changed { border-left: 4px solid $color-warning !important; background-color: $color-primary-light; transition: $transition-smooth; }
 
+.input-warning {
+  border-color: #ff9800 !important;
+  background-color: #fff9f2 !important; /* Sfondo arancione */
+
+  &:focus {
+    border-color: #e65100 !important;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.25) !important;
+  }
+}
+
 /* PULSANTI E AZIONI */
 
 .actions {

@@ -51,6 +51,17 @@
                 }
               </div>
             }
+            @else if (h.key === 'totalDays'){
+              <input
+                [id]="h.key"
+                [name]="h.key"
+                [formControlName]="h.key"
+                (input)="onFieldChange()"
+                [pattern]="getPattern(h.key)"
+                [attr.min]="(h.key === 'totalDays' ? 0 : (h.key === 'endDate' ? editProjectForm.get('startDate')?.value : null))"
+                [type]="'number'"
+                [class.input-warning]="facade.warningResourceDaysExceeded()" />
+            }
             @else {
               <input
                 [id]="h.key"
@@ -63,7 +74,7 @@
                 [attr.min]="h.key === 'winProbability' ? 1 : (h.key === 'totalDays' ? 0 : (h.key === 'endDate' ? editProjectForm.get('startDate')?.value : null))"
                 [attr.max]="h.key === 'winProbability' ? 100 : null"
                 [attr.inputmode]="h.key === 'winProbability' ? 'numeric' : null"
-                [type]="h.key.toLowerCase().includes('date') ? 'date' : (h.key === 'totalDays' ? 'number' : (h.key === 'winProbability' ? 'text' : 'text'))" />
+                [type]="h.key.toLowerCase().includes('date') ? 'date' : (h.key === 'winProbability' ? 'text' : 'text')" />
             }
           </app-text-input>
 
@@ -72,6 +83,7 @@
               @if (editProjectForm.get(h.key)?.errors?.['required']) { *campo obbligatorio }
               @if (h.key === 'winProbability' && (editProjectForm.get(h.key)?.errors?.['min'] || editProjectForm.get(h.key)?.errors?.['max'] || editProjectForm.get(h.key)?.errors?.['pattern'])) { *sono validi solo numeri da 1 a 100 }
               @if (h.key === 'totalDays' && (editProjectForm.get(h.key)?.errors?.['pattern'] || editProjectForm.get(h.key)?.errors?.['min'])) { *sono accettati solo numeri positivi o nulli }
+              @else if(h.key === 'totalDays' && facade.warningResourceDaysExceeded()) {}
               @if (h.key !== 'winProbability' && h.key !== 'totalDays' && h.key !== 'totalBudget' && editProjectForm.get(h.key)?.errors?.['pattern']) { *sono accettati solo numeri positivi o nulli }
             </span>
           }

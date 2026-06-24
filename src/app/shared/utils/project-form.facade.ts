@@ -10,7 +10,6 @@ import {
   calculateProjectTotals, 
   formatEuroCurrency, 
   getDateAfterDays, 
-  getExclusiveDaysDiff, 
   parseIsoDate,
   isProjectRoleComplete,
   isProjectEmployeeComplete,
@@ -18,8 +17,8 @@ import {
   getProjectFormComparableSnapshot,
   createEmptyProjectEmployee,
   createEmptyProjectRole,
-  getProjectFieldPattern
-} from '../utils/project-form.utils';
+  getProjectFieldPattern,
+} from '../utils/project-form.utils'; // Prima c'era anche la funzione getExclusiveDaysDiff per il calcolo dei giorni con la data di inizio e di fine
 
 @Injectable()
 export class ProjectFormFacade {
@@ -41,6 +40,7 @@ export class ProjectFormFacade {
   showAllPmOptions = signal(false);
   pmFilterValue = signal('');
 
+  warningResourceDaysExceeded = signal(false);
   dateRangeError = signal(false);
   hasMadeInlineAssignment = signal(false);
   pendingEmployeeAssignments = new Map<string, Employee>();
@@ -91,40 +91,56 @@ export class ProjectFormFacade {
   }
 
   setupReactiveCalculations(form: FormGroup) {
-    form.get('startDate')?.valueChanges.subscribe(() => this.recalculateDateRange(form));
-    form.get('endDate')?.valueChanges.subscribe(() => this.recalculateDateRange(form));
+    // Logica disattivata: cambiando le date viene ricalcolato automaticamente totalDays.
+    // form.get('startDate')?.valueChanges.subscribe(() => this.recalculateDateRange(form));
+    // form.get('endDate')?.valueChanges.subscribe(() => this.recalculateDateRange(form));
 
-    form.get('totalDays')?.valueChanges.subscribe((days) => {
-      const start = parseIsoDate(form.get('startDate')?.value);
-      const totalDays = Number(days);
+    // Logica disattivata: cambiando totalDays viene ricalcolata automaticamente endDate.
+    // form.get('totalDays')?.valueChanges.subscribe((days) => {
+    //   const start = parseIsoDate(form.get('startDate')?.value);
+    //   const totalDays = Number(days);
+    //
+    //   if (start && Number.isFinite(totalDays) && totalDays > 0) {
+    //     this.dateRangeError.set(false);
+    //     const newEndDate = getDateAfterDays(start, totalDays);
+    //     form.patchValue({ endDate: newEndDate }, { emitEvent: false });
+    //   }
+    // });
 
-      if (start && Number.isFinite(totalDays) && totalDays > 0) {
-        this.dateRangeError.set(false);
-        const newEndDate = getDateAfterDays(start, totalDays);
-        form.patchValue({ endDate: newEndDate }, { emitEvent: false });
-      }
+    (form.get('projectJobRoles') as FormArray).valueChanges.subscribe(() => {
+      this.recalculateTotals(form);
+      this.updateWarningStatus(form);
     });
 
-    (form.get('projectJobRoles') as FormArray).valueChanges.subscribe(() => this.recalculateTotals(form));
-    (form.get('projectEmployees') as FormArray).valueChanges.subscribe(() => this.recalculateTotals(form));
+    (form.get('projectEmployees') as FormArray).valueChanges.subscribe(() => {
+      this.recalculateTotals(form);
+      this.updateWarningStatus(form);
+    });
+
+    form.get('totalDays')?.valueChanges.subscribe(() => {
+      this.updateWarningStatus(form);
+    });
+
+    this.updateWarningStatus(form);
+
   }
 
-  private recalculateDateRange(form: FormGroup) {
-    const start = parseIsoDate(form.get('startDate')?.value);
-    const end = parseIsoDate(form.get('endDate')?.value);
+  // private recalculateDateRange(form: FormGroup) { Logica di ricalcoll del range delle date commentato
+  //   const start = parseIsoDate(form.get('startDate')?.value);
+  //   const end = parseIsoDate(form.get('endDate')?.value);
 
-    if (!start || !end) {
-      this.dateRangeError.set(false);
-      return;
-    }
-    if (end < start) {
-      this.dateRangeError.set(true);
-      return;
-    }
-    this.dateRangeError.set(false);
-    const diff = getExclusiveDaysDiff(start, end);
-    form.patchValue({ totalDays: diff }, { emitEvent: false });
-  }
+  //   if (!start || !end) {
+  //     this.dateRangeError.set(false);
+  //     return;
+  //   }
+  //   if (end < start) {
+  //     this.dateRangeError.set(true);
+  //     return;
+  //   }
+  //   this.dateRangeError.set(false);
+  //   const diff = getExclusiveDaysDiff(start, end);
+  //   form.patchValue({ totalDays: diff }, { emitEvent: false });
+  // }
 
   private recalculateTotals(form: FormGroup) {
     const roles = (form.get('projectJobRoles') as FormArray).getRawValue() || [];
@@ -148,46 +164,55 @@ export class ProjectFormFacade {
   }
 
   handleEmployeeChange(form: FormGroup, index: number) {
-  const projectEmployees = form.get('projectEmployees') as FormArray;
-  const group = projectEmployees.at(index) as FormGroup;
-  const empId = group.get('employeeId')?.value;
+    const projectEmployees = form.get('projectEmployees') as FormArray;
+    const group = projectEmployees.at(index) as FormGroup;
+    const empId = group.get('employeeId')?.value;
 
-  // Cerchiamo la risorsa selezionata direttamente qui nel Facade
-  const emp = this.employeesList().find(e => String(e.id) === String(empId));
+    // Cerchiamo la risorsa selezionata direttamente qui nel Facade
+    const emp = this.employeesList().find(e => String(e.id) === String(empId));
 
-  if (emp) {
-    if (!group.get('jobRole')) group.addControl('jobRole', this.fb.control(null));
-    if (!group.get('jobRoleLevel')) group.addControl('jobRoleLevel', this.fb.control(null));
+    if (emp) {
+      if (!group.get('jobRole')) group.addControl('jobRole', this.fb.control(null));
+      if (!group.get('jobRoleLevel')) group.addControl('jobRoleLevel', this.fb.control(null));
 
-    const resolvedRoleId = this.resolveLookupId(this.jobRolesList(), emp.jobRole);
-    const resolvedLevelId = this.resolveLookupId(this.jobRoleLevelsList(), emp.jobRoleLevel);
+      const resolvedRoleId = this.resolveLookupId(this.jobRolesList(), emp.jobRole);
+      const resolvedLevelId = this.resolveLookupId(this.jobRoleLevelsList(), emp.jobRoleLevel);
 
-    group.patchValue({
-      jobRole: resolvedRoleId,
-      jobRoleLevel: resolvedLevelId
-    }, { emitEvent: false });
+      group.patchValue({
+        jobRole: resolvedRoleId,
+        jobRoleLevel: resolvedLevelId
+      }, { emitEvent: false });
+    }
   }
-}
 
-  isButtonDisabled(form: FormGroup, isSaving: boolean): boolean {
+  updateWarningStatus(form: FormGroup) {
     const projectDays = Number(form.get('totalDays')?.value || 0);
     const roles = (form.get('projectJobRoles') as FormArray).getRawValue() || [];
     const employees = (form.get('projectEmployees') as FormArray).getRawValue() || [];
 
     const totalAllocatedDays = roles.reduce((sum: number, r: any) => sum + Number(r.daysSpent || 0), 0) +
-                               employees.reduce((sum: number, e: any) => sum + Number(e.daysSpent || 0), 0);
+                              employees.reduce((sum: number, e: any) => sum + Number(e.daysSpent || 0), 0);
 
-    const resourceDaysExceeded = totalAllocatedDays > projectDays;
+    this.warningResourceDaysExceeded.set(totalAllocatedDays > projectDays);
+
+  }
+
+  isButtonDisabled(form: FormGroup, isSaving: boolean): boolean {
+    const roles = (form.get('projectJobRoles') as FormArray).getRawValue() || [];
+    const employees = (form.get('projectEmployees') as FormArray).getRawValue() || [];
 
     const isChanged = this.hasMadeInlineAssignment() || 
       getProjectFormComparableSnapshot(form.getRawValue()) !== this.originalFormSnapshot();
 
     const hasValidRoles = roles.length === 0 || roles.every((role: any) => isProjectRoleComplete(role) && !getWinProbabilityError(role));
     const hasValidResources = employees.length === 0 || employees.every((emp: any) => isProjectEmployeeComplete(emp) && !getWinProbabilityError(emp));
+    const start = parseIsoDate(form.get('startDate')?.value);
+    const end = parseIsoDate(form.get('endDate')?.value);
+    const hasInvalidDateRange = !!start && !!end && end < start;
 
     return isSaving || 
            this.dateRangeError() || 
-           resourceDaysExceeded || 
+           hasInvalidDateRange ||
            form.invalid || 
            !hasValidRoles || 
            !hasValidResources || 

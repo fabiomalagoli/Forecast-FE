@@ -169,10 +169,10 @@ export function parseIsoDate(value: string | undefined): Date | null {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-export function getExclusiveDaysDiff(start: Date, end: Date): number {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.floor((end.getTime() - start.getTime()) / msPerDay);
-}
+// export function getExclusiveDaysDiff(start: Date, end: Date): number {
+//   const msPerDay = 24 * 60 * 60 * 1000;
+//   return Math.floor((end.getTime() - start.getTime()) / msPerDay);
+// }
 
 export function getDateAfterDays(start: Date, totalDays: number): string {
   const end = new Date(start);
