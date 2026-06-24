@@ -21,4 +21,8 @@ export class RoleRowComponent {
 
   deleteRole = output<Role>();
   isSelected = input<string | null>(null);
+
+  isUnassignedRole(): boolean {
+    return this.role().name.trim().toLowerCase() === 'unassigned';
+  }
 }

@@ -67,6 +67,11 @@ td {
   }
 }
 
+.btn-action-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .tooltip-container {
   &::after {
     content: attr(data-tooltip);

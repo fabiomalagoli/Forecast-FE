@@ -224,6 +224,10 @@ export class RolesComponent implements OnInit {
     }
 
     onDeleteRole(role: Role): void {
+        if (this.isUnassignedRole(role)) {
+            return;
+        }
+
         const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
         data: {
             name: role.name,
@@ -239,6 +243,10 @@ export class RolesComponent implements OnInit {
             this.onRoleDeleted();
         }
         });
+    }
+
+    private isUnassignedRole(role: Role): boolean {
+        return role.name.trim().toLowerCase() === 'unassigned';
     }
 
     onRoleDeleted(): void {

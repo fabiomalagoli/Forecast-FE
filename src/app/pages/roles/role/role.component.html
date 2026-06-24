@@ -24,7 +24,8 @@
 
   <button class="btn-action-icon btn-remove-single" type="button" 
     (click)="deleteRole.emit(role())"
-    matTooltip="Elimina" 
+    [disabled]="isUnassignedRole()"
+    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non puo essere eliminato' : 'Elimina'"
     matTooltipPosition="above">
     <mat-icon class="action-icon">delete</mat-icon>
   </button>
