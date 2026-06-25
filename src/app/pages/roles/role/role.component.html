@@ -10,7 +10,7 @@
   <button class="btn-action-icon btn-edit" type="button" 
     (click)="editRole.emit(role())"
     [disabled]="isUnassignedRole()"
-    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non puo essere modificato' : 'Modifica'"
+    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non può essere modificato' : 'Modifica'"
     matTooltipPosition="above"
     aria-label="Modifica">
     <mat-icon class="action-icon">edit</mat-icon>
@@ -26,7 +26,7 @@
   <button class="btn-action-icon btn-remove-single" type="button" 
     (click)="deleteRole.emit(role())"
     [disabled]="isUnassignedRole()"
-    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non puo essere eliminato' : 'Elimina'"
+    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non può essere eliminato' : 'Elimina'"
     matTooltipPosition="above">
     <mat-icon class="action-icon">delete</mat-icon>
   </button>
