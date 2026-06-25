@@ -62,7 +62,6 @@ export class CustomersService {
   loadAvailableCustomers() {
     return this.httpClient.get<any[]>(`${environment.apiUrl}/customers`).pipe(
       map(customers => customers.map(c => this.mapToCustomer(c))),
-      tap(customers => this.customers.set(customers)),
       catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
     );
   }

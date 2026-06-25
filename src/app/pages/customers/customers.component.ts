@@ -171,7 +171,8 @@ export class CustomersComponent implements OnInit {
       this.filterNameValue.set('');
     }
 
-    this.loadInitialData();
+    if(this.isInitialLoading()) this.loadInitialData();
+    else this.reloadCustomers();
 
     this.filterCustomerName.valueChanges.pipe(
       debounceTime(300),
