@@ -37,7 +37,8 @@ export class CustomerDetailsComponent {
                     && key !== 'postalCode'
                     && key !== 'city'
                     && key !== 'province'
-                    && key !== 'country')
+                    && key !== 'country'
+                    && key !== 'isEliminated')
     .map(([key, label]) => ({
       key: key as keyof Customer,
       label,
