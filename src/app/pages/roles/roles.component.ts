@@ -430,7 +430,13 @@ export class RolesComponent implements OnInit {
         this.filteredSelectedEmployees.set([]);
     }
 
-    apriModifica(r: Role) { this.editingRole.set(r); }
+    apriModifica(r: Role) {
+        if (this.isUnassignedRole(r)) {
+            return;
+        }
+        this.editingRole.set(r); 
+    }
+    
     chiudiModifica() { this.editingRole.set(null); }
     apriAssegnaRisorse(r: Role) { this.assigningRole.set(r); }
     chiudiAssegnaRisorse() { this.assigningRole.set(null); }

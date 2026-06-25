@@ -9,7 +9,8 @@
   </button>   
   <button class="btn-action-icon btn-edit" type="button" 
     (click)="editRole.emit(role())"
-    matTooltip="Modifica" 
+    [disabled]="isUnassignedRole()"
+    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non puo essere modificato' : 'Modifica'"
     matTooltipPosition="above"
     aria-label="Modifica">
     <mat-icon class="action-icon">edit</mat-icon>
