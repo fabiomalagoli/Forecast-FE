@@ -78,6 +78,16 @@
         </a>
       </li>
 
+      <li class="nav-item">
+        <a class="nav-link text-dark" 
+          [class.active]="activeMenu() === 'Workgroups'" 
+          style="cursor: pointer;" 
+          (click)="onBtnClick('Workgroups')">
+          <img src="workgroup-icon.svg" alt="Workgroups" class="sidebar-icon me-2" />
+          Gruppi di Lavoro
+        </a>
+      </li>
+
   </ul>
 </div>
 
