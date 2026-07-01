@@ -8,7 +8,6 @@ import { ProjectsService } from '../../../../shared/services/projects.service';
 import { RolesService } from '../../../../shared/services/roles.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildUpdateWorkGroupPayload } from '../../../../shared/payloads/workgroup.payloads';
-import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import {
     AssignableEmployee,
     getEmployeeFullName,
@@ -16,7 +15,6 @@ import {
     mapAssignedEmployeesToSelected,
 } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
-import { of } from 'rxjs';
 import { WorkGroup } from '../../../../shared/models/workgroups.model';
 import { WorkGroupsService } from '../../../../shared/services/workgroups.service';
 
@@ -33,7 +31,7 @@ export class AssignEmployeeComponent {
     private projectsService = inject(ProjectsService);
     private rolesService = inject(RolesService);
     private lookupsService = inject(LookupsService);
-    private workGroupsService = inject(WorkGroupsService)
+    private workGroupsService = inject(WorkGroupsService);
     private destroyRef = inject(DestroyRef);
     private initializedState = false;
 
@@ -239,7 +237,6 @@ export class AssignEmployeeComponent {
         if (form.invalid) {
             return;
         }
-
         const selectedEmployees = this.listaRisorseSelezionate();
 
         const selectedGroup = this.selectedWorkGroup();
@@ -252,8 +249,6 @@ export class AssignEmployeeComponent {
             employeeIds: RemainingEmployeesIds
         }, selectedGroupId)
 
-        const updateWorkGroupRequest$ = this.workGroupsService.updateWorkGroup(selectedGroup, workGroupPayload);
-
         // Employees to assign/keep
         const updatedEmployees: Employee[] = selectedEmployees.map((employee) => ({
             ...employee,
@@ -262,106 +257,11 @@ export class AssignEmployeeComponent {
             company: employee.company,
         }));
 
-        // Employees che erano assegnati a un ruolo -> devono essere unassigned ora
-        const currentIds = new Set(selectedEmployees.map(e => e.id));
-        const removedEmployees: Employee[] = this.initialEmployeeState
-            .filter(init => !currentIds.has(init.id))
-            .map(emp => ({ ...emp, jobRole: '', jobRoleLevel: '' }));
-
-        const assignRequests = updatedEmployees.map((employee) =>
-            this.employeesService.updateEmployee(
-                employee.id,
-                buildEmployeePayload(employee, {
-                    selectedRoleId: selectedGroup.id,
-                    levels: this.listaJobRolesLevels(),
-                    companies: this.lookupsService.loadedCompanies(),
-                }),
-                buildEmployeeUiFallback(employee, employee.id),
-            )
-        );
-
-        const allRoles = this.rolesService.loadedAllJobRoles?.() || [];
-        const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
-        let unassignRequests: any[] = [];
-        const projectEmployeeRoleUpdates: { employee: Employee; jobRoleId: string | null | undefined; jobRoleLevelId: string | null }[] = updatedEmployees.map((employee) => ({
-            employee,
-            jobRoleId: selectedGroupId,
-            jobRoleLevelId: this.resolveJobRoleLevelId(employee.jobRoleLevel),
-        }));
-
-        let localOnlyUnassign = false;
-        if (foundUnassigned && foundUnassigned.id) {
-            const unassignedRoleId = foundUnassigned.id;
-            // Use 'Junior' as default level for unassigned
-            unassignRequests = removedEmployees.map(emp => {
-                const empForPayload = { ...emp, jobRoleLevel: 'Junior' } as any;
-                return this.employeesService.updateEmployee(
-                    emp.id,
-                    buildEmployeePayload(empForPayload, {
-                        selectedRoleId: unassignedRoleId,
-                        levels: this.listaJobRolesLevels(),
-                        companies: this.lookupsService.loadedCompanies(),
-                    }),
-                    buildEmployeeUiFallback({ ...emp, jobRole: foundUnassigned.name, jobRoleLevel: 'Junior' }, emp.id),
-                );
-            });
-            removedEmployees.forEach((employee) => {
-                projectEmployeeRoleUpdates.push({
-                    employee: { ...employee, jobRole: foundUnassigned.name, jobRoleLevel: 'Junior' },
-                    jobRoleId: unassignedRoleId,
-                    jobRoleLevelId: this.resolveJobRoleLevelId('Junior'),
-                });
-            });
-        } else {
-            // Nessun 'unassigned' role trovato: applico un unassign locale e mostriamo un messaggio
-            localOnlyUnassign = true;
-            unassignRequests = removedEmployees.map(emp => {
-                const localUpdate = { ...emp, jobRole: '', jobRoleLevel: 'Junior' } as Employee;
-                this.employeesService.updateEmployeeLocal(localUpdate);
-                return of(null);
-            });
-        }
-
-        const allRequests: Observable<any>[] = [...assignRequests, ...unassignRequests, updateWorkGroupRequest$];
-
-        forkJoin(allRequests).subscribe({
+        this.workGroupsService.updateWorkGroup(selectedGroup, workGroupPayload).subscribe({
             next: () => {
-                const projectSyncRequests = projectEmployeeRoleUpdates.map((update) =>
-                    this.projectsService.updateProjectEmployeesForEmployeeRole(
-                        update.employee,
-                        update.jobRoleId,
-                        update.jobRoleLevelId,
-                    )
-                );
-
-                const finalizeSuccess = () => {
-                    this.attemptedSubmit = false;
-                    this.noChangesMessage = false;
-                    if (localOnlyUnassign) {
-                        this.statusMessage = { text: 'Assegnazioni salvate. Alcune rimozioni sono state applicate solo localmente perché il ruolo "Unassigned" non esiste sul server. Crea il ruolo "Unassigned" per persistere le rimozioni.', type: 'success' };
-                    } else {
-                        this.statusMessage = { text: 'Risorse assegnate con successo!', type: 'success' };
-                    }
                     this.saved.emit(updatedEmployees);
                     form.resetForm();
                     this.cancel.emit();
-                };
-
-                if (!projectSyncRequests.length) {
-                    finalizeSuccess();
-                    return;
-                }
-
-                forkJoin(projectSyncRequests).subscribe({
-                    next: finalizeSuccess,
-                    error: (error) => {
-                        this.attemptedSubmit = true;
-                        this.statusMessage = {
-                            text: `Risorse aggiornate, ma errore nella sincronizzazione dei progetti: ${error.message || error}`,
-                            type: 'error',
-                        };
-                    }
-                });
             },
             error: (error: any) => {
                 this.attemptedSubmit = true;

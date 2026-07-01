@@ -48,8 +48,8 @@
                 </div>
 
                 <div class="wg-form-level-box">
-                  <label [for]="toId('wgLevel', $index)">Livello</label>
-                  <select
+                  <label class="level-label" [for]="toId('wgLevel', $index)">Livello</label>
+                  <!-- <select
                     [id]="toId('wgLevel', $index)"
                     [value]="employee.selectedJobRoleLevel"
                     (change)="updateSelectedLevel(employee.id, $any($event.target).value)"
@@ -60,7 +60,8 @@
                         {{ optionName(level) }}
                       </option>
                     }
-                  </select>
+                  </select> PER POSSIBILE IMPLEMENTAZIONE DELLA SCELTA DEL LIVELLO NEL FORM DEI GRUPPI -->
+                  <strong class="level-value">{{ employee.jobRoleLevel || employee.selectedJobRoleLevel || '-' }}</strong>
                 </div>
 
                 <button

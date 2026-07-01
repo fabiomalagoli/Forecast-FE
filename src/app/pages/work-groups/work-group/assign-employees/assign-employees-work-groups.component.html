@@ -29,22 +29,22 @@
                   <small>{{ employee.company }}</small>
                 </div>
 
-                <label class="level-field" [for]="toId('jobRoleLevel', $index)">
-                  Livello
-                  <select
-                    [id]="toId('jobRoleLevel', $index)"
-                    [ngModel]="employee.selectedJobRoleLevel"
-                    [ngModelOptions]="{ standalone: true }"
-                    (ngModelChange)="updateSelectedLevel(employee.id, $event)"
+                <div class="wg-form-level-box">
+                  <label class="level-label" [for]="toId('wgLevel', $index)">Livello</label>
+                  <!-- <select
+                    [id]="toId('wgLevel', $index)"
+                    [value]="employee.selectedJobRoleLevel"
+                    (change)="updateSelectedLevel(employee.id, $any($event.target).value)"
                     required>
-                    <option value="" disabled>Seleziona livello</option>
-                    @for (level of listaJobRolesLevels(); track (level.id || level.Id || level)) {
+                    <option value="" disabled>Seleziona</option>
+                    @for (level of listaJobRolesLevels(); track level) {
                       <option [value]="optionName(level)">
                         {{ optionName(level) }}
                       </option>
                     }
-                  </select>
-                </label>
+                  </select> PER POSSIBILE IMPLEMENTAZIONE DELLA SCELTA DEL LIVELLO NEL FORM DI ASSEGNAMENTO DEI GRUPPI -->
+                  <strong class="level-value">{{ employee.jobRoleLevel || employee.selectedJobRoleLevel || '-' }}</strong>
+                </div>
 
                 <button
                   class="remove-resource"

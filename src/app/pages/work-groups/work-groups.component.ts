@@ -101,9 +101,10 @@ export class WorkGroupsComponent {
         if (!gruppo) return [];
 
         const tutteLeRisorse = this.employeesService.loadedAllEmployees() ?? [];
-            return tutteLeRisorse.filter(risorsa => 
-                risorsa.jobRole === gruppo.id || risorsa.jobRole === gruppo.name
-            );
+        if (!gruppo.employees) return [];
+        
+        const idsAssociati = gruppo.employees.map(e => e.employeeId);
+        return tutteLeRisorse.filter(risorsa => idsAssociati.includes(risorsa.id));
     });
 
     constructor(private router: Router) {
@@ -341,13 +342,22 @@ export class WorkGroupsComponent {
         // }
         // });
         this.workGroupsService.loadAllWorkGroupsTest().pipe(
-        finalize(() => this.isFetching.set(false)),
-        takeUntilDestroyed(this.destroyRef)
+            finalize(() => this.isFetching.set(false)),
+            takeUntilDestroyed(this.destroyRef)
         ).subscribe({
-        error: (err) => {
-            this.error.set(`Errore durante il ricaricamento dei gruppi: ${getHttpErrorStatusMessage(err)}`);
-            this.showNotification('error', NotifyAction.Ricaricamento, 'ruoli');
-        }
+            next: (gruppiAggiornati) => {
+                const idGruppoAperto = this.selectedWorkGroupId();
+                if (idGruppoAperto) {
+                    const gruppoAggiornato = gruppiAggiornati.find(g => g.id === idGruppoAperto);
+                    if (gruppoAggiornato) {
+                        this.selectedWorkGroup.set(gruppoAggiornato); 
+                    }
+                }
+            },
+            error: (err) => {
+                this.error.set(`Errore durante il ricaricamento dei gruppi: ${getHttpErrorStatusMessage(err)}`);
+                this.showNotification('error', NotifyAction.Ricaricamento, 'gruppi');
+            }
         });
     }
 
@@ -498,6 +508,7 @@ export class WorkGroupsComponent {
         this.assigningWorkGroup.set(null);
         this.showNotification('success', NotifyAction.Assegnazione, 'gruppi');
 
+        this.ricaricaGruppi();
         this.employeesService.loadAllEmployees().subscribe({
             error: (err) => {
                 console.error("Errore durante il riallineamento delle gruppi:", err);
