@@ -43,15 +43,15 @@ export class ProjectDetailsComponent {
   unassignedCount = computed(() => this.displayedProjectEmployees().filter(e => (e.jobRole || '').toString().toLowerCase() === 'unassigned').length);
 
   formattedTotalRevenues = computed(() => {
-    return this.formatDecimal(this.projectRecapData()?.totalRevenues);
+    return this.formatDecimal(this.projectRecapData()?.totalRevenues, true);
   });
 
   formattedBudgetWin = computed(() => {
-    return this.formatDecimal(this.projectRecapData()?.budgetWin);
+    return this.formatDecimal(this.projectRecapData()?.budgetWin, true);
   });
 
   formattedBudgetTotale = computed(() => {
-    return this.formatDecimal(this.projectRecapData()?.budgetTotaleRisorsa);
+    return this.formatDecimal(this.projectRecapData()?.budgetTotaleRisorsa, true);
   });
 
   formattedTotalEmployedDays = computed(() => {
@@ -164,8 +164,19 @@ export class ProjectDetailsComponent {
     this.location.back();
   }
 
-  private formatDecimal(value: number | null | undefined): string {
-    return (value ?? 0).toFixed(2);
+  private formatDecimal(value: number | null | undefined, isMonetary = false): string {
+    if (value == null || isNaN(Number(value))) {
+      value = 0;
+    }
+    const standardString = Number(value).toFixed(2);
+    const parts = standardString.split('.');
+    
+    // Applica il punto delle migliaia solo se richiesto
+    if (isMonetary) {
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    
+    return parts.join(',');
   }
 
   private setupDisplayedEmployeesEffect() {

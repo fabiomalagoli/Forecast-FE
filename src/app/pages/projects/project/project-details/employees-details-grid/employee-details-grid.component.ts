@@ -95,9 +95,9 @@ export class ResourceDetailsGridComponent {
   totaleConsuntivate = computed(() => {
     const backendValue = this.recapData()?.totalEmployedDays ?? 0;
     if (this.isEditMode()) {
-      return this.formatDecimal(backendValue + this.deltaDaysFromSnapshot());
+      return this.formatDecimal(backendValue + this.deltaDaysFromSnapshot(), true);
     }
-    return this.formatDecimal(backendValue);
+    return this.formatDecimal(backendValue, true);
   });
 
   isTotalExceeded = computed<boolean>(() => {
@@ -106,21 +106,21 @@ export class ResourceDetailsGridComponent {
 
   budgetTotale = computed(() => {
     const valore = this.recapData()?.budgetTotaleRisorsa ?? 0;
-    return this.formatDecimal(valore);
+    return this.formatDecimal(valore, true);
   });
 
   totaleRicavi = computed(() => {
     const backendValue = this.recapData()?.totalRevenues ?? 0;
     if (this.isEditMode()) {
       const dailyCost = this.resource()?.dailyCost ?? 0;
-      return this.formatDecimal(backendValue + (this.deltaDaysFromSnapshot() * dailyCost));
+      return this.formatDecimal(backendValue + (this.deltaDaysFromSnapshot() * dailyCost), true);
     }
-    return this.formatDecimal(backendValue);
+    return this.formatDecimal(backendValue, true);
   });
 
   budgetWin = computed(() => {
     const valore = this.recapData()?.budgetWin ?? 0;
-    return this.formatDecimal(valore);
+    return this.formatDecimal(valore, true);
   });
 
   deltaValue = computed(() => {
@@ -381,8 +381,19 @@ export class ResourceDetailsGridComponent {
     this.closeDrawer().emit(); // Emissione dell'evento per chiudere il drawer
   }
 
-  private formatDecimal(value: number | null | undefined): string {
-    return (value ?? 0).toFixed(2);
+  private formatDecimal(value: number | null | undefined, isMonetary = false): string {
+    if (value == null || isNaN(Number(value))) {
+      value = 0;
+    }
+    const standardString = Number(value).toFixed(2);
+    const parts = standardString.split('.');
+    
+    // Applica il punto delle migliaia solo se richiesto
+    if (isMonetary) {
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    
+    return parts.join(',');
   }
 
   private parseDayValue(value: unknown): number {
