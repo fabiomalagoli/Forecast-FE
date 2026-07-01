@@ -57,7 +57,7 @@ export class SnackbarService {
                 case NotifyAction.UpdateProject:
                     message = `Errore durante l'aggiornamento di un progetto`;
                     break;
-                case NotifyAction.UpdateRole:
+                case NotifyAction.UpdateWorkGroup:
                     message = `Errore durante l'aggiornamento di un ruolo`;
                     break;
                 case NotifyAction.UpdateClient:
@@ -133,7 +133,7 @@ export class SnackbarService {
             case NotifyAction.UpdateProject:
                 message = `Progetto aggiornato con successo`;
                 break;
-            case NotifyAction.UpdateRole:
+            case NotifyAction.UpdateWorkGroup:
                 message = `Ruolo aggiornato con successo`;
                 break;
             case NotifyAction.UpdateClient:

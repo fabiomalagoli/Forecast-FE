@@ -1,0 +1,38 @@
+<div class="resources-panel">
+  <div class="panel-header">
+    <h3>Risorse Associate</h3>
+  </div>
+
+  @if (risorseAssociateAlGruppo().length === 0) {
+    <div class="empty-state">
+      <p>Nessuna risorsa trovata per questo ruolo.</p>
+    </div>
+  } @else {
+    <div class="table-container-inner">
+      <table class="inner-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Livello</th>
+            <th>Azienda</th>
+            <th class="action-header">Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (resource of risorseAssociateAlGruppo(); track resource.id) {
+            <tr>
+              <td class="font-semibold" (click)="apriDettagliRisorsa(resource)">{{ resource.name }} {{ resource.surname }}</td>
+              <td>
+                <span class="badge">{{ resource.jobRoleLevel || resource.livello || '-' }}</span>
+              </td>
+              <td>{{ resource.company }}</td>
+            <td class="actions-cell">
+              <button appButton class="btn-small btn-outline" (click)="OpenEmployeeEditing(resource)">Modifica</button>
+            </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -418,3 +418,280 @@ select.np-input-direct {
   background-color: #fff3cd; 
   border: 1px solid #ffeeba;
 }
+
+/* STRUTTURA UNIFICATA PER WORK GROUPS (wg-form-) */
+
+.wg-form-assignment-block {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.9fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 10px;
+  border-top: 1px solid $border-light;
+  padding-top: 24px;
+
+  @media (max-width: 780px) {
+    grid-template-columns: 1fr;
+  }
+
+  // Box contenitori (Selezionati e Picker)
+  .wg-form-panel {
+    min-height: 380px;
+    padding: 18px;
+    border: 1px solid $border-light;
+    border-radius: $radius-lg;
+    background: $bg-light;
+    box-sizing: border-box;
+
+    &--selected {
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.01);
+    }
+  }
+
+  // Intestazioni interne ai pannelli
+  .wg-form-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: $text-dark;
+    }
+
+    .wg-form-counter {
+      background: $color-primary;
+      color: $bg-white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      min-width: 20px;
+      text-align: center;
+      border-radius: 10px;
+    }
+  }
+
+  // Lista a scorrimento delle risorse inserite
+  .wg-form-scroll-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .wg-form-resource-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 170px) 32px;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid $border-main;
+    border-radius: $radius-md;
+    background: $bg-white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr 32px;
+    }
+  }
+
+  .wg-form-resource-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      color: $text-dark;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    small {
+      color: $text-light;
+      font-size: 0.78rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .wg-form-level-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: $text-medium;
+    }
+
+    select {
+      height: 32px;
+      padding: 0 8px;
+      font-size: 0.82rem;
+      border: 1px solid $border-main;
+      border-radius: $radius-sm;
+      background: $bg-white;
+      color: $text-dark;
+      cursor: pointer;
+      outline: none;
+
+      &:focus {
+        border-color: $color-primary;
+      }
+    }
+    @media (max-width: 480px) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .wg-form-btn-remove {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    border-radius: $radius-sm;
+    color: $text-muted;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, color 0.2s;
+
+    &:hover {
+      background: $color-error-bg;
+      color: $color-error-text;
+    }
+  }
+
+  // Gestione ricerca e Combo del picker
+  .wg-form-search-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .wg-form-search-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: $text-medium;
+    }
+  }
+
+  .wg-form-combo {
+    position: relative;
+    width: 100%;
+
+    input {
+      width: 100%;
+      height: $input-height;
+      padding: 0 64px 0 12px;
+      border: 1px solid $border-main;
+      border-radius: $radius-md;
+      background: $bg-white;
+      box-sizing: border-box;
+      font: inherit;
+      outline: none;
+      color: $text-dark;
+
+      &:focus {
+        border-color: $color-primary;
+        box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.12);
+      }
+    }
+  }
+
+  // Bottoni di controllo interni alla barra di ricerca
+  .wg-form-combo-clear,
+  .wg-form-combo-trigger {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: transparent;
+    color: $text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    padding: 0;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background: $bg-light;
+      color: $text-dark;
+    }
+  }
+
+  .wg-form-combo-clear { right: 32px; }
+  .wg-form-combo-trigger { right: 4px; }
+
+  // Menù a tendina dei risultati di ricerca
+  .wg-form-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 90;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid $border-main;
+    border-radius: $radius-lg;
+    background: $bg-white;
+    box-shadow: $shadow-menu;
+    padding: 4px 0;
+    box-sizing: border-box;
+  }
+
+  .wg-form-dropdown-item {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background-color: $color-primary-light;
+    }
+
+    .wg-form-emp-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: $text-dark;
+    }
+
+    .wg-form-emp-meta {
+      font-size: 0.76rem;
+      color: $text-light;
+    }
+  }
+
+  .wg-form-empty-state,
+  .wg-form-dropdown-empty {
+    padding: 24px;
+    border: 1px dashed $border-main;
+    border-radius: $radius-lg;
+    color: $text-light;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .wg-form-dropdown-empty {
+    border: none;
+    padding: 16px;
+  }
+}

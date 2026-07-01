@@ -1,0 +1,65 @@
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <div class="np-panel">
+    <h2 class="np-title">Modifica Gruppo</h2>
+
+    @if(workGroupEditForm) {
+      <form class="np-form" [formGroup]="workGroupEditForm" (ngSubmit)="submit()">
+        @for (header of facade.headers; track header.key; let i = $index) {
+          <div class="np-field">
+            <app-text-input>
+              <label class="np-label" [attr.for]="toId(header.key, i)">
+                {{ header.label }}
+              </label>
+              <input
+                class="np-input"
+                type="text"
+                [attr.id]="toId(header.key, i)"
+                [formControlName]="header.key"
+              />
+            </app-text-input>
+
+            @if (statusMessage) {
+              <div class="message message--{{ statusMessage.type }}">
+                {{ statusMessage.text }}
+              </div>
+            }
+
+            @if (noChangesMessage) {
+              <p class="error">Nessuna modifica da salvare.</p>
+            }
+
+            @if (
+              workGroupEditForm.get(header.key)?.invalid &&
+              (workGroupEditForm.get(header.key)?.touched || attemptedSubmit)
+            ) {
+              <p class="error">
+                @if (workGroupEditForm.get(header.key)?.errors?.['required']) {
+                  *{{ facade.getRequiredErrorMessage(header.key) }}
+                }
+              </p>
+            }
+          </div>
+        }
+        
+        @if (workGroupEditForm.valid && !isChanged()) {
+          <div class="info-message">
+            <p>ℹ️ Il gruppo è identico a prima. Modifica il nome per salvare.</p>
+          </div>
+        }
+      
+        <div class="actions">
+          <button 
+            type="submit" 
+            [attr.aria-disabled]="isButtonDisabled"
+            [class.btn--disabled]="isButtonDisabled"
+            (click)="onSubmitClick($event)">
+            Salva modifiche
+          </button>
+          <button type="button" (click)="onCancel()">Annulla</button>
+        </div>
+      </form>
+  }
+  </div>
+</dialog>

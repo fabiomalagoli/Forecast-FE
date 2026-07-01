@@ -1,0 +1,108 @@
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <div class="np-panel">
+    <div class="modal-heading">
+      <h2 class="np-title">Assegna Risorse</h2>
+      <p>Gruppo: <strong>{{ selectedWorkGroup().name }}</strong></p>
+    </div>
+
+    @if (statusMessage) {
+      <div class="message message--{{ statusMessage.type }}">
+        {{ statusMessage.text }}
+      </div>
+    }
+
+    <form class="np-form" #f="ngForm" (ngSubmit)="submit(f)">
+      <div class="assignment-layout">
+        <section class="selected-panel">
+          <div class="section-heading">
+            <h3>Risorse selezionate</h3>
+            <span>{{ listaRisorseSelezionate().length }}</span>
+          </div>
+
+          <div class="selected-list">
+            @for (employee of listaRisorseSelezionate(); track employee.id) {
+              <div class="selected-row">
+                <div class="selected-resource">
+                  <strong>{{ fullName(employee) }}</strong>
+                  <small>{{ employee.company }}</small>
+                </div>
+
+                <label class="level-field" [for]="toId('jobRoleLevel', $index)">
+                  Livello
+                  <select
+                    [id]="toId('jobRoleLevel', $index)"
+                    [ngModel]="employee.selectedJobRoleLevel"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="updateSelectedLevel(employee.id, $event)"
+                    required>
+                    <option value="" disabled>Seleziona livello</option>
+                    @for (level of listaJobRolesLevels(); track (level.id || level.Id || level)) {
+                      <option [value]="optionName(level)">
+                        {{ optionName(level) }}
+                      </option>
+                    }
+                  </select>
+                </label>
+
+                <button
+                  class="remove-resource"
+                  type="button"
+                  aria-label="Rimuovi risorsa"
+                  (click)="removeSelectedResource(employee.id)">
+                  ×
+                </button>
+              </div>
+            } @empty {
+              <div class="empty-selection">
+                Seleziona una o più risorse dalla lista a destra.
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="picker-panel">
+          <div class="section-heading">
+            <h3>Aggiungi risorse</h3>
+          </div>
+
+          <div class="filter-group">
+            <label>Risorsa</label>
+            <div class="combo-field resource-name-filter-combo">
+              <input
+                type="text"
+                [formControl]="filtroNomeRisorsa"
+                placeholder="Cerca per nome..."
+                autocomplete="off"
+                (focus)="onEmployeeFilterFocus()"
+                (input)="onEmployeeFilterInput()">
+              @if (filtroRisorsaValue()) {
+                <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
+              }
+              <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleEmployeeFilterDropdown()">▾</button>
+            </div>
+
+            @if (employeeDropdownOpen()) {
+              <div class="resource-results">
+                @for (employee of nameFilterOptions(); track employee.id) {
+                  <div class="resource-option" role="button" (mousedown)="selectEmployeeFilter(employee)">
+                    <span>{{ fullName(employee) }}</span>
+                    <small>{{ employee.company }} · {{ employee.jobRoleLevel }}</small>
+                  </div>
+                } @empty {
+                  <div class="combo-empty">Nessuna risorsa trovata</div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+
+      <div class="actions">
+        <button type="submit" [disabled]="isSubmitDisabled(f)">Conferma modifiche</button>
+        <button type="button" (click)="onCancel()">Annulla</button>
+      </div>
+    </form>
+  </div>
+</dialog>
