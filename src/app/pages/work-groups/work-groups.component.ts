@@ -9,7 +9,7 @@ import { Employee } from '../../shared/models/employee.model';
 import { WorkGroup } from '../../shared/models/workgroups.model';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { PageEvent } from '@angular/material/paginator';
+import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
@@ -33,7 +33,8 @@ import { AssignEmployeeComponent } from "./work-group/assign-employees/assign-em
     MatProgressSpinnerModule,
     ReactiveFormsModule,
     EditEmployeeForRoleComponent,
-    AssignEmployeeComponent
+    AssignEmployeeComponent,
+    MatPaginatorModule
 ],
   templateUrl: 'work-groups.component.html',
   styleUrl: 'work-groups.component.scss'
@@ -112,15 +113,13 @@ export class WorkGroupsComponent {
         const currentNav = this.router.currentNavigation();
         const previousUrl = currentNav?.previousNavigation?.finalUrl?.toString() || null;
 
-        this.isFromDetails.set(previousUrl?.includes(`/workgroups/`) ?? false);
+        this.isFromDetails.set(previousUrl?.includes(`/risorse/`) ?? false);
 
         if(!this.isFromDetails()) {
             (this.workGroupsService as any).currentFilters = {
                 searchTerm: null as string | null
             };
-            if (typeof (this.workGroupsService as any).clearLastRoleSelected === 'function') {
-                (this.workGroupsService as any).clearLastRoleSelected();
-            }
+            this.workGroupsService.setLastSelectedWorkGroup(null);
         }
 
         effect(() => {
@@ -159,55 +158,31 @@ export class WorkGroupsComponent {
         if(!dataAlreadyLoaded) {
 
           forkJoin({
-              // filteredRoles: this.workGroupsService.loadWorkGroups(this.currentPage(), this.pageSize, this.currentFilters()),
-              allRoles: this.workGroupsService.loadAllWorkGroupsTest(),
-              employees: this.employeesService.loadAllEmployees(),
-              hold: timer(1500) // Aggiunta di un timer per garantire che lo spinner sia visibile per almeno 1.5 secondi
+            filteredGroups: this.workGroupsService.loadWorkGroups(this.currentPage(), this.pageSize, this.currentFilters()),
+            allRoles: this.workGroupsService.loadAllWorkGroups(),
+            employees: this.employeesService.loadAllEmployees(),
+            hold: timer(1500) // Aggiunta di un timer per garantire che lo spinner sia visibile per almeno 1.5 secondi
           }).pipe(
-              finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
-              takeUntilDestroyed(this.destroyRef)
+                finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
+                takeUntilDestroyed(this.destroyRef)
           ).subscribe({
-              next: () => {
-              const meta = this.pagination();
-              if (meta) {
-                  this.currentPage.set(meta.currentPage);
-                  this.pageSize = meta.pageSize;
-              }
-              },
-              error: (err) => {
-              this.error.set(this.buildLoadRolesErrorMessage(err));
-              this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
-                  .onAction().subscribe(() => {
-                  this.loadInitialData(true); // Se clicco su Riprova, riesegue l'intero blocco di caricamento iniziale, inclusa la paginazione. NOTA: Se vuoi mantenere la pagina corrente, modifica la chiamata per ricaricare solo i ruoli, senza resettare la pagina alla prima
-                  });
-              }
+                next: () => this.syncPaginationMeta(),
+                error: (err) => this.handleLoadError(err)
           });
 
         }
         else{
 
           forkJoin({
-              // filteredRoles: this.workGroupsService.loadWorkGroups(this.currentPage(), this.pageSize, this.currentFilters()),
-              allRoles: this.workGroupsService.loadAllWorkGroupsTest(),
-              employees: this.employeesService.loadAllEmployees(),
+            filteredGroups: this.workGroupsService.loadWorkGroups(this.currentPage(), this.pageSize, this.currentFilters()),
+            allRoles: this.workGroupsService.loadAllWorkGroups(),
+            employees: this.employeesService.loadAllEmployees(),
           }).pipe(
               finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
               takeUntilDestroyed(this.destroyRef)
           ).subscribe({
-              next: () => {
-              const meta = this.pagination();
-              if (meta) {
-                  this.currentPage.set(meta.currentPage);
-                  this.pageSize = meta.pageSize;
-              }
-              },
-              error: (err) => {
-              this.error.set(this.buildLoadRolesErrorMessage(err));
-              this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
-                  .onAction().subscribe(() => {
-                  this.loadInitialData(true); // Se clicco su Riprova, riesegue l'intero blocco di caricamento iniziale, inclusa la paginazione. NOTA: Se vuoi mantenere la pagina corrente, modifica la chiamata per ricaricare solo i ruoli, senza resettare la pagina alla prima
-                  });
-              }
+                next: () => this.syncPaginationMeta(),
+                error: (err) => this.handleLoadError(err)
           });
 
         }
@@ -236,8 +211,11 @@ export class WorkGroupsComponent {
             distinctUntilChanged(),
             takeUntilDestroyed(this.destroyRef)
             ).subscribe(value => {
-            this.filterNameValue.set(value?.toLowerCase() || '');
-            this.showAllWorkGroupOptions.set(false);
+                const term = value?.trim() || '';
+                this.filterNameValue.set(value?.toLowerCase() || '');
+                this.showAllWorkGroupOptions.set(false);
+                this.currentFilters.update(filters => ({ ...filters, searchTerm: term || null }));
+                (this.workGroupsService as any).currentFilters = { searchTerm: term || null };
         });
 
         const gruppoSalvato = this.workGroupsService.lastWorkGroupSelected();
@@ -249,10 +227,10 @@ export class WorkGroupsComponent {
         }
     }
 
-    // onPageChange(event: PageEvent) {
-    //     this.pageSize = event.pageSize;
-    //     this.caricaPagina(event.pageIndex + 1);
-    // }
+    onPageChange(event: PageEvent) {
+        this.pageSize = event.pageSize;
+        this.caricaPagina(event.pageIndex + 1);
+    }
 
     onDeleteWorkGroup(workGroup: WorkGroup): void {
         const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
@@ -288,7 +266,7 @@ export class WorkGroupsComponent {
         ).subscribe({
         next: () => {
             this.snackbarService.success(NotifyAction.Eliminazione, 'ruoli');
-            // this.caricaPagina(this.currentPage());
+            this.caricaPagina(this.currentPage());
         },
         error: () => {
             this.snackbarService.error(NotifyAction.Eliminazione, 'gruppo', 'Chiudi');
@@ -296,52 +274,44 @@ export class WorkGroupsComponent {
         })
     }
 
-    // TO-DO: Implementazione lato backend dell'impaginazione dei gruppi di lavoro
-    // caricaPagina(page: number, forceInitialSpinner = false) {
-    //     this.isFetching.set(true);
-    //     this.isInitialLoading.set(forceInitialSpinner);
-    //     this.currentPage.set(page);
-    //     this.error.set(null); 
+    caricaPagina(page: number, forceInitialSpinner = false) {
+        this.isFetching.set(true);
+        this.isInitialLoading.set(forceInitialSpinner);
+        this.currentPage.set(page);
+        this.error.set(null); 
 
-    //     this.workGroupsService.loadJobRoles(page, this.pageSize, this.currentFilters()).pipe(
-    //         finalize(() => {
-    //             this.isFetching.set(false);
-    //             this.isInitialLoading.set(false);
-    //         }),
-    //         takeUntilDestroyed(this.destroyRef)
-    //         ).subscribe({
-    //         next: () => {
-    //             const meta = this.pagination();
-    //             if (meta) {
-    //             this.currentPage.set(meta.currentPage);
-    //             this.pageSize = meta.pageSize;
-    //             }
-    //         },
-    //         error: (err) => {
-    //             this.error.set(this.buildLoadRolesErrorMessage(err));
-    //             // Chiamata diretta al servizio con opzione "Riprova" configurata nell'azione della snackbar
-    //             this.snackbarService.error(NotifyAction.Caricamento, 'ruoli', 'Riprova')
-    //             .onAction().subscribe(() => {
-    //                 this.caricaPagina(page, true);
-    //             });
-    //         },
-    //     });
-    // }
+        this.workGroupsService.loadWorkGroups(page, this.pageSize, this.currentFilters()).pipe(
+            finalize(() => {
+                this.isFetching.set(false);
+                this.isInitialLoading.set(false);
+            }),
+            takeUntilDestroyed(this.destroyRef)
+            ).subscribe({
+            next: () => this.syncPaginationMeta(),
+            error: (err) => {
+                this.error.set(this.buildLoadRolesErrorMessage(err));
+                // Chiamata diretta al servizio con opzione "Riprova" configurata nell'azione della snackbar
+                this.snackbarService.error(NotifyAction.Caricamento, 'ruoli', 'Riprova')
+                .onAction().subscribe(() => {
+                    this.caricaPagina(page, true);
+                });
+            },
+        });
+    }
 
     ricaricaGruppi() {
         this.isFetching.set(true);
         this.error.set(null);
-        // TO-DO: Implementazione impaginazione lato backend
-        // this.workGroupsService.loadJobRoles(1, this.pageSize, this.currentFilters()).pipe(
-        // finalize(() => this.isFetching.set(false)),
-        // takeUntilDestroyed(this.destroyRef)
-        // ).subscribe({
-        // error: (err) => {
-        //     this.error.set(`Errore durante il ricaricamento dei ruoli: ${getHttpErrorStatusMessage(err)}`);
-        //     this.showNotification('error', NotifyAction.Ricaricamento, 'ruoli');
-        // }
-        // });
-        this.workGroupsService.loadAllWorkGroupsTest().pipe(
+        this.workGroupsService.loadWorkGroups(1, this.pageSize, this.currentFilters()).pipe(
+        finalize(() => this.isFetching.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+        error: (err) => {
+            this.error.set(`Errore durante il ricaricamento dei ruoli: ${getHttpErrorStatusMessage(err)}`);
+            this.showNotification('error', NotifyAction.Ricaricamento, 'ruoli');
+        }
+        });
+        this.workGroupsService.loadAllWorkGroups().pipe(
             finalize(() => this.isFetching.set(false)),
             takeUntilDestroyed(this.destroyRef)
         ).subscribe({
@@ -361,26 +331,38 @@ export class WorkGroupsComponent {
         });
     }
 
-    // TO-DO
-    // aggiornaRuoli() {
-    //     this.isFetching.set(true);
-    //     this.error.set(null);
+    aggiornaRuoli() {
+        this.isFetching.set(true);
+        this.error.set(null);
         
-    //     // RxJS si occupa di gestire l'attesa di 3 secondi prima di far partire la chiamata
-    //     timer(3000).pipe(
-    //     switchMap(() => this.workGroupsService.loadJobRoles(1, this.pageSize, this.currentFilters())),
-    //     finalize(() => this.isFetching.set(false)),
-    //     takeUntilDestroyed(this.destroyRef)
-    //     ).subscribe({
-    //     error: (error: Error) => {
-    //         this.error.set(`Errore durante l'aggiornamento dei ruoli: ${getHttpErrorStatusMessage(error)}`);
-    //         this.snackbarService.error(NotifyAction.Ricaricamento, 'ruoli', 'Riprova')
-    //         .onAction().subscribe(() => {
-    //             this.aggiornaRuoli();
-    //         });
-    //     },
-    //     });
-    // }
+        // RxJS si occupa di gestire l'attesa di 3 secondi prima di far partire la chiamata
+        timer(3000).pipe(
+        switchMap(() => this.workGroupsService.loadWorkGroups(1, this.pageSize, this.currentFilters())),
+        finalize(() => this.isFetching.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+        error: (error: Error) => {
+            this.error.set(`Errore durante l'aggiornamento dei ruoli: ${getHttpErrorStatusMessage(error)}`);
+            this.snackbarService.error(NotifyAction.Ricaricamento, 'ruoli', 'Riprova')
+            .onAction().subscribe(() => {
+                this.aggiornaRuoli();
+            });
+        },
+        });
+    }
+
+    private syncPaginationMeta() {
+        const meta = this.pagination();
+        if (meta) {
+            this.currentPage.set(meta.currentPage);
+            this.pageSize = meta.pageSize;
+        }
+    }
+    private handleLoadError(err: any) {
+        this.error.set(this.buildLoadRolesErrorMessage(err));
+        this.snackbarService.error(NotifyAction.Caricamento, 'dati iniziali', 'Riprova')
+            .onAction().subscribe(() => this.loadInitialData(true));
+    }
 
     safeEditingEmployee() {
         this.editingEmployee.set(null);
@@ -395,6 +377,8 @@ export class WorkGroupsComponent {
         this.selectedWorkGroupId.set(gruppo.id);
         this.selectedWorkGroup.set(gruppo);
         
+        this.workGroupsService.setLastSelectedWorkGroup(gruppo);
+
         const tutteLeRisorse = this.employeesService.loadedAllEmployees() ?? [];
         
         if (gruppo.employees) {
@@ -441,7 +425,7 @@ export class WorkGroupsComponent {
 
         this.currentFilters.update(filters => ({ ...filters, searchTerm: groupName }));
         (this.workGroupsService as any).currentFilters = { searchTerm: groupName }; // Salva il filtro di ricerca direttamente nel servizio per poterlo recuperare in caso di navigazione lontano dalla pagina e ritorno
-        // this.caricaPagina(1); // Ricarica la prima pagina con il nuovo filtro
+        this.caricaPagina(1); // Ricarica la prima pagina con il nuovo filtro
 
         this.workGroupFilterDropdownOpen.set(false);
         this.showAllWorkGroupOptions.set(false);
@@ -454,7 +438,7 @@ export class WorkGroupsComponent {
 
         this.currentFilters.update(filters => ({ ...filters, searchTerm: null }));
         (this.workGroupsService as any).currentFilters = { searchTerm: null }; // Rimuove il filtro di ricerca salvato nel servizio
-        // this.caricaPagina(1); // Ricarica la prima pagina senza il filtro
+        this.caricaPagina(1); // Ricarica la prima pagina senza il filtro
 
         this.workGroupFilterDropdownOpen.set(false);
         this.showAllWorkGroupOptions.set(false);
@@ -466,7 +450,7 @@ export class WorkGroupsComponent {
         this.showNotification('success', NotifyAction.AddRole);
         // this.caricaPagina(1);
         forkJoin({
-          groups: this.workGroupsService.loadAllWorkGroupsTest(),
+          groups: this.workGroupsService.loadAllWorkGroups(),
           employees: this.employeesService.loadAllEmployees()
         }).subscribe({
           next: () => {

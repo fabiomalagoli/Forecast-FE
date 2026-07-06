@@ -73,7 +73,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                @for (r of listAllWorkGroups(); track r.id) { 
+                @for (r of workGroups(); track r.id) { 
                     <tr
                       app-work-group-row
                       [workGroup]="r"
@@ -107,14 +107,14 @@
       </div>
     }
 
-  <!-- <mat-paginator
+  <mat-paginator
       [length]="pagination()?.totalCount || 0"
       [pageSize]="pageSize"
       [pageIndex]="currentPage() - 1"
       [pageSizeOptions]="[5, 10, 20, 50]"
       [showFirstLastButtons]="true"
-      (page) = "onPageChange($event)">
-  </mat-paginator> PER FUTURA IMPAGINAZIONE DEI GRUPPI -->
+      (page)="onPageChange($event)">
+  </mat-paginator> 
 
   @if(isAddingWorkGroupState()) {
       <app-new-work-group

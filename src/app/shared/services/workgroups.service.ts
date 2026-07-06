@@ -1,7 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, map, tap, throwError, of } from 'rxjs';
-import { CreateRoleRequest, Role } from '../models/role.model';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
@@ -36,7 +35,7 @@ export class WorkGroupsService {
 
     // --- WORK GROUPS ---
     loadWorkGroups(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
-        let url = `${environment.apiUrl}/jobroles/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+        let url = `${environment.apiUrl}/groups?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
         let params = new HttpParams();
         if (filters?.searchTerm) {
@@ -64,21 +63,10 @@ export class WorkGroupsService {
     }
 
     loadAllWorkGroups() {
-        return this.httpClient.get<any[]>(`${environment.apiUrl}/jobroles?PageNumber=1&PageSize=1000`, { observe: 'response' }).pipe(
-            tap(response => {
-            const roles = (response.body || []).map(r => this.mapToWorkGroup(r));
-            this.allWorkGroups.set(roles);
-            }),
-            map(response => (response.body || []).map(r => this.mapToWorkGroup(r))),
-        );
-    }
-
-    loadAllWorkGroupsTest() {
         return this.httpClient.get<any[]>(`${environment.apiUrl}/groups`, { observe: 'response' }).pipe(
             tap(response => {
             const workGroups = (response.body || []).map(r => this.mapToWorkGroup(r));
             this.allWorkGroups.set(workGroups);
-            this.workGroups.set(workGroups);
             }),
             map(response => (response.body || []).map(r => this.mapToWorkGroup(r))),
         );
@@ -106,8 +94,8 @@ export class WorkGroupsService {
             this.allWorkGroups.update(prev => prev.map(r => r.id === workGroup.id ? { ...r, ...workGroup } : r));
             }),
             catchError(error => {
-            this.errorService.showError('Errore durante l\'aggiornamento del ruolo.');
-            return throwError(() => buildEntityError(error, 'ruolo', 'aggiornamento'));
+            this.errorService.showError('Errore durante l\'aggiornamento del gruppo.');
+            return throwError(() => buildEntityError(error, 'gruppo', 'aggiornamento'));
             })
         );
     }
