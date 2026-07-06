@@ -55,8 +55,8 @@ export class WorkGroupsService {
                 hasNext: data.HasNext
                 });
             }
-            const roles = (response.body || []).map(r => this.mapToWorkGroup(r));
-            this.workGroups.set(roles);
+            const groups = (response.body || []).map(r => this.mapToWorkGroup(r));
+            this.workGroups.set(groups);
             }),
             map(response => (response.body || []).map(r => this.mapToWorkGroup(r))),
         );
@@ -65,8 +65,8 @@ export class WorkGroupsService {
     loadAllWorkGroups() {
         return this.httpClient.get<any[]>(`${environment.apiUrl}/groups`, { observe: 'response' }).pipe(
             tap(response => {
-            const workGroups = (response.body || []).map(r => this.mapToWorkGroup(r));
-            this.allWorkGroups.set(workGroups);
+            const groups = (response.body || []).map(r => this.mapToWorkGroup(r));
+            this.allWorkGroups.set(groups);
             }),
             map(response => (response.body || []).map(r => this.mapToWorkGroup(r))),
         );
