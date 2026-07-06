@@ -38,8 +38,6 @@ export class WorkGroupResourcesComponent {
 
     editEmployee = output<Employee>();
 
-    // risorsaInModifica = signal<Employee | null>(null);
-
     risorsaPerDettaglio = signal<Employee | null>(null);
 
     constructor() {

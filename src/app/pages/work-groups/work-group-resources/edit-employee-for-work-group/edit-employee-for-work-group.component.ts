@@ -1,4 +1,4 @@
-import { Component, input, output, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, input, output, HostListener, inject, signal, effect } from '@angular/core';
 import { TextInputComponent } from '../../../../shared/text-input/text-input.component';
 import { FormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -6,7 +6,6 @@ import { Employee } from '../../../../shared/models/employee.model';
 import { EMPLOYEES_HEADERS_FORM } from '../../../employees/employee.headers';
 import { forkJoin } from 'rxjs';
 import { EmployeesService } from '../../../../shared/services/employees.service';
-import { WorkGroupsService } from '../../../../shared/services/workgroups.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import { normalizeEmployeeForForm } from '../../../../shared/utils/employee-form.utils';
@@ -21,7 +20,6 @@ import { RolesService } from '../../../../shared/services/roles.service';
 export class EditEmployeeForRoleComponent {
 
     private employeesService = inject(EmployeesService);
-    private workGroupsService = inject(WorkGroupsService);
     private rolesService = inject(RolesService)
     private lookupsService = inject(LookupsService);
     risorsaDaModificare = input.required<Employee | null>();
@@ -43,7 +41,6 @@ export class EditEmployeeForRoleComponent {
     jobRoleDropdownOpen = signal(false);
     showAllJobRoles = signal(false);
 
-    // Variabile per memorizzare i dati originali del cliente, utile per verificare se ci sono state modifiche
     private OriginalData: string = '';
 
     // Headers dinamici basati su RISORSE_HEADERS, escludendo campi non editabili come 'id'
@@ -52,18 +49,22 @@ export class EditEmployeeForRoleComponent {
     .map(([key, label]) => ({ key, label }));
 
     ngOnInit() {
-        const caricamenti = [
-            this.rolesService.loadAllJobRoles(),
-            this.rolesService.loadJobRoleLevels(),
-            this.lookupsService.loadAvailableCompanies()
-        ];
-
-        forkJoin(caricamenti).subscribe(risultati => {
-            this.listaJobRoles.set(risultati[0]);
-            this.listaJobRoleLevels.set(risultati[1]);
-            this.listaAziende.set(risultati[2]);
-        }, error => {
-            this.statusMessage = { text: 'Errore durante il caricamento dei dati: ' + error.message, type: 'error' };
+        forkJoin({
+            roles: this.rolesService.loadAllJobRoles(),
+            levels: this.rolesService.loadJobRoleLevels(),
+            companies: this.lookupsService.loadAvailableCompanies()
+        }).subscribe({
+            next: ({ roles, levels, companies }) => {
+                this.listaJobRoles.set(roles);
+                this.listaJobRoleLevels.set(levels);
+                this.listaAziende.set(companies);
+            },
+            error: (error) => {
+                this.statusMessage = { 
+                    text: 'Errore durante il caricamento dei dati: ' + error.message, 
+                    type: 'error' 
+                };
+            }
         });
 
         this.formData = {
@@ -73,53 +74,17 @@ export class EditEmployeeForRoleComponent {
         this.OriginalData = JSON.stringify(this.formData);
     }
 
-        // Reagiamo ai cambiamenti dell'input `risorsaDaModificare` (può arrivare dopo l'inizializzazione)
-        private syncRisorsa = effect(() => {
-            const r = this.risorsaDaModificare();
-            if (!r) return;
-            // normalizziamo i campi per essere sicuri che `formData` contenga le chiavi usate nei `headers`
-            this.baseData = JSON.parse(JSON.stringify(r));
-            const normalized = normalizeEmployeeForForm(this.baseData);
-            console.log('Modifica: risorsa ricevuta per edit:', r, '-> normalizzata:', normalized);
-            this.formData = { ...normalized };
-            this.OriginalData = JSON.stringify(this.formData);
-        });
-
-    // private parseIndirizzo(fullAddress : string){
-    //     if(!fullAddress) return {};
-
-    //     const parts = fullAddress.split(',');
-
-    //     const address = parts[0]?.trim();
-    //     const province = parts[2]?.trim();
-    //     const country = parts[3]?.trim();
-
-    //     let streetNumber = '';
-    //     let postalCode = '';
-    //     let city = '';
-
-    //     if(parts[1]) {
-    //         const middleParts = parts[1].split('-');
-
-    //         streetNumber = middleParts[0]?.trim();
-
-    //         if(middleParts[1]) {
-    //             const postaCodeAndCity = middleParts[1].trim();
-    //             postalCode = postaCodeAndCity.substring(0,5);
-    //             city = postaCodeAndCity.substring(5).trim();
-    //         }
-    //     }
-
-    //     return {
-    //         address,
-    //         streetNumber,
-    //         postalCode,
-    //         city,
-    //         province,
-    //         country,
-    //     };
-
-     // }
+    // Reagiamo ai cambiamenti dell'input `risorsaDaModificare` (può arrivare dopo l'inizializzazione)
+    private syncRisorsa = effect(() => {
+        const r = this.risorsaDaModificare();
+        if (!r) return;
+        // normalizziamo i campi per essere sicuri che `formData` contenga le chiavi usate nei `headers`
+        this.baseData = JSON.parse(JSON.stringify(r));
+        const normalized = normalizeEmployeeForForm(this.baseData);
+        console.log('Modifica: risorsa ricevuta per edit:', r, '-> normalizzata:', normalized);
+        this.formData = { ...normalized };
+        this.OriginalData = JSON.stringify(this.formData);
+    });
 
     getOptions(key: string): any[] {
         switch (key) {
@@ -199,7 +164,7 @@ export class EditEmployeeForRoleComponent {
                 this.modified.emit(uiFallback);
                 form.resetForm();
                 this.formData = {};
-                // Chiudi il dialogo dopo il successo
+                // Chiudi il form dopo il successo
                 this.cancel.emit();
             },
             error: (error: any) => {
@@ -225,7 +190,7 @@ export class EditEmployeeForRoleComponent {
         this.cancel.emit();
     }
     
-    //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali.
+    //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali
     toId(key: string, i: number): string {
     return toElementId('employee', key, i);
     }
@@ -234,47 +199,12 @@ export class EditEmployeeForRoleComponent {
         return key === 'name' || key === 'surname' || key === 'jobRole' || key === 'jobRoleLevel' || key === 'company';
     }
 
-    // getMaxLength(key: string): number | null {
-    //     const limits: Record<string, number> = {
-    //         vatNumber: 20,
-    //         name: 60,
-    //         address: 200,
-    //         streetNumber: 10,
-    //         postalCode: 10,
-    //         city: 60,
-    //         province: 10,
-    //         country: 60
-    //     };
-    //     return limits[key] || null;
-    // }
-
-    // isNumericField(key: string): boolean {
-    //     return key === 'projects';
-    // }
-
     getRequiredErrorMessage(key: string): string {
         const messages: Record<string, string> = {
             name: 'Nome obbligatorio'
         };
         return messages[key] || 'Campo obbligatorio';
     }
-
-    // getMaxLengthErrorMessage(key: string): string {
-    //     const maxLength = this.getMaxLength(key);
-    //     if (!maxLength) return 'Lunghezza massima superata';
-        
-    //     const messages: Record<string, string> = {
-    //         vatNumber: `Massimo ${maxLength} caratteri per Partita IVA`,
-    //         name: `Massimo ${maxLength} caratteri per Nome`,
-    //         address: `Massimo ${maxLength} caratteri per Indirizzo`,
-    //         streetNumber: `Massimo ${maxLength} caratteri per Civico`,
-    //         postalCode: `Massimo ${maxLength} caratteri per CAP`,
-    //         city: `Massimo ${maxLength} caratteri per Città`,
-    //         province: `Massimo ${maxLength} caratteri per Provincia`,
-    //         country: `Massimo ${maxLength} caratteri per Paese`
-    //     };
-    //     return messages[key] || `Massimo ${maxLength} caratteri`;
-    // }
 
     onSubmitClick(form: NgForm, event: Event) {
 
@@ -294,5 +224,15 @@ export class EditEmployeeForRoleComponent {
         this.attemptedSubmit = false;
         this.noChangesMessage = false;
         this.statusMessage = null;
+    }
+
+    @HostListener('document:mousedown', ['$event'])
+    onDocumentMouseDown(event: MouseEvent) {
+        const target = event.target as Element | null;
+        
+        if (this.jobRoleDropdownOpen() && !target?.closest('.job-role-combo')) {
+            this.jobRoleDropdownOpen.set(false);
+            this.showAllJobRoles.set(false);
+        }
     }
 }

@@ -74,7 +74,7 @@ export class ModificaWorkGroupComponent {
         this.workGroupEditForm.valueChanges.subscribe(() => this.resetMessages());
       }
     });
-  } 
+  }
 
   ngOnInit() {
     this.isLoadingLookups.set(true);
@@ -100,7 +100,7 @@ export class ModificaWorkGroupComponent {
     });
   }
 
-isChanged(): boolean {
+  isChanged(): boolean {
     const nameChanged = this.facade.isChanged(this.workGroupEditForm, this.originalNameSnapshot);
     
     const currentList = this.listaRisorseSelezionate();

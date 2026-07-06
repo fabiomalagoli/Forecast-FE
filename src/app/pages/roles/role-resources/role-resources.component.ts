@@ -37,8 +37,6 @@ export class RoleResourcesComponent {
 
     editEmployee = output<Employee>();
 
-    // risorsaInModifica = signal<Employee | null>(null);
-
     risorsaPerDettaglio = signal<Employee | null>(null);
 
     constructor() {
@@ -90,7 +88,6 @@ export class RoleResourcesComponent {
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
-                // this.risorsaInModifica.set(null);
                 this.statusMessage.set({text: 'Risorsa modificata con successo!', type: 'success'});
             },
             error: (err) => {
@@ -107,16 +104,6 @@ export class RoleResourcesComponent {
     OpenEmployeeEditing(risorsa: Employee) {
         this.editEmployee.emit(risorsa);
     }
-
-    // closeEmployeeEditing() {
-    //     this.risorsaInModifica.set(null); // Nasconde l' @if nel template
-    // }
-
-    // saveEdits() {
-    //     this.reloadEmployeesforRoleSelected();
-    //     this.closeEmployeeEditing();
-    //     this.showNotification('Modifiche salvate correttamente!', 'success');
-    // }
 
     showNotification(text: string, type: 'success' | 'error') {
         this.statusMessage.set({ text, type });

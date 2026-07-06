@@ -55,7 +55,6 @@ export class NewWorkGroupComponent implements OnInit {
 
   nameFilterOptions = computed<Employee[]>(() => {
     const term = this.showAllEmployeeOptions() ? '' : this.filtroRisorsaValue();
-    const employees = this.listaTotaleRisorse(); // Fallback se digitato male: listaTotaleRisorse
     const available = this.listaTotaleRisorse().filter(
       emp => !this.listaRisorseSelezionate().some(sel => sel.id === emp.id)
     );

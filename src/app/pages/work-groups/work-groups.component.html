@@ -26,21 +26,21 @@
       <button
         class="combo-toggle"
         type="button"
-        aria-label="Apri lista ruoli"
+        aria-label="Apri lista gruppi"
         (click)="toggleWorkGroupFilterDropdown()">
         ▾
       </button>
       @if (workGroupFilterDropdownOpen()) {
         <div class="combo-menu">
-          @for (role of workGroupFilterOptions(); track role.id) {
+          @for (group of workGroupFilterOptions(); track group.id) {
             <button
               class="combo-option"
               type="button"
-              (mousedown)="selectWorkGroupFilter(role)">
-              {{ role.name }}
+              (mousedown)="selectWorkGroupFilter(group)">
+              {{ group.name }}
             </button>
           } @empty {
-            <div class="combo-empty">Nessun ruolo trovato</div>
+            <div class="combo-empty">Nessun gruppo trovato</div>
           }
         </div>
       }
@@ -57,13 +57,13 @@
     <p>{{ error() }}</p>
   </div>
 } @else {
-  <!-- Stato Normale di visualizzazione della tabella dei Ruoli -->
+  <!-- Stato Normale di visualizzazione della tabella dei Gruppi -->
     @if (statusMessage()) {
       <div class="notification" [class]="statusMessage()?.type">
         {{ statusMessage()?.text }}
       </div>
     }
-    <div class="roles-layout">       
+    <div class="work-groups-layout">       
         <div class="table-container">
             <table>
                 <thead>
@@ -78,7 +78,7 @@
                       app-work-group-row
                       [workGroup]="r"
                       [selected]="selectedWorkGroupId() === r.id"
-                      [class.active-role-highlight]="selectedWorkGroupId() === r.id"
+                      [class.active-workgroup-highlight]="selectedWorkGroupId() === r.id"
                       (showResources)="mostraRisorsePerGruppo($event)"
                       (editWorkGroup)="apriModifica($event)"
                       (assignResourcesToGroups)="apriAssegnaRisorse($event)"
@@ -97,10 +97,8 @@
       <div class="drawer-overlay" (click)="closeSidePanel()"></div>
 
       <div class="drawer-panel">
-        <!-- Il tasto di chiusura ereditato dallo stile del progetto -->
         <button class="drawer-close-btn" (click)="closeSidePanel()">×</button>
         
-        <!-- Stesso identico component e dati di prima -->
         <app-work-group-resources 
           [risorseAssociateAlGruppo]="filteredSelectedEmployees()"
           [gruppoSelezionato]="selectedWorkGroup()"
@@ -116,7 +114,7 @@
       [pageSizeOptions]="[5, 10, 20, 50]"
       [showFirstLastButtons]="true"
       (page) = "onPageChange($event)">
-  </mat-paginator> -->
+  </mat-paginator> PER FUTURA IMPAGINAZIONE DEI GRUPPI -->
 
   @if(isAddingWorkGroupState()) {
       <app-new-work-group

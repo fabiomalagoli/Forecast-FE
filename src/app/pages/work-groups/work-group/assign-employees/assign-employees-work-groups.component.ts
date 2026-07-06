@@ -47,11 +47,8 @@ export class AssignEmployeeComponent {
 
 
     filtroNomeRisorsa = new FormControl('');
-    // filtroLivello = new FormControl('');
     filtroRisorsaValue = signal('');
-    // filtroLivelloValue = signal('');
     showAllEmployeeOptions = signal(false);
-    // showAllLevelOptions = signal(false);
     employeeDropdownOpen = signal(false);
 
     fullName(employee: Employee): string {
@@ -211,10 +208,9 @@ export class AssignEmployeeComponent {
     }
 
     isSubmitDisabled(form: NgForm): boolean {
-        // Disable when loading or invalid or resources invalid or when there are no actual changes
+        // Disabilita il submit se il form è invalido, se i lookup sono in caricamento o se le risorse non sono complete
         if (this.isLoadingLookups() || form.invalid || !this.hasValidResources()) return true;
-
-        // Allow submit when there are changes even if selection is empty (unassigning all)
+        // Permetti il submit solo se ci sono cambiamenti rispetto allo stato iniziale
         return !this.isChanged();
     }
 
@@ -249,7 +245,7 @@ export class AssignEmployeeComponent {
             employeeIds: RemainingEmployeesIds
         }, selectedGroupId)
 
-        // Employees to assign/keep
+        // Employees da aggiornare localmente con i nuovi valori di jobRole e jobRoleLevel ed assegnare
         const updatedEmployees: Employee[] = selectedEmployees.map((employee) => ({
             ...employee,
             jobRole: selectedGroup.name,
@@ -356,18 +352,6 @@ export class AssignEmployeeComponent {
 
     optionName(option: any): string {
         return option?.name || option?.Name || option || '';
-    }
-
-    private resolveJobRoleLevelId(levelName: string | null | undefined): string | null {
-        if (!levelName) return null;
-
-        const normalizedLevel = levelName.trim().toLowerCase();
-        const level = this.listaJobRolesLevels().find((item) =>
-            String(item.id || item.Id) === levelName ||
-            String(item.name || item.Name || '').trim().toLowerCase() === normalizedLevel
-        );
-
-        return level ? (level.id || level.Id) : null;
     }
 
     @HostListener('document:mousedown', ['$event'])
