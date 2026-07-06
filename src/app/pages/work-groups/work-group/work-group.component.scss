@@ -1,0 +1,126 @@
+@use 'variables' as *;
+
+tr[app-work-group-row] {
+  border-bottom: 1px solid $border-filter-light;
+  transition: $transition-base;
+
+  &:hover {
+    background-color: $bg-app-shell;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+tr.active-workgroup-highlight td {
+  background-color: $color-primary-lighter !important;
+
+  &:first-child {
+    border-left: 4px solid $color-primary !important;
+  }
+}
+
+td {
+  padding: 1rem 0.875rem;
+  color: $text-filter-medium;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.workgroup-name {
+  font-weight: 700;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.bold-icon {
+  font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: $border-hover; 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+  position: relative;
+  border-radius: 50%;
+
+  &:hover {
+    color: $text-medium;
+    background-color: $bg-hover;
+  }
+}
+
+.btn-action-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.tooltip-container {
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    background-color: $bg-tooltip;
+    color: white;
+    padding: 6px 12px;
+    border-radius: $radius-md;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: $transition-bounce;
+    box-shadow: $shadow-md;
+    z-index: 100;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    border-width: 6px 5px 0 5px;
+    border-style: solid;
+    border-color: $bg-tooltip transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: $transition-bounce;
+    z-index: 100;
+  }
+
+  &:hover {
+    &::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-8px);
+    }
+
+    &::before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-2px);
+    }
+  }
+}

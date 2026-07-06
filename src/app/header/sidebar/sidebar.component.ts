@@ -33,6 +33,7 @@ export class SidebarComponent {
     if (url.includes('/progetti')) return 'Progetti';
     if (url.includes('/ruoli')) return 'Ruoli';
     if (url.includes('/risorse')) return 'Risorse';
+    if (url.includes('/workgroups')) return 'Workgroups'
     return 'Home';
   }
   onBtnClick(id: string) {

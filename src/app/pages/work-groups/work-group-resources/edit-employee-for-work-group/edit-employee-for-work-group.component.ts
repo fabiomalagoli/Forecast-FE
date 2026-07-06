@@ -1,4 +1,4 @@
-import { Component, input, output, OnInit, inject, signal, effect, HostListener } from '@angular/core';
+import { Component, input, output, HostListener, inject, signal, effect } from '@angular/core';
 import { TextInputComponent } from '../../../../shared/text-input/text-input.component';
 import { FormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -6,21 +6,21 @@ import { Employee } from '../../../../shared/models/employee.model';
 import { EMPLOYEES_HEADERS_FORM } from '../../../employees/employee.headers';
 import { forkJoin } from 'rxjs';
 import { EmployeesService } from '../../../../shared/services/employees.service';
-import { RolesService } from '../../../../shared/services/roles.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import { normalizeEmployeeForForm } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
+import { RolesService } from '../../../../shared/services/roles.service';
 
 @Component({
-  selector: 'app-edit-employee-for-role',
+  selector: 'app-edit-employee-for-work-group',
   imports: [FormsModule, CommonModule, TextInputComponent],
-  templateUrl: './edit-employee-for-role.component.html',
+  templateUrl: './edit-employee-for-work-group.component.html',
 })
 export class EditEmployeeForRoleComponent {
 
     private employeesService = inject(EmployeesService);
-    private rolesService = inject(RolesService);
+    private rolesService = inject(RolesService)
     private lookupsService = inject(LookupsService);
     risorsaDaModificare = input.required<Employee | null>();
 
@@ -50,17 +50,20 @@ export class EditEmployeeForRoleComponent {
 
     ngOnInit() {
         forkJoin({
-            jobRoles: this.rolesService.loadAllJobRoles(),
-            jobRoleLevels: this.rolesService.loadJobRoleLevels(),
+            roles: this.rolesService.loadAllJobRoles(),
+            levels: this.rolesService.loadJobRoleLevels(),
             companies: this.lookupsService.loadAvailableCompanies()
         }).subscribe({
-            next: ({jobRoles, jobRoleLevels, companies}) => {
-                this.listaJobRoles.set(jobRoles);
-                this.listaJobRoleLevels.set(jobRoleLevels);
+            next: ({ roles, levels, companies }) => {
+                this.listaJobRoles.set(roles);
+                this.listaJobRoleLevels.set(levels);
                 this.listaAziende.set(companies);
-            }, 
+            },
             error: (error) => {
-                this.statusMessage = { text: 'Errore durante il caricamento dei dati: ' + error.message, type: 'error' };
+                this.statusMessage = { 
+                    text: 'Errore durante il caricamento dei dati: ' + error.message, 
+                    type: 'error' 
+                };
             }
         });
 
@@ -71,17 +74,17 @@ export class EditEmployeeForRoleComponent {
         this.OriginalData = JSON.stringify(this.formData);
     }
 
-        // Reagiamo ai cambiamenti dell'input `risorsaDaModificare` (può arrivare dopo l'inizializzazione)
-        private syncRisorsa = effect(() => {
-            const r = this.risorsaDaModificare();
-            if (!r) return;
-            // Normalizziamo i campi per essere sicuri che `formData` contenga le chiavi usate negli `headers`
-            this.baseData = JSON.parse(JSON.stringify(r));
-            const normalized = normalizeEmployeeForForm(this.baseData);
-            console.log('Modifica: risorsa ricevuta per edit:', r, '-> normalizzata:', normalized);
-            this.formData = { ...normalized };
-            this.OriginalData = JSON.stringify(this.formData);
-        });
+    // Reagiamo ai cambiamenti dell'input `risorsaDaModificare` (può arrivare dopo l'inizializzazione)
+    private syncRisorsa = effect(() => {
+        const r = this.risorsaDaModificare();
+        if (!r) return;
+        // normalizziamo i campi per essere sicuri che `formData` contenga le chiavi usate nei `headers`
+        this.baseData = JSON.parse(JSON.stringify(r));
+        const normalized = normalizeEmployeeForForm(this.baseData);
+        console.log('Modifica: risorsa ricevuta per edit:', r, '-> normalizzata:', normalized);
+        this.formData = { ...normalized };
+        this.OriginalData = JSON.stringify(this.formData);
+    });
 
     getOptions(key: string): any[] {
         switch (key) {
@@ -187,7 +190,7 @@ export class EditEmployeeForRoleComponent {
         this.cancel.emit();
     }
     
-    //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali.
+    //Funzione per evitare problemi di caratteri speciali e maiuscole eventuali
     toId(key: string, i: number): string {
     return toElementId('employee', key, i);
     }
@@ -224,12 +227,12 @@ export class EditEmployeeForRoleComponent {
     }
 
     @HostListener('document:mousedown', ['$event'])
-        onDocumentMouseDown(event: MouseEvent) {
-            const target = event.target as Element | null;
-            
-            if (this.jobRoleDropdownOpen() && !target?.closest('.job-role-combo')) {
-                this.jobRoleDropdownOpen.set(false);
-                this.showAllJobRoles.set(false);
-            }
+    onDocumentMouseDown(event: MouseEvent) {
+        const target = event.target as Element | null;
+        
+        if (this.jobRoleDropdownOpen() && !target?.closest('.job-role-combo')) {
+            this.jobRoleDropdownOpen.set(false);
+            this.showAllJobRoles.set(false);
         }
+    }
 }

@@ -1,0 +1,154 @@
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <div class="np-panel">
+    <h2 class="np-title">Modifica Gruppo</h2>
+
+    @if(workGroupEditForm) {
+      <form class="np-form" [formGroup]="workGroupEditForm" (ngSubmit)="submit()">
+        @for (header of facade.headers; track header.key; let i = $index) {
+          <div class="np-field">
+            <app-text-input>
+              <label class="np-label" [attr.for]="toId(header.key, i)">
+                {{ header.label }}
+              </label>
+              <input
+                class="np-input"
+                type="text"
+                [attr.id]="toId(header.key, i)"
+                [formControlName]="header.key"
+              />
+            </app-text-input>
+
+            @if (statusMessage) {
+              <div class="message message--{{ statusMessage.type }}">
+                {{ statusMessage.text }}
+              </div>
+            }
+
+            @if (noChangesMessage) {
+              <p class="error">Nessuna modifica da salvare.</p>
+            }
+
+            @if (
+              workGroupEditForm.get(header.key)?.invalid &&
+              (workGroupEditForm.get(header.key)?.touched || attemptedSubmit)
+            ) {
+              <p class="error">
+                @if (workGroupEditForm.get(header.key)?.errors?.['required']) {
+                  *{{ facade.getRequiredErrorMessage(header.key) }}
+                }
+              </p>
+            }
+          </div>
+        }
+        
+        @if (workGroupEditForm.valid && !isChanged()) {
+          <div class="info-message">
+            <p>ℹ️ Il gruppo è identico a prima. Modifica il nome per salvare.</p>
+          </div>
+        }
+
+              <div class="wg-form-assignment-block">
+        
+        <section class="wg-form-panel wg-form-panel--selected">
+          <div class="wg-form-panel-header">
+            <h3>Risorse da inserire nel gruppo</h3>
+            <span class="wg-form-counter">{{ listaRisorseSelezionate().length }}</span>
+          </div>
+
+          <div class="wg-form-scroll-container custom-scrollbar">
+            @for (employee of listaRisorseSelezionate(); track employee.id) {
+              <div class="wg-form-resource-row">
+                <div class="wg-form-resource-info">
+                  <strong>{{ fullName(employee) }}</strong>
+                  <small>{{ employee.company }}</small>
+                </div>
+
+                <div class="wg-form-level-box">
+                  <label class="level-label" [for]="toId('wgLevel', $index)">Livello</label>
+                  <!-- <select
+                    [id]="toId('wgLevel', $index)"
+                    [value]="employee.selectedJobRoleLevel"
+                    (change)="updateSelectedLevel(employee.id, $any($event.target).value)"
+                    required>
+                    <option value="" disabled>Seleziona</option>
+                    @for (level of listaJobRolesLevels(); track level) {
+                      <option [value]="optionName(level)">
+                        {{ optionName(level) }}
+                      </option>
+                    }
+                  </select> PER POSSIBILE IMPLEMENTAZIONE DELLA SCELTA DEL LIVELLO NEL FORM DEI GRUPPI -->
+                  <strong class="level-value">{{ employee.jobRoleLevel || employee.selectedJobRoleLevel || '-' }}</strong>
+                </div>
+
+                <button
+                  class="wg-form-btn-remove"
+                  type="button"
+                  aria-label="Rimuovi risorsa"
+                  (click)="removeSelectedResource(employee.id)">
+                  ×
+                </button>
+              </div>
+            } @empty {
+              <div class="wg-form-empty-state">
+                Cerca e seleziona le risorse dal pannello di destra.
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="wg-form-panel wg-form-panel--picker">
+          <div class="wg-form-panel-header">
+            <h3>Cerca risorse</h3>
+          </div>
+
+          <div class="wg-form-search-wrapper">
+            <label class="wg-form-search-label">Risorsa</label>
+            
+            <div class="wg-form-combo">
+              <input
+                type="text"
+                [formControl]="filtroNomeRisorsa"
+                placeholder="Cerca per nome..."
+                autocomplete="off"
+                (focus)="onEmployeeFilterFocus()"
+                (input)="onEmployeeFilterInput()"
+              />
+              @if (filtroRisorsaValue()) {
+                <button class="wg-form-combo-clear" type="button" (click)="clearNameFilter()">×</button>
+              }
+              <button class="wg-form-combo-trigger" type="button" (click)="toggleEmployeeFilterDropdown()">▾</button>
+            </div>
+
+            @if (employeeDropdownOpen()) {
+              <div class="wg-form-dropdown-menu custom-scrollbar">
+                @for (employee of nameFilterOptions(); track employee.id) {
+                  <div class="wg-form-dropdown-item" role="button" (mousedown)="selectEmployeeFilter(employee)">
+                    <span class="wg-form-emp-name">{{ fullName(employee) }}</span>
+                    <small class="wg-form-emp-meta">{{ employee.company }} · {{ employee.jobRoleLevel }}</small>
+                  </div>
+                } @empty {
+                  <div class="wg-form-dropdown-empty">Nessuna risorsa trovata</div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+      </div>
+      
+        <div class="actions">
+          <button 
+            type="submit" 
+            [attr.aria-disabled]="isButtonDisabled"
+            [class.btn--disabled]="isButtonDisabled"
+            (click)="onSubmitClick($event)">
+            Salva modifiche
+          </button>
+          <button type="button" (click)="onCancel()">Annulla</button>
+        </div>
+      </form>
+  }
+  </div>
+</dialog>

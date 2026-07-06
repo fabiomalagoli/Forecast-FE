@@ -8,6 +8,7 @@ import { CustomersComponent } from './pages/customers/customers.component';
 import { RolesComponent } from './pages/roles/roles.component';
 import { EmployeesComponent } from './pages/employees/employees.component';
 import { EmployeeDetailsComponent } from './pages/employees/employee-details/employee-details.component';
+import { WorkGroupsComponent } from './pages/work-groups/work-groups.component';
 export const routes: Routes = [  
   { path: 'home', component: GridComponent },
 
@@ -23,6 +24,8 @@ export const routes: Routes = [
 
   { path: 'risorse/:id', component: EmployeeDetailsComponent },
   { path: 'risorse', component: EmployeesComponent },
+
+  { path: 'workgroups', component: WorkGroupsComponent },
 
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: '**', redirectTo: 'home' },

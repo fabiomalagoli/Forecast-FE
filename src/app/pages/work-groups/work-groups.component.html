@@ -1,0 +1,151 @@
+<div class="page-header">
+  <h2>Gruppi di Lavoro</h2>
+  <button appButton class="btn-add" (click)="isAddingWorkGroupState.set(true)">+ Aggiungi Gruppo</button>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-group">
+    <label>Filtra per Nome</label>
+    <div class="combo-field role-filter-combo">
+      <input
+        type="text"
+        [formControl]="filterNameWorkGroup"
+        placeholder="Filtra per nome..."
+        autocomplete="off"
+        (focus)="onWorkGroupFilterFocus()"
+        (input)="onWorkGroupFilterInput()">
+      @if (filterNameValue()) {
+        <button
+          class="combo-clear"
+          type="button"
+          aria-label="Cancella filtro"
+          (click)="clearRoleFilter()">
+          ×
+        </button>
+      }
+      <button
+        class="combo-toggle"
+        type="button"
+        aria-label="Apri lista gruppi"
+        (click)="toggleWorkGroupFilterDropdown()">
+        ▾
+      </button>
+      @if (workGroupFilterDropdownOpen()) {
+        <div class="combo-menu">
+          @for (group of workGroupFilterOptions(); track group.id) {
+            <button
+              class="combo-option"
+              type="button"
+              (mousedown)="selectWorkGroupFilter(group)">
+              {{ group.name }}
+            </button>
+          } @empty {
+            <div class="combo-empty">Nessun gruppo trovato</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (isInitialLoading()) {
+  <div class="loading-overlay">
+    <mat-progress-spinner mode="indeterminate" diameter="120"></mat-progress-spinner>
+  </div>
+} @else if (error()) {
+  <div class="error-state">
+    <p>{{ error() }}</p>
+  </div>
+} @else {
+  <!-- Stato Normale di visualizzazione della tabella dei Gruppi -->
+    @if (statusMessage()) {
+      <div class="notification" [class]="statusMessage()?.type">
+        {{ statusMessage()?.text }}
+      </div>
+    }
+    <div class="work-groups-layout">       
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th class="action-header">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (r of workGroups(); track r.id) { 
+                    <tr
+                      app-work-group-row
+                      [workGroup]="r"
+                      [selected]="selectedWorkGroupId() === r.id"
+                      [class.active-workgroup-highlight]="selectedWorkGroupId() === r.id"
+                      (showResources)="mostraRisorsePerGruppo($event)"
+                      (editWorkGroup)="apriModifica($event)"
+                      (assignResourcesToGroups)="apriAssegnaRisorse($event)"
+                      (deleteWorkGroup)="onDeleteWorkGroup($event)">
+                    </tr>
+                }
+                </tbody>
+            </table>
+            <div class="table-footer">
+              <p class="count-footer">Numero gruppi: {{ listAllWorkGroups().length || 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    @if (selectedWorkGroupId() !== null) {
+      <div class="drawer-overlay" (click)="closeSidePanel()"></div>
+
+      <div class="drawer-panel">
+        <button class="drawer-close-btn" (click)="closeSidePanel()">×</button>
+        
+        <app-work-group-resources 
+          [risorseAssociateAlGruppo]="filteredSelectedEmployees()"
+          [gruppoSelezionato]="selectedWorkGroup()"
+          (editEmployee)="editingEmployee.set($event)">
+        </app-work-group-resources>
+      </div>
+    }
+
+  <mat-paginator
+      [length]="pagination()?.totalCount || 0"
+      [pageSize]="pageSize"
+      [pageIndex]="currentPage() - 1"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [showFirstLastButtons]="true"
+      (page)="onPageChange($event)">
+  </mat-paginator> 
+
+  @if(isAddingWorkGroupState()) {
+      <app-new-work-group
+          [workGroupToAdd]="addingWorkGroup()!"
+          (added)="aggiungiGruppo()"
+          (cancel)="isAddingWorkGroupState.set(false)"
+      ></app-new-work-group>
+  }
+
+  @if(editingWorkGroup()) {
+      <app-modifica-work-group
+          [workGroupToEdit]="editingWorkGroup()!"
+          (cancel)="chiudiModifica()"
+          (modified)="salvaModifica()"
+      ></app-modifica-work-group>
+  }
+
+  @if(assigningWorkGroup()) {
+      <app-assegna-risorse-gruppi
+          [selectedWorkGroup]="assigningWorkGroup()!"
+          [listaRisorseAssegnate]="assigningWorkGroupEmployees()"
+          (cancel)="chiudiAssegnaRisorse()"
+          (saved)="salvaAssegnazioneRisorse()"
+      ></app-assegna-risorse-gruppi>
+  }
+
+  @if(editingEmployee()) {
+    <app-edit-employee-for-work-group
+        [risorsaDaModificare]="editingEmployee()"
+        (cancel)="editingEmployee.set(null)"
+        (modified)="safeEditingEmployee()">
+    </app-edit-employee-for-work-group>
+  }
+}

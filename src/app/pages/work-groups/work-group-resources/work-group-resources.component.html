@@ -1,12 +1,12 @@
 <div class="resources-panel">
-  <h1>{{ruoloSelezionato()?.name}}</h1>
+  <h1>{{gruppoSelezionato()?.name}}</h1>
   <div class="panel-header">
     <h3>Risorse Associate</h3>
   </div>
 
-  @if (risorseAssociate().length === 0) {
+  @if (risorseAssociateAlGruppo().length === 0) {
     <div class="empty-state">
-      <p>Nessuna risorsa trovata per questo ruolo.</p>
+      <p>Nessuna risorsa trovata per questo gruppo.</p>
     </div>
   } @else {
     <div class="table-container-inner">
@@ -16,11 +16,11 @@
             <th>Nome</th>
             <th>Livello</th>
             <th>Azienda</th>
-            <th>Azioni</th>
+            <th class="action-header">Azioni</th>
           </tr>
         </thead>
         <tbody>
-          @for (resource of risorseAssociate(); track resource.id) {
+          @for (resource of risorseAssociateAlGruppo(); track resource.id) {
             <tr>
               <td class="font-semibold" (click)="apriDettagliRisorsa(resource)">{{ resource.name }} {{ resource.surname }}</td>
               <td>

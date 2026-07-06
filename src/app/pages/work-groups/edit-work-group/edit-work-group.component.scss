@@ -1,0 +1,39 @@
+@use 'variables' as *;
+
+.np-panel {
+  min-width: min(420px, calc(100vw - 2rem));
+}
+
+.message {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+
+  &--success {
+    background-color: $bg-notify-success;
+    color: $text-notify-success;
+  }
+
+  &--error {
+    background-color: $bg-notify-error;
+    color: $text-notify-error;
+  }
+
+}
+
+.level-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.level-value {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: #212529;
+  background-color: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}

@@ -444,7 +444,7 @@ export class RolesComponent implements OnInit {
     salvaModifica() {
         this.ricaricaRuoli();
         this.editingRole.set(null);
-        this.showNotification('success', NotifyAction.UpdateRole);
+        this.showNotification('success', NotifyAction.UpdateWorkGroup);
     }
 
     salvaAssegnazioneRisorse() {

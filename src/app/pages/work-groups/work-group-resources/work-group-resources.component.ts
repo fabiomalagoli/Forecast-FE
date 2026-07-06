@@ -1,6 +1,6 @@
 import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Role } from '../../../shared/models/role.model';
+import { WorkGroup } from '../../../shared/models/workgroups.model';
 import { Employee } from '../../../shared/models/employee.model';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../shared/button/button';
@@ -9,17 +9,18 @@ import { Location } from '@angular/common';
 import { EmployeesService } from '../../../shared/services/employees.service';
 import { RolesService } from '../../../shared/services/roles.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { WorkGroupsService } from '../../../shared/services/workgroups.service';
 
 @Component({
-  selector: 'app-role-resources',
-  templateUrl: './role-resources.component.html',
-  styleUrls: ['./role-resources.component.scss'],
+  selector: 'app-work-group-resources',
+  templateUrl: './work-group-resources.component.html',
+  styleUrls: ['./work-group-resources.component.scss'],
   imports: [CommonModule, AppButtonComponent],
 })
-export class RoleResourcesComponent {
+export class WorkGroupResourcesComponent {
 
     private employeesService = inject(EmployeesService);
-    private rolesService = inject(RolesService);
+    private workGroupsService = inject(WorkGroupsService);
     private destroyRef = inject(DestroyRef);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
@@ -32,8 +33,8 @@ export class RoleResourcesComponent {
 
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
-    risorseAssociate = input<any[]>([]);
-    ruoloSelezionato = input<Role | null>(null);
+    risorseAssociateAlGruppo = input<any[]>([]);
+    gruppoSelezionato = input<WorkGroup | null>(null);
 
     editEmployee = output<Employee>();
 
@@ -41,7 +42,7 @@ export class RoleResourcesComponent {
 
     constructor() {
         effect(() => {
-            console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.risorseAssociate());
+            console.log('IL SEGNALE È CAMBIATO! Nuova lista:', this.risorseAssociateAlGruppo());
         });
         
     }
@@ -88,6 +89,7 @@ export class RoleResourcesComponent {
             finalize(() => this.isFetching.set(false))
         ).subscribe({
             next: () => {
+                // this.risorsaInModifica.set(null);
                 this.statusMessage.set({text: 'Risorsa modificata con successo!', type: 'success'});
             },
             error: (err) => {
@@ -105,6 +107,16 @@ export class RoleResourcesComponent {
         this.editEmployee.emit(risorsa);
     }
 
+    // closeEmployeeEditing() {
+    //     this.risorsaInModifica.set(null); // Nasconde l' @if nel template
+    // }
+
+    // saveEdits() {
+    //     this.reloadEmployeesforRoleSelected();
+    //     this.closeEmployeeEditing();
+    //     this.showNotification('Modifiche salvate correttamente!', 'success');
+    // }
+
     showNotification(text: string, type: 'success' | 'error') {
         this.statusMessage.set({ text, type });
         timer(3000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -118,7 +130,7 @@ export class RoleResourcesComponent {
 
     apriDettagliRisorsa(r: Employee) {
         this.risorsaPerDettaglio.set(r);
-        this.rolesService.setLastSelectedRole(this.ruoloSelezionato());
+        this.workGroupsService.setLastSelectedWorkGroup(this.gruppoSelezionato());
         this.router.navigate(['/risorse', r.id]);
     }
 

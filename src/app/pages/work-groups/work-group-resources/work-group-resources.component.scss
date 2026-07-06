@@ -1,0 +1,95 @@
+@use 'variables' as *;
+
+.resources-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel-header {
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: $text-filter-dark;
+    font-weight: 600;
+    border-bottom: 2px solid $color-primary;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+  }
+}
+
+.empty-state {
+  padding: 2rem 1rem;
+  text-align: center;
+  background-color: $bg-app-shell;
+  border-radius: $radius-md;
+  border: 1px dashed $border-filter-main;
+  color: $text-filter-muted;
+  font-style: italic;
+}
+
+/* TABELLA INTERNA (Risorse del Ruolo) */
+
+.table-container-inner {
+  overflow-x: auto;
+  border-radius: $radius-md;
+  border: 1px solid $border-filter-light;
+
+  .inner-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+
+    thead {
+      background-color: $bg-app-shell;
+    }
+
+    th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: $text-filter-medium;
+      border-bottom: 1px solid $border-filter-light;
+
+      &.action-header {
+        text-align: right;
+      }
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid $border-inner-light;
+      color: $text-filter-dark;
+    }
+
+    tbody {
+      tr {
+        &:hover {
+          background-color: $color-primary-light; // Hover leggero arancione
+        }
+
+        &:last-child td {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+}
+
+/* BADGE E UTILITY */
+
+.font-semibold {
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.badge {
+  background-color: $bg-badge-blue;
+  color: $text-badge-blue;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
