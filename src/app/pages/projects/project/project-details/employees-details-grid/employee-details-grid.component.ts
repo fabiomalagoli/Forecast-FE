@@ -133,7 +133,7 @@ export class ResourceDetailsGridComponent {
 
   delta = computed(() => this.formatDecimal(this.deltaValue()));
 
-  formattedDailyTariff = computed(() => this.formatDecimal(this.resource()?.dailyCost));
+  formattedDailyTariff = computed(() => this.formatDecimal(this.resource()?.dailyCost, true));
 
   private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) {
     return `${projectEmployeeId}_${year}`;
