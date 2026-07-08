@@ -554,4 +554,10 @@ export class ProjectsService {
       return forkJoin(saveCalls);
     }
   }
+
+  downloadProjectExcel(projectId: string): Observable<Blob> {
+    return this.httpClient.get(`api/projects/${projectId}/excel`, {
+        responseType: 'blob'
+    });
+  }
 }

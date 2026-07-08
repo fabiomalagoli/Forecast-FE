@@ -717,4 +717,30 @@ clearYearFilter() {
     this.router.navigate(['/progetti', id]);
   }
 
+  downloadExcel(project: Project): void {
+    this.isFetching.set(true);
+
+    this.projectsService.downloadProjectExcel(project.id).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Sostituisce gli spazi con i trattini bassi per evitare problemi nel nome del file
+        a.download = `Export_${project.name.replace(/\s+/g, '_')}.xlsx`;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        this.isFetching.set(false);
+        this.snackbarService.success(NotifyAction.Caricamento, 'Excel scaricato con successo');
+      },
+      error: (err) => {
+        this.isFetching.set(false);
+        this.snackbarService.error(NotifyAction.Caricamento, "Impossibile generare il file Excel");
+      }
+    });
+  }
 }

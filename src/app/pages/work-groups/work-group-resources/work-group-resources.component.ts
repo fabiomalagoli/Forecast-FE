@@ -1,6 +1,6 @@
 import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { WorkGroup } from '../../../shared/models/workgroups.model';
+import { WorkGroup } from '../../../shared/models/workgroup.model';
 import { Employee } from '../../../shared/models/employee.model';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../shared/button/button';

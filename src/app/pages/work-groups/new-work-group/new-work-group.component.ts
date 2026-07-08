@@ -2,7 +2,7 @@ import { Component, inject, input, output, signal, effect, OnInit, DestroyRef, H
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
-import { WorkGroup } from '../../../shared/models/workgroups.model';
+import { WorkGroup } from '../../../shared/models/workgroup.model';
 import { toElementId } from '../../../shared/utils/project-form.utils';
 import { WorkGroupFormFacade } from '../../../shared/utils/workgourp-form.facade';
 import { WorkGroupsService } from '../../../shared/services/workgroups.service';

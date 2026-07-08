@@ -5,7 +5,7 @@ import { TextInputComponent } from '../../../shared/text-input/text-input.compon
 import { toElementId } from '../../../shared/utils/project-form.utils';
 import { WorkGroupFormFacade } from '../../../shared/utils/workgourp-form.facade';
 import { WorkGroupsService } from '../../../shared/services/workgroups.service';
-import { WorkGroup } from '../../../shared/models/workgroups.model';
+import { WorkGroup } from '../../../shared/models/workgroup.model';
 import { buildUpdateWorkGroupPayload } from '../../../shared/payloads/workgroup.payloads';
 import { AssignableEmployee, getEmployeeFullName } from '../../../shared/utils/employee-form.utils';
 import { Employee } from '../../../shared/models/employee.model';

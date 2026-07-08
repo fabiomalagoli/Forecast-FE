@@ -6,7 +6,7 @@ import { SnackbarService } from '../../shared/services/snackbar.service';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, Subject, switchMap, tap, timer } from 'rxjs';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Employee } from '../../shared/models/employee.model';
-import { WorkGroup } from '../../shared/models/workgroups.model';
+import { WorkGroup } from '../../shared/models/workgroup.model';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';

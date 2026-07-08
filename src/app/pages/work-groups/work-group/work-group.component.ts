@@ -2,7 +2,7 @@ import { Component, input, output, ViewEncapsulation } from '@angular/core';
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { WorkGroup } from '../../../shared/models/workgroups.model';
+import { WorkGroup } from '../../../shared/models/workgroup.model';
 
 @Component({
   selector: 'tr[app-work-group-row]',

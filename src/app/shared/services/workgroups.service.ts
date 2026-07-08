@@ -4,7 +4,7 @@ import { catchError, map, tap, throwError, of } from 'rxjs';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
-import { WorkGroup } from '../models/workgroups.model';
+import { WorkGroup } from '../models/workgroup.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkGroupsService {

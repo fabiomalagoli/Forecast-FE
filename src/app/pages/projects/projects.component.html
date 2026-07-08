@@ -211,6 +211,12 @@
                   [title]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'">
                   ★
                 </button>
+                <button class="btn-action-icon btn-download" type="button" (click)="downloadExcel(p)"
+                  matTooltip="Scarica Excel" 
+                  matTooltipPosition="above"
+                  aria-label="Scarica Excel">
+                  <mat-icon class="action-icon">file_download</mat-icon>
+                </button>
                 <button class="btn-action-icon btn-details" type="button" (click)="openProjectDetails(p.id)"
                   matTooltip="Dettagli" 
                   matTooltipPosition="above"

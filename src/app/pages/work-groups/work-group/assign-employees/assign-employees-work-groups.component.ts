@@ -15,7 +15,7 @@ import {
     mapAssignedEmployeesToSelected,
 } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
-import { WorkGroup } from '../../../../shared/models/workgroups.model';
+import { WorkGroup } from '../../../../shared/models/workgroup.model';
 import { WorkGroupsService } from '../../../../shared/services/workgroups.service';
 
 @Component({

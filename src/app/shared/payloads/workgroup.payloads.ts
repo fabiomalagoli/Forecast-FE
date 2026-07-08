@@ -1,4 +1,4 @@
-import { CreateWorkGroupRequest, UpdateWorkGroupRequest } from "../models/workgroups.model";
+import { CreateWorkGroupRequest, UpdateWorkGroupRequest } from "../models/workgroup.model";
 
 export function buildUpdateWorkGroupPayload(formData: any, fallbackId: string): UpdateWorkGroupRequest {
   return {

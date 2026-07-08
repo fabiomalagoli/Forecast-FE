@@ -13,11 +13,12 @@ import { RolesService } from '../../../../shared/services/roles.service';
 import { mergeProjectEmployeesWithEmployeeDetails } from '../../../../shared/utils/project-display.utils';
 import { TextInputComponent } from "../../../../shared/text-input/text-input.component";
 import { RECAP_DATA_HEADERS } from '../../recap-data.headers';
+import { MatIconModule } from "@angular/material/icon";
 
 @Component({
   selector: 'app-project-details',
   standalone: true,
-  imports: [AppButtonComponent, ResourceDetailsGridComponent, TextInputComponent],
+  imports: [AppButtonComponent, ResourceDetailsGridComponent, TextInputComponent, MatIconModule],
   templateUrl: './project-details.component.html',
   styleUrls: ['./project-details.component.scss'],
 })
@@ -187,4 +188,5 @@ export class ProjectDetailsComponent {
       if (_p) this.updateDisplayedEmployees();
     });
   }
+
 }

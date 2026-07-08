@@ -255,3 +255,60 @@ app-text-input {
   font-size: 13px;
   color: $text-light;
 }
+
+.export-button-container {
+  margin-top: 40px; 
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+/* PULSANTE DI ESPORTAZIONE (COMMENTATO PER EVENTUALE UTILIZZO) */
+
+// .btn-export {
+//   display: inline-flex;
+//   align-items: center;
+//   justify-content: center;
+//   gap: $spacing-sm; // Spazio di 8px tra l'icona di download e il testo
+  
+//   padding: 0.75rem 1.5rem;
+//   background-color: $color-primary;
+//   color: white;
+//   border: 1px solid $color-primary;
+//   border-radius: $radius-sm;
+//   font-size: 0.9375rem;
+//   font-weight: 600;
+//   cursor: pointer;
+//   transition: $transition-base;
+
+//   // Forza l'allineamento verticale dell'icona Material
+//   mat-icon {
+//     font-size: 1.25rem;
+//     width: 24px;
+//     height: 24px;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//   }
+
+//   /* Effetti di Hover e Pressione */
+//   &:hover {
+//     background-color: $color-primary-hover;
+//     border-color: $color-primary-hover;
+//     box-shadow: $shadow-primary;
+//   }
+
+//   &:active {
+//     transform: scale(0.98);
+//   }
+
+//   /* Stato Disabilitato */
+//   &:disabled {
+//     border-color: $color-primary-disabled;
+//     background: $color-primary-disabled;
+//     color: rgba($text-dark, 0.55);
+//     cursor: not-allowed;
+//     box-shadow: none;
+//     transform: none;
+//   }
+// }
