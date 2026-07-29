@@ -1,4 +1,3 @@
-<!-- SVG Symbols per icone/temi -->
 <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
   <symbol id="circle-half" viewBox="0 0 16 16">
     <path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"></path>
@@ -15,7 +14,7 @@
 <main class="form-signin w-100 m-auto text-center">
   <div class="card shadow-sm p-4 rounded-4 border-0 bg-body">
     
-    <!-- Brand Header -->
+    <!-- Header del nome dell'applicazione -->
     <div class="forecast-brand">
       <img src="favicon.ico" alt="Forecast Logo" class="forecast-brand__logo">
       <h2 class="forecast-brand__title">Forecast</h2>
@@ -23,14 +22,13 @@
 
     <h1 class="h4 mb-4 fw-normal">Accedi al sistema</h1>
 
-    <!-- Alert Errore -->
     @if (errorMessage()) {
       <div class="alert alert-danger py-2 text-start small mb-3" role="alert">
         {{ errorMessage() }}
       </div>
     }
 
-    <!-- Pulsante Google Login -->
+    <!-- Pulsante per login di Google -->
     <div class="d-grid gap-2 my-3">
       <button 
         type="button" 
@@ -52,7 +50,7 @@
       </button>
     </div>
 
-    <!-- Link Registrazione -->
+    <!-- Link Registrazione (da implementare?) -->
     <!-- <div class="sign-up-text-section mt-3">
       <p class="small text-muted mb-0">
         Non hai ancora un account? <a href="#" class="text-decoration-none">Registrati</a>
