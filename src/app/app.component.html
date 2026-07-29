@@ -1,11 +1,13 @@
-<!-- <app-header></app-header> -->
-
-<main class="app-shell"> 
-  
-  <app-sidebar (selected)="OnSidebarIdSelected($event)"></app-sidebar>
-  
-  <div class="content-container flex-grow-1 bg-light p-4">
-    <router-outlet />
-  </div>
-  
-</main>
+@if (authService.isAuthenticated()) {
+  <!-- Shell principale dell'App con Sidebar -->
+  <main class="app-shell"> 
+    <app-sidebar (selected)="OnSidebarIdSelected($event)"></app-sidebar>
+    
+    <div class="content-container flex-grow-1 bg-light p-4">
+      <router-outlet />
+    </div>
+  </main>
+} @else {
+  <!-- Schermata intera per il Login (senza Sidebar) -->
+  <router-outlet />
+}

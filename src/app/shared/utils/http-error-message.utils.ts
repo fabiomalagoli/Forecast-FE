@@ -1,4 +1,4 @@
-export type EntityName = 'cliente' | 'progetto' | 'risorsa' | 'ruolo' | 'gruppo' | 'favourite';
+export type EntityName = 'cliente' | 'progetto' | 'risorsa' | 'ruolo' | 'gruppo' | 'favourite' | 'utente';
 
 export type EntityAction =
   | 'caricamento'
@@ -8,6 +8,8 @@ export type EntityAction =
   | 'assegnazione'
   | 'rimozione'
   | 'salvataggio'
+  | 'autenticazione'
+  | 'registrazione'
   | 'gruppo';
 
 type ErrorWithStatus = Error & { status?: number };
@@ -65,7 +67,8 @@ function getEntityLabel(entity: EntityName): string {
     risorsa: 'la risorsa',
     ruolo: 'il ruolo',
     gruppo: 'il gruppo',
-    favourite: 'il favourite'
+    favourite: 'il favourite',
+    utente: 'l\'utente'
   };
 
   return labels[entity];
@@ -81,6 +84,8 @@ function getActionLabel(action: EntityAction): string {
     rimozione: 'la rimozione',
     salvataggio: 'il salvataggio',
     gruppo: 'il gruppo',
+    registrazione: 'la registrazione',
+    autenticazione: 'l\'autenticazione'
   };
 
   return labels[action];
