@@ -6,6 +6,10 @@ import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { UserForAuthentication, UserForRegistration, TokenDto, User } from '../models/user.model';
 
+interface IdTokenGoogleDto {
+  idToken: string
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,7 +27,7 @@ export class AuthenticationService {
   readonly accessToken = this._accessToken.asReadonly();
   readonly isAuthenticated = computed(() => !!this._accessToken());
 
-  /* Effettua il login inviando username e password nel Body della richiesta (UserForAuthenticationDto sul backend) */
+  // Effettua il login inviando username e password nel Body della richiesta (UserForAuthenticationDto sul backend)
   login(credentials: UserForAuthentication): Observable<TokenDto> {
     return this.httpClient.post<TokenDto>(`${environment.apiUrl}/authentication/login`, credentials).pipe(
       tap((tokenDto) => {
@@ -38,7 +42,31 @@ export class AuthenticationService {
     );
   }
 
-  /* Registrazione */
+  loginWithGoogle(body: IdTokenGoogleDto): Observable<TokenDto> {
+      return this.httpClient.post<TokenDto>(`${environment.apiUrl}/authentication/google-login`, body).pipe(
+        tap((tokenDto) => {
+          this.saveTokens(tokenDto);
+          // Imposta l'utente (ricavabile dal token o dal payload)
+          const username = this.extractUsernameFromToken(tokenDto.accessToken);
+          this._currentUser.set({ username: username });
+        }),
+        catchError((error) => {
+          this.errorService.showError('Errore durante l\'autenticazione dell\'utente.');
+          return throwError(() => buildEntityError(error, 'utente', 'autenticazione'));
+        })
+    );
+  }
+
+  private extractUsernameFromToken(token: string): string {
+    const tokenPart =  token.split('.')[1];
+    const base64 = tokenPart.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = window.atob(base64);
+    
+    const payload = JSON.parse(decoded);
+    return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || payload['name'] || payload['sub'] || '';
+  }
+
+  // Registrazione
   register(userData: UserForRegistration) {
     return this.httpClient.post(`${environment.apiUrl}/authentication/register`, userData).pipe(
       catchError((error) => {
@@ -49,7 +77,7 @@ export class AuthenticationService {
   }
 
   setGoogleUser(idToken: string, claims: any): void {
-    this._accessToken.set(idToken);
+    this._accessToken.set(idToken); // Token ricavato da Google
     localStorage.setItem('accessToken', idToken);
 
     this._currentUser.set({
@@ -57,7 +85,7 @@ export class AuthenticationService {
     });
   }
 
-  /* Rinnova l'access token usando il refresh token */
+  // Rinnova l'access token usando il refresh token
   refreshToken(): Observable<TokenDto> {
     const refreshToken = this._refreshToken();
     const accessToken = this._accessToken();
@@ -76,7 +104,7 @@ export class AuthenticationService {
     );
   }
 
-  /* Disconnette l'utente e pulisce lo stato */
+  // Disconnette l'utente e pulisce lo stato
   logout(): void {
     this._currentUser.set(null);
     this._accessToken.set(null);

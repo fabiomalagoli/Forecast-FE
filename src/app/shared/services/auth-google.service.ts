@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthConfig, OAuthService } from 'angular-oauth2-oidc';
 import { authConfig } from '../../auth.config';
 import { AuthenticationService } from './authentication.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
     providedIn: 'root',
@@ -24,7 +25,7 @@ export class AuthGoogleService {
         this.oAuthService.setupAutomaticSilentRefresh();
         return this.oAuthService
             .loadDiscoveryDocumentAndTryLogin()
-            .then((loggedIn) => {
+            .then(async (loggedIn) => {
                 console.log('[AuthGoogleService] Risultato tryLogin:', loggedIn);
                 console.log('[AuthGoogleService] Ha un token valido?', this.oAuthService.hasValidIdToken());
 
@@ -32,8 +33,20 @@ export class AuthGoogleService {
                     const claims = this.oAuthService.getIdentityClaims() as any;
                     const idToken = this.oAuthService.getIdToken();
 
-                    this.profile.set(claims);
-                    this.authService.setGoogleUser(idToken, claims);
+                    try {
+                        // Invia il token al backend e attende il JWT di Forecast
+                        await firstValueFrom(this.authService.loginWithGoogle({ idToken }));
+
+                        // Se il backend risponde positivamente, salva il profilo Google e naviga alla Home
+                        this.profile.set(claims);
+                        this.router.navigate(['/home']);
+                    } catch (err) {
+                        console.error('[AuthGoogleService] Accesso negato dal backend:', err);
+
+                        // L'utente non è nel database. Annulliamo la sessione Google
+                        this.logout();
+                        return false;
+  }
 
                     this.router.navigate(['/home']);
                 }

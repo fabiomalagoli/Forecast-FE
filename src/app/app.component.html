@@ -1,5 +1,5 @@
 @if (authService.isAuthenticated()) {
-  <!-- Shell principale dell'App con Sidebar -->
+  <!-- Shell principale dell'app  -->
   <main class="app-shell"> 
     <app-sidebar (selected)="OnSidebarIdSelected($event)"></app-sidebar>
     
@@ -8,6 +8,6 @@
     </div>
   </main>
 } @else {
-  <!-- Schermata intera per il Login (senza Sidebar) -->
+  <!-- Schermata intera per il Login -->
   <router-outlet />
 }

@@ -12,7 +12,7 @@ import { AuthenticationService } from './shared/services/authentication.service'
 })
 export class AppComponent {
   protected readonly title = signal('Forecast-FE');
-  protected readonly authService = inject(AuthenticationService); // Esposto per il template
+  protected readonly authService = inject(AuthenticationService);
   private router = inject(Router);
 
   readonly selectedPage = signal('Home');
