@@ -89,5 +89,41 @@
       </li>
 
   </ul>
+
+  <hr>
+
+  <div class="user-info">
+    <button 
+      [matMenuTriggerFor]="userMenu" 
+      class="user-menu-btn"
+      type="button">
+      
+      <span class="user-full-name">{{ firstName() }} {{ lastName() }}</span>
+      
+      <mat-icon class="dropdown-icon">expand_more</mat-icon>
+
+      <div class="account-picture-container">
+        @if (currentUser()) {
+          @if (profilePictureUrl()) {
+            <img 
+              [src]="profilePictureUrl()" 
+              alt="Foto profilo" 
+              class="account-picture" />
+          } @else {
+            <div class="account-initials">
+              {{ firstName()[0] || '' }}
+            </div>
+          }
+        }
+      </div>
+    </button>
+
+    <mat-menu #userMenu="matMenu" panelClass="custom-user-menu" xPosition="before">
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </div>
 </div>
 

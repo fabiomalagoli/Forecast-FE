@@ -32,8 +32,16 @@ export class AuthenticationService {
     return this.httpClient.post<TokenDto>(`${environment.apiUrl}/authentication/login`, credentials).pipe(
       tap((tokenDto) => {
         this.saveTokens(tokenDto);
+
+        const userDetails = this.extractUsernameFromToken(tokenDto.accessToken);
+
         // Imposta l'utente (ricavabile dal token o dal payload)
-        this._currentUser.set({ username: credentials.userName || '' });
+        this._currentUser.set({
+          username: userDetails.username || credentials.userName || '',
+          firstName: userDetails.firstName,
+          lastName: userDetails.lastName,
+          profilePictureUrl: userDetails.profilePictureUrl
+        });
       }),
       catchError((error) => {
         this.errorService.showError('Errore durante l\'autenticazione dell\'utente.');
@@ -47,8 +55,15 @@ export class AuthenticationService {
         tap((tokenDto) => {
           this.saveTokens(tokenDto);
           // Imposta l'utente (ricavabile dal token o dal payload)
-          const username = this.extractUsernameFromToken(tokenDto.accessToken);
-          this._currentUser.set({ username: username });
+          const user = {
+            ...this.extractUsernameFromToken(tokenDto.accessToken)
+          }
+          this._currentUser.set({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profilePictureUrl: user.profilePictureUrl
+          });
         }),
         catchError((error) => {
           this.errorService.showError('Errore durante l\'autenticazione dell\'utente.');
@@ -57,13 +72,22 @@ export class AuthenticationService {
     );
   }
 
-  private extractUsernameFromToken(token: string): string {
+  private extractUsernameFromToken(token: string): { 
+    firstName: string;
+    lastName: string; 
+    username: string; 
+    profilePictureUrl?: string
+  } {
     const tokenPart =  token.split('.')[1];
     const base64 = tokenPart.replace(/-/g, '+').replace(/_/g, '/');
     const decoded = window.atob(base64);
     
     const payload = JSON.parse(decoded);
-    return payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || payload['name'] || payload['sub'] || '';
+    const firstName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] || '';
+    const lastName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] || '';
+    const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || payload['name'] || payload['sub'] || '';
+    const profilePictureUrl = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture'] || payload['picture'] || undefined;
+    return { firstName, lastName, username, profilePictureUrl };
   }
 
   // Registrazione
@@ -74,15 +98,6 @@ export class AuthenticationService {
         return throwError(() => buildEntityError(error, 'utente', 'registrazione'));
       })
     );
-  }
-
-  setGoogleUser(idToken: string, claims: any): void {
-    this._accessToken.set(idToken); // Token ricavato da Google
-    localStorage.setItem('accessToken', idToken);
-
-    this._currentUser.set({
-      username: claims?.email || claims?.name || 'Utente Google'
-    });
   }
 
   // Rinnova l'access token usando il refresh token

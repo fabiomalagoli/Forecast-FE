@@ -21,6 +21,9 @@ export interface TokenDto {
 
 // Informazioni sull'utente autenticato (estratte dal JWT o ricevute al login)
 export interface User {
+  firstName: string;
+  lastName: string;
   username: string;
   roles?: string[];
+  profilePictureUrl?: string; // URL dell'immagine del profilo (opzionale)
 }

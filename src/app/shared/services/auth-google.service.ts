@@ -16,6 +16,8 @@ export class AuthGoogleService {
     private router = inject(Router);
     readonly profile = signal<any>(null);
 
+    readonly initialized = signal<boolean>(false);
+
     constructor() {
         this.initConfiguration();
     }
@@ -37,34 +39,40 @@ export class AuthGoogleService {
                         // Invia il token al backend e attende il JWT di Forecast
                         await firstValueFrom(this.authService.loginWithGoogle({ idToken }));
 
-                        // Se il backend risponde positivamente, salva il profilo Google e naviga alla Home
+                        // Se il backend risponde positivamente, salva il profilo Google e naviga alla Home solo se l'utente è nella pagina di login o nella root
                         this.profile.set(claims);
-                        this.router.navigate(['/home']);
+                        if (this.router.url.startsWith('/login') || this.router.url === '/') {
+                            this.router.navigate(['/home']);
+                        }
                     } catch (err) {
                         console.error('[AuthGoogleService] Accesso negato dal backend:', err);
 
                         // L'utente non è nel database. Annulliamo la sessione Google
                         this.logout();
                         return false;
-  }
-
-                    this.router.navigate(['/home']);
+                    }
                 }
+                this.initialized.set(true); // Segnala che l'inizializzazione è completata
                 return loggedIn;
             })
             .catch((err) => {
                 console.error('[AuthGoogleService] Errore login Google: ', err);
+                this.initialized.set(true); // Segnala che l'inizializzazione è completata anche in caso di errore
                 return false;
             });
     }
 
     login(): void {
-        if (!this.oAuthService.hasValidIdToken()) {
-            this.oAuthService.initCodeFlow();
-        }
-        else {
-            this.router.navigate(['/home']);
-        }
+        // if (!this.oAuthService.hasValidIdToken()) {
+        //     this.oAuthService.initCodeFlow();
+        // }
+        // else {
+        //     this.router.navigate(['/home']);
+        // }
+
+        // Avvia il flusso di autenticazione con Google, ora senza il controllo di validità del token.
+        // Il reindirizzamento avverrà automaticamente dopo il login.
+        this.oAuthService.initCodeFlow();
     }
 
     logout() {
