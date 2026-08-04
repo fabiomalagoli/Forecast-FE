@@ -49,6 +49,7 @@ export class AuthGoogleService {
 
                         // L'utente non è nel database. Annulliamo la sessione Google
                         this.logout();
+                        this.router.navigate(['/contact-administrator']);
                         return false;
                     }
                 }

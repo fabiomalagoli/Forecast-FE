@@ -1,9 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { AuthGoogleService } from '../shared/services/auth-google.service';
 
 const MODULES: any[] = [
   MatButtonModule,
@@ -14,17 +13,13 @@ const MODULES: any[] = [
 ];
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-contact-administrator',
   standalone: true,
   imports: [MODULES],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss',
+  templateUrl: './contact-administrator.component.html',
+  styleUrl: './contact-administrator.component.scss',
 })
 
-export class LoginComponent {
-  private authService = inject(AuthGoogleService);
+export class ContactAdministratorComponent {
 
-  signInWithGoogle() {
-    this.authService.login();
-  }
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthGoogleService } from '../../shared/services/auth-google.service';
@@ -11,12 +11,25 @@ import { AuthGoogleService } from '../../shared/services/auth-google.service';
   styleUrls: ['./authentication.component.scss'],
   host: { class: 'd-flex align-items-center py-4 bg-body-tertiary min-vh-100' }
 })
-export class AuthenticationComponent {
+export class AuthenticationComponent implements OnInit, OnDestroy {
   private readonly authGoogleService = inject(AuthGoogleService);
 
-  // Signal per lo stato di caricamento ed eventuali errori
   protected readonly isLoading = signal<boolean>(false);
   protected readonly errorMessage = signal<string | null>(null);
+
+  private onPageShow = (event: PageTransitionEvent) => {
+    // Se la pagina viene mostrata dalla cache del browser o riaperta
+    this.isLoading.set(false);
+  };
+
+  ngOnInit(): void {
+    this.isLoading.set(false);
+    window.addEventListener('pageshow', this.onPageShow);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('pageshow', this.onPageShow);
+  }
 
   signInWithGoogle(): void {
     this.isLoading.set(true);

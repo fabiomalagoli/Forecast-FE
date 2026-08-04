@@ -12,12 +12,15 @@ import { RolesComponent } from './pages/roles/roles.component';
 import { EmployeesComponent } from './pages/employees/employees.component';
 import { EmployeeDetailsComponent } from './pages/employees/employee-details/employee-details.component';
 import { WorkGroupsComponent } from './pages/work-groups/work-groups.component';
+import { ContactAdministratorComponent } from './pages/authentication/contact-administrator/contact-administrator.component';
 
 export const routes: Routes = [
   // Rotta pubblica di Login
   { path: 'login', component: AuthenticationComponent },
   // Rotta publica di Registrazione
   { path: 'register', component: AuthenticationComponent },
+  // Rotta pubblica di contatto con l'amministratore
+  { path: 'contact-administrator', component: ContactAdministratorComponent },
 
   // Rotte private (protette da authGuard)
   { path: 'home', component: GridComponent, canActivate: [authGuard] },
