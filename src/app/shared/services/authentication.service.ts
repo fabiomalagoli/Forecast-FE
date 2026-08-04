@@ -27,6 +27,38 @@ export class AuthenticationService {
   readonly accessToken = this._accessToken.asReadonly();
   readonly isAuthenticated = computed(() => !!this._accessToken());
 
+
+  constructor() {
+    this.initUserFromStorage();
+  }
+
+  private initUserFromStorage(): void {
+    const token = this._accessToken();
+    if(token) {
+      if (this.isTokenExpired(token)) {
+        this.logout();
+      } else {
+        const userDetails = this.extractUsernameFromToken(token);
+        this._currentUser.set({
+          username: userDetails.username,
+          firstName: userDetails.firstName,
+          lastName: userDetails.lastName,
+          profilePictureUrl: userDetails.profilePictureUrl
+        });
+      }
+    }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if(!payload.exp) return false; 
+      return Date.now() >= payload.exp * 1000;
+    } catch (error) {
+      return true;
+    }
+  }
+
   // Effettua il login inviando username e password nel Body della richiesta (UserForAuthenticationDto sul backend)
   login(credentials: UserForAuthentication): Observable<TokenDto> {
     return this.httpClient.post<TokenDto>(`${environment.apiUrl}/authentication/login`, credentials).pipe(
