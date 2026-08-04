@@ -14,9 +14,9 @@
   width: clamp(220px, 15vw, 280px);
   min-height: 100dvh; /* Occupa tutta l'altezza visibile */
   height: 100%;
-  position: sticky;
+  position: fixed; /* Sidebar fissa */
   top: 0;
-  overflow-y: auto;
+  overflow-y: auto; /* Disabilita lo scroll verticale */
 
   @media (max-width: 768px) {
     width: 88px;

@@ -1,6 +1,6 @@
 @use 'variables' as *;
 
-tr[app-work-group-row] {
+:host {
   border-bottom: 1px solid $border-filter-light;
   transition: $transition-base;
 
