@@ -38,7 +38,7 @@ export class AuthenticationService {
       if (this.isTokenExpired(token)) {
         this.logout();
       } else {
-        const userDetails = this.extractUsernameFromToken(token);
+        const userDetails = this.extractUserDataFromToken(token);
         this._currentUser.set({
           username: userDetails.username,
           firstName: userDetails.firstName,
@@ -65,7 +65,7 @@ export class AuthenticationService {
       tap((tokenDto) => {
         this.saveTokens(tokenDto);
 
-        const userDetails = this.extractUsernameFromToken(tokenDto.accessToken);
+        const userDetails = this.extractUserDataFromToken(tokenDto.accessToken);
 
         // Imposta l'utente (ricavabile dal token o dal payload)
         this._currentUser.set({
@@ -88,7 +88,7 @@ export class AuthenticationService {
           this.saveTokens(tokenDto);
           // Imposta l'utente (ricavabile dal token o dal payload)
           const user = {
-            ...this.extractUsernameFromToken(tokenDto.accessToken)
+            ...this.extractUserDataFromToken(tokenDto.accessToken)
           }
           this._currentUser.set({
             username: user.username,
@@ -104,7 +104,7 @@ export class AuthenticationService {
     );
   }
 
-  private extractUsernameFromToken(token: string): { 
+  private extractUserDataFromToken(token: string): { 
     firstName: string;
     lastName: string; 
     username: string; 
