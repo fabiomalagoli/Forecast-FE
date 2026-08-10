@@ -73,3 +73,28 @@ html, body {
     font-weight: 700;
   }
 }
+
+.custom-user-menu {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+  margin-top: 6px !important;
+  min-width: 130px !important;
+
+  .mat-mdc-menu-item {
+    min-height: 42px;
+    font-size: 0.9rem;
+    color: #333;
+
+    mat-icon {
+      margin-right: 8px;
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+      color: #333;
+    }
+
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+}

@@ -178,8 +178,7 @@
 
   table {
     width: 100%;
-    // Per mantenere gli angoli arrotondati senza usare overflow: hidden:
-    border-collapse: separate; 
+    border-collapse: collapse; 
     border-spacing: 0;
   }
 
