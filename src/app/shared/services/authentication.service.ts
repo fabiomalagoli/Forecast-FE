@@ -4,10 +4,14 @@ import { catchError, tap, throwError, Observable } from 'rxjs';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
-import { UserForAuthentication, UserForRegistration, TokenDto, User } from '../models/user.model';
+import { UserForAuthentication, UserForRegistration, TokenDto, User, AuthResponseDto } from '../models/user.model';
 
 interface IdTokenGoogleDto {
-  idToken: string
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  profilePictureUrl?: string;
+  role?: string;
 }
 
 @Injectable({
@@ -34,18 +38,20 @@ export class AuthenticationService {
 
   private initUserFromStorage(): void {
     const token = this._accessToken();
-    if(token) {
+    const storedUser = localStorage.getItem('user');
+
+    if (token && storedUser) {
       if (this.isTokenExpired(token)) {
         this.logout();
       } else {
-        const userDetails = this.extractUserDataFromToken(token);
-        this._currentUser.set({
-          username: userDetails.username,
-          firstName: userDetails.firstName,
-          lastName: userDetails.lastName,
-          profilePictureUrl: userDetails.profilePictureUrl
-        });
+        try {
+          this._currentUser.set(JSON.parse(storedUser));
+        } catch {
+          this.logout();
+        }
       }
+    } else if (token) {
+      this.logout();
     }
   }
 
@@ -60,21 +66,9 @@ export class AuthenticationService {
   }
 
   // Effettua il login inviando username e password nel Body della richiesta (UserForAuthenticationDto sul backend)
-  login(credentials: UserForAuthentication): Observable<TokenDto> {
-    return this.httpClient.post<TokenDto>(`${environment.apiUrl}/authentication/login`, credentials).pipe(
-      tap((tokenDto) => {
-        this.saveTokens(tokenDto);
-
-        const userDetails = this.extractUserDataFromToken(tokenDto.accessToken);
-
-        // Imposta l'utente (ricavabile dal token o dal payload)
-        this._currentUser.set({
-          username: userDetails.username || credentials.userName || '',
-          firstName: userDetails.firstName,
-          lastName: userDetails.lastName,
-          profilePictureUrl: userDetails.profilePictureUrl
-        });
-      }),
+  login(credentials: UserForAuthentication): Observable<AuthResponseDto> {
+    return this.httpClient.post<AuthResponseDto>(`${environment.apiUrl}/authentication/login`, credentials).pipe(
+      tap((authResponse) => this.saveAuthData(authResponse)),
       catchError((error) => {
         this.errorService.showError('Errore durante l\'autenticazione dell\'utente.');
         return throwError(() => buildEntityError(error, 'utente', 'autenticazione'));
@@ -82,44 +76,31 @@ export class AuthenticationService {
     );
   }
 
-  loginWithGoogle(body: IdTokenGoogleDto): Observable<TokenDto> {
-      return this.httpClient.post<TokenDto>(`${environment.apiUrl}/authentication/google-login`, body).pipe(
-        tap((tokenDto) => {
-          this.saveTokens(tokenDto);
-          // Imposta l'utente (ricavabile dal token o dal payload)
-          const user = {
-            ...this.extractUserDataFromToken(tokenDto.accessToken)
-          }
-          this._currentUser.set({
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            profilePictureUrl: user.profilePictureUrl
-          });
-        }),
-        catchError((error) => {
-          this.errorService.showError('Errore durante l\'autenticazione dell\'utente.');
-          return throwError(() => buildEntityError(error, 'utente', 'autenticazione'));
-        })
+  loginWithGoogle(body: { idToken: string }): Observable<AuthResponseDto> {
+    return this.httpClient.post<AuthResponseDto>(`${environment.apiUrl}/authentication/google-login`, body).pipe(
+      tap((authResponse) => this.saveAuthData(authResponse)),
+      catchError((error) => {
+        this.errorService.showError('Errore durante l\'autenticazione Google.');
+        return throwError(() => buildEntityError(error, 'utente', 'autenticazione'));
+      })
     );
   }
 
-  private extractUserDataFromToken(token: string): { 
-    firstName: string;
-    lastName: string; 
-    username: string; 
-    profilePictureUrl?: string
-  } {
-    const tokenPart =  token.split('.')[1];
-    const base64 = tokenPart.replace(/-/g, '+').replace(/_/g, '/');
-    const decoded = window.atob(base64);
-    
-    const payload = JSON.parse(decoded);
-    const firstName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] || '';
-    const lastName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] || '';
-    const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || payload['name'] || payload['sub'] || '';
-    const profilePictureUrl = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture'] || payload['picture'] || undefined;
-    return { firstName, lastName, username, profilePictureUrl };
+  private saveAuthData(authResponse: AuthResponseDto): void {
+    this._accessToken.set(authResponse.tokens.accessToken);
+    this._refreshToken.set(authResponse.tokens.refreshToken);
+    localStorage.setItem('accessToken', authResponse.tokens.accessToken);
+    localStorage.setItem('refreshToken', authResponse.tokens.refreshToken);
+
+    const user: User = {
+      username: authResponse.user.userName,
+      firstName: authResponse.user.firstName,
+      lastName: authResponse.user.lastName,
+      profilePictureUrl: authResponse.user.pictureUrl
+    };
+
+    this._currentUser.set(user);
+    localStorage.setItem('user', JSON.stringify(user));
   }
 
   // Registrazione

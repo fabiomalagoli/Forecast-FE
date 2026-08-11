@@ -19,6 +19,19 @@ export interface TokenDto {
   refreshToken: string;
 }
 
+export interface UserTokenDataDto {
+  firstName: string;
+  lastName: string;
+  userName: string;
+  pictureUrl?: string;
+  role: string;
+}
+
+export interface AuthResponseDto {
+  tokens: TokenDto;
+  user: UserTokenDataDto;
+}
+
 // Informazioni sull'utente autenticato (estratte dal JWT o ricevute al login)
 export interface User {
   firstName: string;
