@@ -556,7 +556,7 @@ export class ProjectsService {
   }
 
   downloadProjectExcel(projectId: string): Observable<Blob> {
-    return this.httpClient.get(`api/projects/${projectId}/excel`, {
+    return this.httpClient.get(`${environment.apiUrl}/projects/${projectId}/excel`, {
         responseType: 'blob'
     });
   }
