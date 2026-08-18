@@ -3,24 +3,24 @@ import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
-import { RolesService } from '../../../shared/services/roles.service';
-import { Role } from '../../../shared/models/role.model';
-import { buildCreateRolePayload } from '../../../shared/payloads/role.payloads';
-import { RoleFormFacade } from '../../../shared/utils/role-form.facade';
+import { JobRolesService } from '../../../shared/services/job-roles.service';
+import { JobRole } from '../../../shared/models/job-role.model';
+import { buildCreateJobRolePayload } from '../../../shared/payloads/job-role.payloads';
+import { JobRoleFormFacade } from '../../../shared/utils/job-role-form.facade';
 import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-new-role',
+  selector: 'app-new-job-role',
   standalone: true,
   imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
-  templateUrl: './new-role.component.html',
-  providers: [RoleFormFacade]
+  templateUrl: './new-job-role.component.html',
+  providers: [JobRoleFormFacade]
 })
-export class NewRoleComponent {
-  public facade = inject(RoleFormFacade);
-  private rolesService = inject(RolesService);
+export class NewJobRoleComponent {
+  public facade = inject(JobRoleFormFacade);
+  private rolesService = inject(JobRolesService);
 
-  roleToAdd = input.required<Role | null>();
+  roleToAdd = input.required<JobRole | null>();
 
   added = output<void>();
   cancel = output<void>();
@@ -57,7 +57,7 @@ export class NewRoleComponent {
   submit() {
     if (this.isButtonDisabled) return;
 
-    const payload = buildCreateRolePayload({ 
+    const payload = buildCreateJobRolePayload({ 
       ...this.roleToAdd(), 
       ...this.roleCreateForm.value 
     });

@@ -1,16 +1,16 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal, OnInit } from '@angular/core';
-import { Role } from '../../shared/models/role.model';
-import { RolesService } from '../../shared/services/roles.service';
+import { JobRole } from '../../shared/models/job-role.model';
+import { JobRolesService } from '../../shared/services/job-roles.service';
 import { Router } from '@angular/router';
-import { RoleResourcesComponent } from './role-resources/role-resources.component';
-import { NewRoleComponent } from "./new-role/new-role.component";
-import { RoleRowComponent } from './role/role.component';
+import { JobRoleResourcesComponent } from './job-role-resources/job-role-resources.component';
+import { NewJobRoleComponent } from "./new-job-role/new-job-role.component";
+import { JobRoleRowComponent } from './job-role/job-role.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, tap, Subject, timer, switchMap, forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ModificaRoleComponent } from './edit-role/edit-role.component';
-import { AssignEmployeeComponent } from './role/assign-employees/assign-employees.component';
+import { ModificaJobRoleComponent } from './edit-job-role/edit-job-role.component';
+import { AssignEmployeeComponent } from './job-role/assign-employees/assign-employees.component';
 import { EmployeesService } from '../../shared/services/employees.service';
 import { AppButtonComponent } from '../../shared/button/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -18,35 +18,35 @@ import { SnackbarService } from '../../shared/services/snackbar.service';
 import { NotifyAction } from '../../shared/enums/notify.enum';
 import { getHttpErrorStatusMessage } from '../../shared/utils/http-error-message.utils';
 import { Employee } from '../../shared/models/employee.model';
-import { EditEmployeeForRoleComponent } from "./role-resources/edit-employee-for-role/edit-employee-for-role.component";
+import { EditEmployeeForJobRoleComponent } from "./job-role-resources/edit-employee-for-job-role/edit-employee-for-job-role.component";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
 
 @Component({
-  selector: 'app-roles',
-  templateUrl: './roles.component.html',
-  styleUrls: ['./roles.component.scss'],
+  selector: 'app-job-roles',
+  templateUrl: './job-roles.component.html',
+  styleUrls: ['./job-roles.component.scss'],
   standalone: true,
   imports: [
-    RoleResourcesComponent,
-    NewRoleComponent,
-    RoleRowComponent,
+    JobRoleResourcesComponent,
+    NewJobRoleComponent,
+    JobRoleRowComponent,
     MatPaginatorModule,
     ReactiveFormsModule,
-    ModificaRoleComponent,
+    ModificaJobRoleComponent,
     AssignEmployeeComponent,
     AppButtonComponent,
     MatProgressSpinnerModule,
-    EditEmployeeForRoleComponent,
+    EditEmployeeForJobRoleComponent,
     MatCheckboxModule
 ],
 })
-export class RolesComponent implements OnInit {
+export class JobRolesComponent implements OnInit {
     isFetching = signal(false);
     error = signal<string | null>(null);
     
-    private rolesService = inject(RolesService);
+    private rolesService = inject(JobRolesService);
     private employeesService = inject(EmployeesService);
     private destroyRef = inject(DestroyRef);
     private snackbarService = inject(SnackbarService);
@@ -64,7 +64,7 @@ export class RolesComponent implements OnInit {
     listAllJobRoles = this.rolesService.loadedAllJobRoles;
     roles = this.rolesService.loadedJobRoles;
 
-    filteredRoles = computed<Role[]>(() => { return this.roles().filter(r => !r.isEliminated); });
+    filteredRoles = computed<JobRole[]>(() => { return this.roles().filter(r => !r.isEliminated); });
     selectedEmployeeForDrawer = signal<any | null>(null);
 
     editingEmployee = signal<Employee | null>(null);
@@ -74,7 +74,7 @@ export class RolesComponent implements OnInit {
     roleFilterDropdownOpen = signal(false);
     showAllRoleOptions = signal(false);
 
-    roleFilterOptions = computed<Role[]>(() => {
+    roleFilterOptions = computed<JobRole[]>(() => {
         const term = this.showAllRoleOptions() ? '' : this.filterNameValue().toLowerCase();
         const rolesData = this.listAllJobRoles() ?? [];
 
@@ -84,9 +84,9 @@ export class RolesComponent implements OnInit {
     });
 
     isAddingRoleState = signal<boolean | null>(null);
-    editingRole = signal<Role | null>(null);
-    assigningRole = signal<Role | null>(null);
-    addingRole = signal<Role | null>(null);
+    editingRole = signal<JobRole | null>(null);
+    assigningRole = signal<JobRole | null>(null);
+    addingRole = signal<JobRole | null>(null);
 
     selectedRoleId = signal<string | null>(null);
     selectedRole = signal<any | null>(null);
@@ -223,7 +223,7 @@ export class RolesComponent implements OnInit {
         this.caricaPagina(event.pageIndex + 1);
     }
 
-    onDeleteRole(role: Role): void {
+    onDeleteRole(role: JobRole): void {
         if (this.isUnassignedRole(role)) {
             return;
         }
@@ -245,7 +245,7 @@ export class RolesComponent implements OnInit {
         });
     }
 
-    private isUnassignedRole(role: Role): boolean {
+    private isUnassignedRole(role: JobRole): boolean {
         return role.name.trim().toLowerCase() === 'unassigned';
     }
 
@@ -385,7 +385,7 @@ export class RolesComponent implements OnInit {
         }
     }
 
-    selectRoleFilter(role: Role) {
+    selectRoleFilter(role: JobRole) {
         const roleName = this.optionName(role);
         this.filterNameRole.setValue(roleName, { emitEvent: false });
         this.filterNameValue.set(roleName.toLowerCase());
@@ -430,7 +430,7 @@ export class RolesComponent implements OnInit {
         this.filteredSelectedEmployees.set([]);
     }
 
-    apriModifica(r: Role) {
+    apriModifica(r: JobRole) {
         if (this.isUnassignedRole(r)) {
             return;
         }
@@ -438,7 +438,7 @@ export class RolesComponent implements OnInit {
     }
     
     chiudiModifica() { this.editingRole.set(null); }
-    apriAssegnaRisorse(r: Role) { this.assigningRole.set(r); }
+    apriAssegnaRisorse(r: JobRole) { this.assigningRole.set(r); }
     chiudiAssegnaRisorse() { this.assigningRole.set(null); }
 
     salvaModifica() {

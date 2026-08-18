@@ -1,25 +1,25 @@
 import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Role } from '../../../shared/models/role.model';
+import { JobRole } from '../../../shared/models/job-role.model';
 import { Employee } from '../../../shared/models/employee.model';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { finalize, timer } from 'rxjs';
 import { Location } from '@angular/common';
 import { EmployeesService } from '../../../shared/services/employees.service';
-import { RolesService } from '../../../shared/services/roles.service';
+import { JobRolesService } from '../../../shared/services/job-roles.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-role-resources',
-  templateUrl: './role-resources.component.html',
-  styleUrls: ['./role-resources.component.scss'],
+  templateUrl: './job-role-resources.component.html',
+  styleUrls: ['./job-role-resources.component.scss'],
   imports: [CommonModule, AppButtonComponent],
 })
-export class RoleResourcesComponent {
+export class JobRoleResourcesComponent {
 
     private employeesService = inject(EmployeesService);
-    private rolesService = inject(RolesService);
+    private rolesService = inject(JobRolesService);
     private destroyRef = inject(DestroyRef);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
@@ -33,7 +33,7 @@ export class RoleResourcesComponent {
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
 
     risorseAssociate = input<any[]>([]);
-    ruoloSelezionato = input<Role | null>(null);
+    ruoloSelezionato = input<JobRole | null>(null);
 
     editEmployee = output<Employee>();
 

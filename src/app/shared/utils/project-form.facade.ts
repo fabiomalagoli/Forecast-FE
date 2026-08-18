@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { forkJoin, Observable, tap } from 'rxjs';
 import { LookupsService } from '../services/lookups.service';
 import { CustomersService } from '../services/customers.service';
-import { RolesService } from '../services/roles.service';
+import { JobRolesService } from '../services/job-roles.service';
 import { EmployeesService } from '../services/employees.service';
 import { Employee } from '../models/employee.model';
 import { 
@@ -25,7 +25,7 @@ export class ProjectFormFacade {
   private fb = inject(FormBuilder);
   private lookupsService = inject(LookupsService);
   private customersService = inject(CustomersService);
-  private rolesService = inject(RolesService);
+  private rolesService = inject(JobRolesService);
   private employeesService = inject(EmployeesService);
 
   // Liste dei Lookup dei dati di supporto

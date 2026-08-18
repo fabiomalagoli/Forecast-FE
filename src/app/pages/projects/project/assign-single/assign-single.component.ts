@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { AppButtonComponent } from '../../../../shared/button/button';
 import { Employee } from '../../../../shared/models/employee.model';
-import { Role } from '../../../../shared/models/role.model';
+import { JobRole } from '../../../../shared/models/job-role.model';
 import { Company } from '../../../../shared/models/company.model';
 
 @Component({
@@ -17,7 +17,7 @@ export class AssignSingleComponent {
 
     // Inputs provided by parent
     employees = input.required<Employee[]>();
-    roles = input.required<Role[]>();
+    roles = input.required<JobRole[]>();
     levels = input.required<any[]>();
     selectedEmployeeIdFromForm = input<string | null>(null);
 

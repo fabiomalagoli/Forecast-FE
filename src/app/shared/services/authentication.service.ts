@@ -6,14 +6,6 @@ import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { UserForAuthentication, UserForRegistration, TokenDto, User, AuthResponseDto } from '../models/user.model';
 
-interface IdTokenGoogleDto {
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  profilePictureUrl?: string;
-  role?: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -92,11 +84,14 @@ export class AuthenticationService {
     localStorage.setItem('accessToken', authResponse.tokens.accessToken);
     localStorage.setItem('refreshToken', authResponse.tokens.refreshToken);
 
+    const userId = authResponse.user.id || this.getUserIdFromToken(authResponse.tokens.accessToken);
+
     const user: User = {
-      username: authResponse.user.userName,
+      id: userId,
+      userName: authResponse.user.userName,
       firstName: authResponse.user.firstName,
       lastName: authResponse.user.lastName,
-      profilePictureUrl: authResponse.user.pictureUrl
+      photoUrl: authResponse.user.pictureUrl
     };
 
     this._currentUser.set(user);
@@ -130,6 +125,15 @@ export class AuthenticationService {
         return throwError(() => error);
       })
     );
+  }
+
+  private getUserIdFromToken(token: string): string | undefined {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+    } catch {
+      return undefined;
+    }
   }
 
   // Disconnette l'utente e pulisce lo stato

@@ -8,11 +8,12 @@ import { CustomerDetailsComponent } from './pages/customers/customer-details/cus
 import { CustomerProjectsComponent } from './pages/customers/customer-details/customer-projects/customer-projects.component';
 import { GridComponent } from './pages/grid/grid.component';
 import { CustomersComponent } from './pages/customers/customers.component';
-import { RolesComponent } from './pages/roles/roles.component';
+import { JobRolesComponent } from './pages/job-roles/job-roles.component';
 import { EmployeesComponent } from './pages/employees/employees.component';
 import { EmployeeDetailsComponent } from './pages/employees/employee-details/employee-details.component';
 import { WorkGroupsComponent } from './pages/work-groups/work-groups.component';
 import { ContactAdministratorComponent } from './pages/authentication/contact-administrator/contact-administrator.component';
+import { AssignUsersToProjectComponent } from './pages/projects/project/project-accessibility/project-accessibility.component';
 
 export const routes: Routes = [
   // Rotta pubblica di Login
@@ -28,8 +29,9 @@ export const routes: Routes = [
   { path: 'clienti/:id', component: CustomerDetailsComponent, canActivate: [authGuard] },
   { path: 'progetti', component: ProjectsComponent, canActivate: [authGuard] },
   { path: 'progetti/:id', component: ProjectDetailsComponent, canActivate: [authGuard] },
+  { path: 'progetti/:id/manage-access', component: AssignUsersToProjectComponent, canActivate: [authGuard] },
   { path: 'clienti/:id/progetti-attivi-cliente', component: CustomerProjectsComponent, canActivate: [authGuard] },
-  { path: 'ruoli', component: RolesComponent, canActivate: [authGuard] },
+  { path: 'ruoli', component: JobRolesComponent, canActivate: [authGuard] },
   { path: 'risorse/:id', component: EmployeeDetailsComponent, canActivate: [authGuard] },
   { path: 'risorse', component: EmployeesComponent, canActivate: [authGuard] },
   { path: 'workgroups', component: WorkGroupsComponent, canActivate: [authGuard] },

@@ -1,11 +1,11 @@
 import { Employee } from '../models/employee.model';
 import { Project, ProjectEmployee } from '../models/project.model';
-import { Role } from '../models/role.model';
+import { JobRole } from '../models/job-role.model';
 
 export function mergeProjectsWithEmployeeDetails(
   projects: Project[],
   employees: Employee[],
-  roles: Role[] = [],
+  roles: JobRole[] = [],
 ): Project[] {
   return projects.map((project) => ({
     ...project,
@@ -20,7 +20,7 @@ export function mergeProjectsWithEmployeeDetails(
 export function mergeProjectEmployeesWithEmployeeDetails(
   projectEmployees: ProjectEmployee[],
   employees: Employee[],
-  roles: Role[] = [],
+  roles: JobRole[] = [],
 ): ProjectEmployee[] {
   return projectEmployees.map((projectEmployee) => {
     const employeeInfo = findEmployeeForProjectEmployee(projectEmployee, employees);
@@ -59,7 +59,7 @@ function findEmployeeForProjectEmployee(projectEmployee: any, employees: Employe
   );
 }
 
-function resolveRoleName(roleValue: string | null | undefined, roles: Role[]): string | null {
+function resolveRoleName(roleValue: string | null | undefined, roles: JobRole[]): string | null {
   if (!roleValue) {
     return null;
   }

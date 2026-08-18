@@ -27,6 +27,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { toBackendDate } from '../../shared/utils/shared-utils';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
+import { AssignUsersToProjectComponent } from "./project/project-accessibility/project-accessibility.component";
+import { UsersService } from '../../shared/services/users.service';
+import { User } from '../../shared/models/user.model';
 
 
 @Component({
@@ -41,7 +44,8 @@ import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-de
     A11yModule,
     MatIconModule,
     MatTooltipModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    AssignUsersToProjectComponent
 ],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.scss'],
@@ -49,6 +53,7 @@ import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-de
 })
 
 export class ProjectsComponent {
+  private userService = inject(UsersService)
   private projectsService = inject(ProjectsService);
   private lookupsService = inject(LookupsService);
   private customersService = inject(CustomersService);
@@ -73,6 +78,8 @@ export class ProjectsComponent {
   editingProject = signal<Project | null>(null);
 
   deletingProjectId = signal<string | null>(null);
+
+  settingUsersAccessibilityProject = signal<Project | null>(null);
 
   companiesList = signal<any[]>([]);
   statusesList = signal<any[]>([]);
@@ -139,6 +146,33 @@ export class ProjectsComponent {
   AllProjects = this.projectsService.loadedProjects;
 
   filteredProjects = computed<Project[]>(() => this.projects());
+
+  existingProjectMembers = computed<User[]>(() => {
+      const progetto = this.settingUsersAccessibilityProject();
+      const membri = progetto?.members || (progetto as any)?.Members;
+      if (!membri || membri.length === 0) return [];
+
+      const tuttiGliUtenti = this.userService.loadedUsers() ?? [];
+      const userMap = new Map<string, User>(
+          tuttiGliUtenti.map((u: User) => [String(u.id || (u as any).Id || '').toLowerCase(), u])
+      );
+
+      return membri
+          .map((m: any): User => {
+              const memberId = String(m.userId || m.UserId || m.id || m.Id || '').toLowerCase();
+              const fullUser = userMap.get(memberId);
+
+              return {
+                  id: memberId,
+                  userName: fullUser?.userName || m.userName || m.UserName || m.email || m.Email || '',
+                  firstName: fullUser?.firstName || m.firstName || m.FirstName || '',
+                  lastName: fullUser?.lastName || m.lastName || m.LastName || '',
+                  role: String(m.role !== undefined && m.role !== null ? m.role : ''),
+                  photoUrl: fullUser?.photoUrl
+              };
+          })
+          .filter((u: User) => u.userName?.toLowerCase() !== 'system_user');
+  });
 
   yearFilterOptions = computed<any[]>(() => {
     const projects = this.AllProjects();
@@ -431,6 +465,14 @@ export class ProjectsComponent {
 
   closeEditProject() {
     this.editingProject.set(null);
+  }
+
+  openUserAccessibilitySettings(project: Project) {
+    this.settingUsersAccessibilityProject.set(project)
+  }
+
+  closeUserAccessibilitySettings() {
+    this.settingUsersAccessibilityProject.set(null)
   }
 
   onDeleteProject(project: Project): void {
@@ -737,7 +779,7 @@ clearYearFilter() {
         this.isFetching.set(false);
         this.snackbarService.success(NotifyAction.Caricamento, 'Excel scaricato con successo');
       },
-      error: (err) => {
+      error: () => {
         this.isFetching.set(false);
         this.snackbarService.error(NotifyAction.Caricamento, "Impossibile generare il file Excel");
       }

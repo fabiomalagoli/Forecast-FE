@@ -19,12 +19,13 @@ export interface Project {
   customer: string;
   companyId?: string;
   pmId?: string;
+  ownerId?: string;
+  members?: ProjectMember[];
   customerId?: string;
   projectStatusId?: string;
   totalBudget: number;
   isFavorite: boolean;
   isEliminated: boolean;
-
 }
 
 
@@ -62,3 +63,8 @@ export interface ProjectRole {
   winProbability: number;
 }
 
+export interface ProjectMember {
+  projectId: string;
+  userId: string;
+  projectRole: string;
+}

@@ -6,7 +6,7 @@ import { AppButtonComponent } from '../../../../shared/button/button';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap, timer } from 'rxjs';
 import { CustomersService } from '../../../../shared/services/customers.service';
 import { EmployeesService } from '../../../../shared/services/employees.service';
-import { RolesService } from '../../../../shared/services/roles.service';
+import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CustomerProjectSummaryPayload } from '../../../../shared/payloads/customer.payloads';
 import { FormControl } from '@angular/forms';

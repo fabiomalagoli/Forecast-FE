@@ -19,3 +19,9 @@ export interface UpdateWorkGroupRequest {
   name: string;
   employeeIds: string[];
 }
+
+export interface GroupMember {
+  groupId: string;
+  userId: string;
+  groupRole: string;
+}

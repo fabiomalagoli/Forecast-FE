@@ -21,7 +21,13 @@ export class ProgettoComponent {
   @Input() align: 'left' | 'center' | 'right' = 'left' //allineamento di default a sinistra
   @Input({required: true}) columns!: Column<Project>[];
   project = input.required<Project>();
+  selected = input(false);
   edit = output<Project>();
+
+  showUsers = output<Project>();
+  manageUsersToproject = output<Project>();
+
+  isSelected = input<string | null>(null);
 
   // Router usato per aprire il dettaglio del progetto
   private router = inject(Router);

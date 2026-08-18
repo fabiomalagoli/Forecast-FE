@@ -1,0 +1,123 @@
+<div class="backdrop" (click)="onCancel()"></div>
+
+<dialog open>
+  <div class="np-panel">
+    <div class="modal-heading">
+      <h2 class="np-title">Assegna Utenti</h2>
+    </div>
+
+    @if (statusMessage) {
+      <div class="message message--{{ statusMessage.type }}">
+        {{ statusMessage.text }}
+      </div>
+    }
+
+    <form class="np-form" #f="ngForm" (ngSubmit)="submit(f)">
+      
+      <div class="filter-group main-role-select">
+        <label for="roleFilter">Filtra la ricerca utenti per Ruolo</label>
+        <select
+          id="roleFilter"
+          [ngModel]="selectedRoleFilter()"
+          (ngModelChange)="selectedRoleFilter.set($event)"
+          [ngModelOptions]="{ standalone: true }">
+          <option value="">Tutti i ruoli</option>
+          @for (role of listaRoles(); track (role.id || role.Id || role)) {
+            <option [value]="optionName(role)">
+              {{ optionName(role) }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="assignment-layout">
+        <section class="selected-panel">
+          <div class="section-heading">
+            <h3>Utenti selezionati</h3>
+            <span>{{ listaUtentiSelezionati().length }}</span>
+          </div>
+
+          <div class="selected-list">
+            @for (user of listaUtentiSelezionati(); track getUserId(user)) {
+              <div class="selected-row">
+                <div class="selected-resource">
+                  <strong>{{ fullName(user) }}</strong>
+                  <small>{{ user.userName }}</small>
+                </div>
+
+                <label class="level-field" [for]="toId('jobRoleLevel', $index)">
+                  Ruolo
+                  <select
+                    [id]="toId('jobRoleLevel', $index)"
+                    [ngModel]="user.role"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="updateUserRole(getUserId(user), $event)">
+                    <option value="" disabled>Seleziona ruolo</option>
+                    @for (role of listaRoles(); track (role.id || role.Id || role)) {
+                      <option [value]="optionName(role)">
+                        {{ optionName(role) }}
+                      </option>
+                    }
+                  </select>
+                </label>
+
+                <button
+                  class="remove-resource"
+                  type="button"
+                  aria-label="Rimuovi risorsa"
+                  (click)="removeSelectedUser(getUserId(user))">
+                  ×
+                </button>
+              </div>
+            } @empty {
+              <div class="empty-selection">
+                Seleziona uno o più utenti dalla lista a destra.
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="picker-panel">
+          <div class="section-heading">
+            <h3>Aggiungi utenti</h3>
+          </div>
+
+          <div class="filter-group">
+            <label>Utente</label>
+            <div class="combo-field resource-name-filter-combo">
+              <input
+                type="text"
+                [formControl]="filtroUtente"
+                placeholder="Cerca per nome..."
+                autocomplete="off"
+                (focus)="onUserFilterFocus()"
+                (input)="onUserFilterInput()">
+              @if (filtroRisorsaValue()) {
+                <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
+              }
+              <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleUserFilterDropdown()">▾</button>
+            </div>
+
+            @if (userDropdownOpen()) {
+              <div class="resource-results">
+                @for (user of nameFilterOptions(); track getUserId(user)) {
+                  <div class="resource-option" role="button" (mousedown)="selectUserFilter(user)">
+                    <span>{{ fullName(user) }}</span>
+                    <small>{{ user.userName }} · {{ user.role }}</small>
+                  </div>
+                } @empty {
+                  <div class="combo-empty">Nessun utente trovato</div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+
+      <div class="actions">
+        <button type="submit" [disabled]="isSubmitDisabled(f)">Conferma modifiche</button>
+        <button type="button" (click)="onCancel()">Annulla</button>
+      </div>
+    </form>
+  </div>
+</dialog>

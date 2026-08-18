@@ -24,5 +24,13 @@
           aria-label="Modifica">
           <mat-icon class="action-icon">edit</mat-icon>
         </button>
+
+        <button [routerLink]="['/progetti', project().id, '/manage-access']" 
+        class="btn-action-icon btn-accessibility-settings" type="button" (click)="manageUsersToproject.emit(project())"
+          matTooltip="Impostazioni" 
+          matTooltipPosition="above"
+          aria-label="Impostazioni">
+          <mat-icon class="action-icon">settings</mat-icon>
+        </button>
     </div>
 </app-table-row> <!-- elemento Progetto, equivalente ad una riga -->

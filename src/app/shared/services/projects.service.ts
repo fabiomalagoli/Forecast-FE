@@ -55,6 +55,11 @@ export class ProjectsService {
       customerId: project.customerId || null,
       projectStatusId: project.projectStatusId || null,
       totalBudget: project.totalBudget || 0,
+      members: (project.members || project.Members || []).map((m: any) => ({
+      userId: m.userId || m.UserId,
+      userName: m.userName || m.UserName || m.email || m.Email,
+      role: m.role !== undefined && m.role !== null ? String(m.role) : ''
+    }))
     };
   }
 

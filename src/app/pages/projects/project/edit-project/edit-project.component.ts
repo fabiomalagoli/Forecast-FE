@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { Project } from '../../../../shared/models/project.model';
 import { TextInputComponent } from '../../../../shared/text-input/text-input.component';
 import { AssignSingleComponent } from '../assign-single/assign-single.component';
-import { Role } from '../../../../shared/models/role.model';
+import { JobRole } from '../../../../shared/models/job-role.model';
 import { Employee } from '../../../../shared/models/employee.model';
 import { ProjectsService } from '../../../../shared/services/projects.service';
 import { EmployeesService } from '../../../../shared/services/employees.service';
@@ -54,7 +54,7 @@ export class EditProjectComponent implements OnInit {
   editProjectForm!: FormGroup;
 
   showAssignPanel = signal(false);
-  assignRole = signal<Role | null>(null);
+  assignRole = signal<JobRole | null>(null);
   assignList = signal<Employee[]>([]);
   assignSelectedEmployeeId = signal<string | null>(null);
   assignSelectedRoleId = signal<string | null>(null);
@@ -230,7 +230,7 @@ export class EditProjectComponent implements OnInit {
   openAssignPanel() {
     const allRoles = this.facade.jobRolesList() || [];
     const foundUnassigned = allRoles.find(r => (r?.name || '').toString().trim().toLowerCase() === 'unassigned');
-    const roleForPanel: Role = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
+    const roleForPanel: JobRole = foundUnassigned ? foundUnassigned : { id: 'UNASSIGNED-FALLBACK', name: 'Unassigned', isDefault: false } as any;
 
     const projectEmps = this.projectEmployees.getRawValue() || [];
     const projectEmpIds = projectEmps.map((pe: any) => String(pe.employeeId || pe.id)).filter(Boolean);

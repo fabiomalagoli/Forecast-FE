@@ -1,0 +1,369 @@
+@use 'variables' as *;
+
+/* BACKDROP E DIALOG MODALE */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+dialog {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 21;
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  overflow: hidden;
+  border: 4px solid $color-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-dialog;
+  transform: translate(-50%, -50%);
+}
+
+.np-panel {
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding: 24px;
+  background: $bg-white;
+}
+
+/* TESTI E TITOLI */
+
+.modal-heading {
+  margin-bottom: 18px;
+
+  p {
+    margin: 6px 0 0;
+    color: $text-muted;
+  }
+
+  strong {
+    color: $text-dark;
+  }
+}
+
+.np-title {
+  margin: 0;
+  font-size: 1.35rem;
+  color: $text-dark;
+}
+
+/* LAYOUT GRID E PANNELLI */
+
+.np-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.assignment-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.selected-panel,
+.picker-panel {
+  min-height: 360px;
+  padding: 16px;
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+  background: $bg-light;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: $text-dark;
+  }
+
+  span {
+    min-width: 28px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: $color-info-badge-bg;
+    color: $color-info-badge-text;
+    font-weight: 700;
+    text-align: center;
+  }
+}
+
+/* LISTE RISORSE SELEZIONATE / RISULTATI */
+
+.selected-list,
+.resource-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.selected-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 190px) 36px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+  background: $bg-white;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr 36px;
+  }
+}
+
+.selected-resource {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+
+  strong {
+    overflow: hidden;
+    color: $text-dark;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    overflow: hidden;
+    color: $text-light;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* INPUT, COMBO BOX E FILTRI */
+
+.level-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: $text-medium;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  @media (max-width: 760px) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  select {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid $border-main;
+    border-radius: $radius-md;
+    background: $bg-white;
+    color: $text-dark;
+    padding: 0 10px;
+  }
+}
+
+.combo-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid $border-main;
+    border-radius: $radius-md;
+    background: $bg-white;
+    color: $text-dark;
+    padding: 0 72px 0 12px;
+  }
+}
+
+.filter-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    color: $text-medium;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+}
+
+/* PULSANTI E ICONE COMBO BOX */
+
+.remove-resource,
+.combo-clear,
+.combo-toggle {
+  border: 0;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+}
+
+.remove-resource {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  font-size: 1.25rem;
+
+  &:hover {
+    background: $color-error-bg;
+    color: $color-error-text;
+  }
+}
+
+.combo-clear,
+.combo-toggle {
+  position: absolute;
+  top: 50%;
+  width: 32px;
+  height: 32px;
+  transform: translateY(-50%);
+}
+
+.combo-clear { right: 34px; }
+.combo-toggle { right: 2px; }
+
+.resource-results {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+  background: $bg-white;
+}
+
+.resource-option {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 100%;
+  gap: 4px;        
+  padding: 10px;
+  border-radius: $radius-md;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  -webkit-user-select: none; /* Per Safari */
+  user-select: none; /* Impedisce la selezione del testo invece dell'opzione al click */
+
+  &:hover {
+    background: $bg-hover;
+  }
+
+  span {
+    display: block;
+    width: 100%;
+    color: $text-dark;
+    font-weight: 600;
+    white-space: normal; 
+    line-height: 1.2;
+  }
+
+  small {
+    display: block;
+    width: 100%;
+    color: $text-light;
+    white-space: normal;
+    line-height: 1.2;
+  }
+}
+
+.empty-selection,
+.combo-empty {
+  padding: 18px;
+  border: 1px dashed $border-main;
+  border-radius: $radius-lg;
+  color: $text-light;
+  text-align: center;
+}
+
+/* MESSAGGI E AZIONI INFERIORI */
+
+.message {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: $radius-md;
+  font-weight: 600;
+
+  &--success {
+    background: $color-success-bg;
+    color: $color-success-text;
+  }
+
+  &--error {
+    background: $color-error-bg;
+    color: $color-error-text;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  button {
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid $border-main;
+    border-radius: $radius-md;
+    background: $bg-white;
+    color: $text-dark;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+    &[type='submit'] {
+      border-color: $color-primary;
+      background: $color-primary;
+      font-weight: 700;
+
+      &:not(:disabled):hover,
+      &:not(:disabled):active {
+        border-color: $color-primary-hover;
+        background: $color-primary-hover;
+      }
+    }
+
+    &[type='button']:hover,
+    &[type='button']:active {
+      border-color: $border-hover;
+      background: $bg-light;
+    }
+
+    &:disabled {
+      border-color: $color-primary-disabled;
+      background: $color-primary-disabled;
+      color: rgba($text-dark, 0.55);
+      opacity: 1;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.btn-add {
+  padding: 0.75rem 1.5rem;
+  background-color: $color-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-base;
+}

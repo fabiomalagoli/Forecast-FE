@@ -7,7 +7,7 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
 import { WorkGroupFormFacade } from '../../../shared/utils/workgourp-form.facade';
 import { WorkGroupsService } from '../../../shared/services/workgroups.service';
 import { EmployeesService } from '../../../shared/services/employees.service';
-import { RolesService } from '../../../shared/services/roles.service';
+import { JobRolesService } from '../../../shared/services/job-roles.service';
 import { LookupsService } from '../../../shared/services/lookups.service';
 import { Employee } from '../../../shared/models/employee.model';
 import { debounceTime, distinctUntilChanged, forkJoin, of, switchMap } from 'rxjs';
@@ -26,7 +26,7 @@ export class NewWorkGroupComponent implements OnInit {
   public facade = inject(WorkGroupFormFacade);
   private workGroupsService = inject(WorkGroupsService);
   private employeesService = inject(EmployeesService);
-  private rolesService = inject(RolesService);
+  private rolesService = inject(JobRolesService);
   private lookupsService = inject(LookupsService);
   private destroyRef = inject(DestroyRef);
 

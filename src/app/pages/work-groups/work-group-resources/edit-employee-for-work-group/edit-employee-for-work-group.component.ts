@@ -10,7 +10,7 @@ import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import { normalizeEmployeeForForm } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
-import { RolesService } from '../../../../shared/services/roles.service';
+import { JobRolesService } from '../../../../shared/services/job-roles.service';
 
 @Component({
   selector: 'app-edit-employee-for-work-group',
@@ -20,7 +20,7 @@ import { RolesService } from '../../../../shared/services/roles.service';
 export class EditEmployeeForRoleComponent {
 
     private employeesService = inject(EmployeesService);
-    private rolesService = inject(RolesService)
+    private rolesService = inject(JobRolesService)
     private lookupsService = inject(LookupsService);
     risorsaDaModificare = input.required<Employee | null>();
 

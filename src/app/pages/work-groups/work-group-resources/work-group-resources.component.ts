@@ -7,7 +7,7 @@ import { AppButtonComponent } from '../../../shared/button/button';
 import { finalize, timer } from 'rxjs';
 import { Location } from '@angular/common';
 import { EmployeesService } from '../../../shared/services/employees.service';
-import { RolesService } from '../../../shared/services/roles.service';
+import { JobRolesService } from '../../../shared/services/job-roles.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkGroupsService } from '../../../shared/services/workgroups.service';
 

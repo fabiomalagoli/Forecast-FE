@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Injectable()
-export class RoleFormFacade {
+export class JobRoleFormFacade {
   private fb = inject(FormBuilder);
 
   // Headers dinamici per la gestione del Ruolo

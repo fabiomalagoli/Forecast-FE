@@ -3,26 +3,26 @@ import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
-import { Role } from '../../../shared/models/role.model';
-import { RolesService } from '../../../shared/services/roles.service';
-import { buildUpdateRolePayload } from '../../../shared/payloads/role.payloads';
-import { RoleFormFacade } from '../../../shared/utils/role-form.facade';
+import { JobRole } from '../../../shared/models/job-role.model';
+import { JobRolesService } from '../../../shared/services/job-roles.service';
+import { buildUpdateJobRolePayload } from '../../../shared/payloads/job-role.payloads';
+import { JobRoleFormFacade } from '../../../shared/utils/job-role-form.facade';
 import { toElementId } from '../../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-modifica-role',
+  selector: 'app-modifica-job-role',
   standalone: true,
   imports: [CommonModule, TextInputComponent, ReactiveFormsModule],
-  templateUrl: './edit-role.component.html',
-  providers: [RoleFormFacade]
+  templateUrl: './edit-job-role.component.html',
+  providers: [JobRoleFormFacade]
 })
-export class ModificaRoleComponent {
-  public facade = inject(RoleFormFacade);
-  private rolesService = inject(RolesService);
+export class ModificaJobRoleComponent {
+  public facade = inject(JobRoleFormFacade);
+  private rolesService = inject(JobRolesService);
 
-  roleToEdit = input.required<Role>();
+  roleToEdit = input.required<JobRole>();
 
-  modified = output<Role>();
+  modified = output<JobRole>();
   cancel = output<void>();
 
   roleEditForm!: FormGroup;
@@ -63,7 +63,7 @@ export class ModificaRoleComponent {
     if (this.isButtonDisabled) return;
 
     this.isSaving.set(true);
-    const updatedRole = buildUpdateRolePayload({ ...this.roleEditForm.value }, this.roleToEdit().id);
+    const updatedRole = buildUpdateJobRolePayload({ ...this.roleEditForm.value }, this.roleToEdit().id);
 
     this.rolesService.updateJobRole(updatedRole).subscribe({
       next: () => {

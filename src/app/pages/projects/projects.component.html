@@ -217,6 +217,12 @@
                   aria-label="Scarica Excel">
                   <mat-icon class="action-icon">file_download</mat-icon>
                 </button>
+                <button class="btn-action-icon btn-accessibility-settings" type="button" (click)="openUserAccessibilitySettings(p)"
+                  matTooltip="Impostazioni" 
+                  matTooltipPosition="above"
+                  aria-label="Impostazioni">
+                  <mat-icon class="action-icon">settings</mat-icon>
+                </button>
                 <button class="btn-action-icon btn-details" type="button" (click)="openProjectDetails(p.id)"
                   matTooltip="Dettagli" 
                   matTooltipPosition="above"
@@ -276,6 +282,15 @@
         (cancel)="closeEditProject()" 
         (saved)="onProjectSaved()">
       </app-modifica-progetto>
+    }
+
+    @if (settingUsersAccessibilityProject()) {
+      <app-project-accessibility
+        [listaUtentiAssegnati]="existingProjectMembers()"
+        [selectedProject]="settingUsersAccessibilityProject()!" 
+        (cancel)="closeUserAccessibilitySettings()" 
+        (saved)="onProjectSaved()">
+      </app-project-accessibility>
     }
     
   </div>

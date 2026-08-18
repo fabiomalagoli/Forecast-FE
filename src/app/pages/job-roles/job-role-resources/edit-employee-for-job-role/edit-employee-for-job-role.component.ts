@@ -6,21 +6,21 @@ import { Employee } from '../../../../shared/models/employee.model';
 import { EMPLOYEES_HEADERS_FORM } from '../../../employees/employee.headers';
 import { forkJoin } from 'rxjs';
 import { EmployeesService } from '../../../../shared/services/employees.service';
-import { RolesService } from '../../../../shared/services/roles.service';
+import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import { normalizeEmployeeForForm } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
 
 @Component({
-  selector: 'app-edit-employee-for-role',
+  selector: 'app-edit-employee-for-job-role',
   imports: [FormsModule, CommonModule, TextInputComponent],
-  templateUrl: './edit-employee-for-role.component.html',
+  templateUrl: './edit-employee-for-job-role.component.html',
 })
-export class EditEmployeeForRoleComponent {
+export class EditEmployeeForJobRoleComponent {
 
     private employeesService = inject(EmployeesService);
-    private rolesService = inject(RolesService);
+    private rolesService = inject(JobRolesService);
     private lookupsService = inject(LookupsService);
     risorsaDaModificare = input.required<Employee | null>();
 

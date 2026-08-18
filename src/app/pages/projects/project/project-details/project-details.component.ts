@@ -9,7 +9,7 @@ import { ProjectEmployee } from '../../../../shared/models/project.model';
 import { finalize, forkJoin } from 'rxjs';
 import { ProjectsService } from '../../../../shared/services/projects.service';
 import { EmployeesService } from '../../../../shared/services/employees.service';
-import { RolesService } from '../../../../shared/services/roles.service';
+import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { mergeProjectEmployeesWithEmployeeDetails } from '../../../../shared/utils/project-display.utils';
 import { TextInputComponent } from "../../../../shared/text-input/text-input.component";
 import { RECAP_DATA_HEADERS } from '../../recap-data.headers';
@@ -29,7 +29,7 @@ export class ProjectDetailsComponent {
   private location = inject(Location);
   private projectsService = inject(ProjectsService);
   private employeesService = inject(EmployeesService);
-  private rolesService = inject(RolesService);
+  private rolesService = inject(JobRolesService);
 
   loading = signal(true);
   error = signal<string | null>(null);

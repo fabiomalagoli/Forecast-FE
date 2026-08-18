@@ -119,19 +119,19 @@
   </mat-paginator>
 
   @if(isAddingRoleState()) {
-      <app-new-role
+      <app-new-job-role
           [roleToAdd]="addingRole()"
           (added)="aggiungiRuolo()"
           (cancel)="isAddingRoleState.set(false)"
-      ></app-new-role>
+      ></app-new-job-role>
   }
 
   @if(editingRole()) {
-      <app-modifica-role
+      <app-modifica-job-role
           [roleToEdit]="editingRole()!"
           (cancel)="chiudiModifica()"
           (modified)="salvaModifica()"
-      ></app-modifica-role>
+      ></app-modifica-job-role>
   }
 
   @if(assigningRole()) {
@@ -144,10 +144,10 @@
   }
 
   @if(editingEmployee()) {
-    <app-edit-employee-for-role
+    <app-edit-employee-for-job-role
         [risorsaDaModificare]="editingEmployee()"
         (cancel)="editingEmployee.set(null)"
         (modified)="safeEditingEmployee()">
-    </app-edit-employee-for-role>
+    </app-edit-employee-for-job-role>
   }
 }

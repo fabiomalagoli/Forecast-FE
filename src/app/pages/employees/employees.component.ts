@@ -1,6 +1,6 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, signal, OnInit } from '@angular/core';
 import { EmployeesService } from '../../shared/services/employees.service';
-import { RolesService } from '../../shared/services/roles.service';
+import { JobRolesService } from '../../shared/services/job-roles.service';
 import { LookupsService } from '../../shared/services/lookups.service'; 
 import { Router } from '@angular/router';
 import { Employee } from '../../shared/models/employee.model';
@@ -35,7 +35,7 @@ export class EmployeesComponent implements OnInit {
     isFetching = signal(false);
     error = signal<string | null>(null);
 
-    private rolesService = inject(RolesService);
+    private rolesService = inject(JobRolesService);
     private employeesService = inject(EmployeesService);
     private lookupsService = inject(LookupsService)
     private destroyRef = inject(DestroyRef);

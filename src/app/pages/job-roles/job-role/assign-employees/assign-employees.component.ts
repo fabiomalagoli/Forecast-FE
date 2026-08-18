@@ -1,12 +1,12 @@
 import { Component, DestroyRef, HostListener, computed, effect, inject, input, output, signal } from '@angular/core';
-import { Role } from '../../../../shared/models/role.model';
+import { JobRole } from '../../../../shared/models/job-role.model';
 import { Employee } from '../../../../shared/models/employee.model';
 import { debounceTime, distinctUntilChanged, forkJoin, Observable, tap } from 'rxjs';
 import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { EmployeesService } from '../../../../shared/services/employees.service';
 import { ProjectsService } from '../../../../shared/services/projects.service';
-import { RolesService } from '../../../../shared/services/roles.service';
+import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import {
@@ -29,13 +29,13 @@ export class AssignEmployeeComponent {
 
     private employeesService = inject(EmployeesService);
     private projectsService = inject(ProjectsService);
-    private rolesService = inject(RolesService);
+    private rolesService = inject(JobRolesService);
     private lookupsService = inject(LookupsService);
     private destroyRef = inject(DestroyRef);
     private initializedState = false;
 
 
-    selectedRole = input.required<Role>();
+    selectedRole = input.required<JobRole>();
     listaRisorseAssegnate = input.required<Employee[]>();
     listaRisorseSelezionate = signal<AssignableEmployee[]>([]);
 

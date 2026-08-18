@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin, Observable, tap } from 'rxjs';
-import { RolesService } from '../services/roles.service';
+import { JobRolesService } from '../services/job-roles.service';
 import { LookupsService } from '../services/lookups.service';
 import { EMPLOYEES_HEADERS_FORM } from '../../pages/employees/employee.headers';
 import { Employee } from '../models/employee.model';
@@ -9,7 +9,7 @@ import { Employee } from '../models/employee.model';
 @Injectable()
 export class EmployeeFormFacade {
   private fb = inject(FormBuilder);
-  private rolesService = inject(RolesService);
+  private rolesService = inject(JobRolesService);
   private lookupsService = inject(LookupsService);
 
   // Liste dei Lookup per i menù a tendina

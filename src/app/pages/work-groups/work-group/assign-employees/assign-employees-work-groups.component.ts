@@ -5,7 +5,7 @@ import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/
 import { CommonModule } from '@angular/common';
 import { EmployeesService } from '../../../../shared/services/employees.service';
 import { ProjectsService } from '../../../../shared/services/projects.service';
-import { RolesService } from '../../../../shared/services/roles.service';
+import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildUpdateWorkGroupPayload } from '../../../../shared/payloads/workgroup.payloads';
 import {
@@ -29,7 +29,7 @@ export class AssignEmployeeComponent {
 
     private employeesService = inject(EmployeesService);
     private projectsService = inject(ProjectsService);
-    private rolesService = inject(RolesService);
+    private rolesService = inject(JobRolesService);
     private lookupsService = inject(LookupsService);
     private workGroupsService = inject(WorkGroupsService);
     private destroyRef = inject(DestroyRef);
