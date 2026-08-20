@@ -7,6 +7,8 @@ export interface WorkGroup {
   id: string;
   name: string;
   employees: EmployeeInGroup[];
+  ownerId?: string;
+  members?: GroupMember[];
 }
 
 export interface CreateWorkGroupRequest {

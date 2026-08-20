@@ -20,6 +20,10 @@ import { WorkGroupRowComponent } from './work-group/work-group.component';
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { EditEmployeeForRoleComponent } from "./work-group-resources/edit-employee-for-work-group/edit-employee-for-work-group.component";
 import { AssignEmployeeComponent } from "./work-group/assign-employees/assign-employees-work-groups.component";
+import { UsersService } from '../../shared/services/users.service';
+import { WorkGroupPermissionsService } from '../../shared/services/work-group-permissions.service';
+import { User } from '../../shared/models/user.model';
+import { AssignUsersToWorkGroupComponent } from "./work-group/work-group-accessibility/work-group-accessibility.component";
 
 
 @Component({
@@ -34,7 +38,8 @@ import { AssignEmployeeComponent } from "./work-group/assign-employees/assign-em
     ReactiveFormsModule,
     EditEmployeeForRoleComponent,
     AssignEmployeeComponent,
-    MatPaginatorModule
+    MatPaginatorModule,
+    AssignUsersToWorkGroupComponent
 ],
   templateUrl: 'work-groups.component.html',
   styleUrl: 'work-groups.component.scss'
@@ -44,6 +49,8 @@ export class WorkGroupsComponent {
     isFetching = signal(false);
     error = signal<string | null>(null);
     
+    protected permissions = inject(WorkGroupPermissionsService);
+    private userService = inject(UsersService)
     private workGroupsService = inject(WorkGroupsService);
     private employeesService = inject(EmployeesService);
     private destroyRef = inject(DestroyRef);
@@ -66,6 +73,8 @@ export class WorkGroupsComponent {
     selectedEmployeeForDrawer = signal<any | null>(null);
 
     editingEmployee = signal<Employee | null>(null);
+
+    settingUsersAccessibilityWorkGroup = signal<WorkGroup | null>(null);
 
     filterNameValue = signal<string>('');
     filterNameWorkGroup = new FormControl('');
@@ -106,6 +115,33 @@ export class WorkGroupsComponent {
         
         const idsAssociati = gruppo.employees.map(e => e.employeeId);
         return tutteLeRisorse.filter(risorsa => idsAssociati.includes(risorsa.id));
+    });
+
+    existingGroupMembers = computed<User[]>(() => {
+        const gruppo = this.settingUsersAccessibilityWorkGroup();
+        const membri = gruppo?.members || (gruppo as any)?.Members;
+        if (!membri || membri.length === 0) return [];
+
+        const tuttiGliUtenti = this.userService.loadedUsers() ?? [];
+        const userMap = new Map<string, User>(
+            tuttiGliUtenti.map((u: User) => [String(u.id || (u as any).Id || '').toLowerCase(), u])
+        );
+
+        return membri
+            .map((m: any): User => {
+                const memberId = String(m.userId || m.UserId || m.id || m.Id || '').toLowerCase();
+                const fullUser = userMap.get(memberId);
+
+                return {
+                    id: memberId,
+                    userName: fullUser?.userName || m.userName || m.UserName || m.email || m.Email || '',
+                    firstName: fullUser?.firstName || m.firstName || m.FirstName || '',
+                    lastName: fullUser?.lastName || m.lastName || m.LastName || '',
+                    role: String(m.role !== undefined && m.role !== null ? m.role : ''),
+                    photoUrl: fullUser?.photoUrl
+                };
+            })
+            .filter((u: User) => u.userName?.toLowerCase() !== 'system_user');
     });
 
     constructor(private router: Router) {
@@ -155,36 +191,29 @@ export class WorkGroupsComponent {
         this.isInitialLoading.set(forceInitialSpinner || !dataAlreadyLoaded);
         this.error.set(null);
 
-        if(!dataAlreadyLoaded) {
-
-          forkJoin({
+        const calls = {
             filteredGroups: this.workGroupsService.loadWorkGroups(this.currentPage(), this.pageSize, this.currentFilters()),
             allRoles: this.workGroupsService.loadAllWorkGroups(),
             employees: this.employeesService.loadAllEmployees(),
-            hold: timer(1500) // Aggiunta di un timer per garantire che lo spinner sia visibile per almeno 1.5 secondi
-          }).pipe(
+            users: this.userService.loadAvailableUsers(),
+        };
+
+        if (!dataAlreadyLoaded) {
+            forkJoin({ ...calls, hold: timer(1500) }).pipe(
                 finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
                 takeUntilDestroyed(this.destroyRef)
-          ).subscribe({
+            ).subscribe({
                 next: () => this.syncPaginationMeta(),
                 error: (err) => this.handleLoadError(err)
-          });
-
-        }
-        else{
-
-          forkJoin({
-            filteredGroups: this.workGroupsService.loadWorkGroups(this.currentPage(), this.pageSize, this.currentFilters()),
-            allRoles: this.workGroupsService.loadAllWorkGroups(),
-            employees: this.employeesService.loadAllEmployees(),
-          }).pipe(
-              finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
-              takeUntilDestroyed(this.destroyRef)
-          ).subscribe({
+            });
+        } else {
+            forkJoin(calls).pipe(
+                finalize(() => { this.isInitialLoading.set(false); this.isFetching.set(false); }),
+                takeUntilDestroyed(this.destroyRef)
+            ).subscribe({
                 next: () => this.syncPaginationMeta(),
                 error: (err) => this.handleLoadError(err)
-          });
-
+            });
         }
     }
 
@@ -371,6 +400,20 @@ export class WorkGroupsComponent {
             this.mostraRisorsePerGruppo(role);
         }
         this.snackbarService.success(NotifyAction.Aggiornamento, 'risorsa');
+    }
+
+    openUserAccessibilitySettings(workGroup: WorkGroup) {
+    this.settingUsersAccessibilityWorkGroup.set(workGroup)
+    }
+
+    closeUserAccessibilitySettings() {
+    this.settingUsersAccessibilityWorkGroup.set(null)
+    }
+
+    safeUserAccessibilitySettings() {
+        this.closeUserAccessibilitySettings();
+        this.ricaricaGruppi();
+        this.snackbarService.success(NotifyAction.UpdateWorkGroup, 'accessibilità');
     }
 
     mostraRisorsePerGruppo(gruppo: WorkGroup) {

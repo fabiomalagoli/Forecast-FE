@@ -25,13 +25,16 @@ export class WorkGroupsService {
         this.lastSelectedWorkGroup.set(workGroup);
     }
 
-    private mapToWorkGroup(workGroup: any): WorkGroup {
-    return {
-        id: workGroup.id,
-        name: workGroup.name ?? workGroup.Name,
-        employees: workGroup.employees || [] // Passi direttamente l'array di oggetti
-    };
-}
+    private mapToWorkGroup(g: any): WorkGroup {
+        return {
+            id: g.id || g.Id,
+            name: g.name || g.Name,
+            ownerId: g.ownerId || g.OwnerId,
+            employees: g.employees || g.Employees || [],
+            members: g.members || g.Members || []
+        };
+    }
+
 
     // --- WORK GROUPS ---
     loadWorkGroups(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {

@@ -239,6 +239,8 @@
                     aria-label="Modifica">
                     <mat-icon class="action-icon">edit</mat-icon>
                   </button>
+                }
+                @if (permissions.canDeleteProject(p)) {
                   <button class="btn-action-icon btn-remove-single" type="button" 
                     (click)="onDeleteProject(p)"
                     matTooltip="Elimina" 

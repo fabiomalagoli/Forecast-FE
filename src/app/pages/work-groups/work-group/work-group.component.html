@@ -7,25 +7,45 @@
     aria-label="Dettagli">
     <mat-icon class="action-icon">visibility</mat-icon>
   </button>   
-  <button class="btn-action-icon btn-edit" type="button" 
-    (click)="editWorkGroup.emit(workGroup())"
-    [matTooltip]="'Modifica'"
-    matTooltipPosition="above"
-    aria-label="Modifica">
-    <mat-icon class="action-icon">edit</mat-icon>
-  </button>
-  <button
-    class="icon-btn tooltip-container"
-    type="button"
-    data-tooltip="Assegna Risorse al Gruppo"
-    (click)="assignResourcesToGroups.emit(workGroup())">
-    <span class="material-symbols-outlined bold-icon">add</span>
-  </button>
 
-  <button class="btn-action-icon btn-remove-single" type="button" 
-    (click)="deleteWorkGroup.emit(workGroup())"
-    [matTooltip]="'Elimina'"
-    matTooltipPosition="above">
-    <mat-icon class="action-icon">delete</mat-icon>
-  </button>
+  @if (permissions.isUserLocalAdminOrManager(workGroup()) || permissions.isGlobalAdmin()) {
+    <button class="btn-action-icon btn-edit" type="button" 
+      (click)="editWorkGroup.emit(workGroup())"
+      [matTooltip]="'Modifica'"
+      matTooltipPosition="above"
+      aria-label="Modifica">
+      <mat-icon class="action-icon">edit</mat-icon>
+    </button>
+  }
+
+  @if (permissions.canManageMembers(workGroup())) {
+    <button class="btn-action-icon btn-accessibility-settings" type="button"
+      (click)="manageUsers.emit(workGroup())"
+      matTooltip="Impostazioni" 
+      matTooltipPosition="above"
+      aria-label="Impostazioni">
+      <mat-icon class="action-icon">settings</mat-icon>
+    </button>
+  }
+
+  @if (permissions.isUserLocalAdminOrManager(workGroup()) || permissions.isGlobalAdmin()) {
+    <button
+      class="icon-btn tooltip-container"
+      type="button"
+      data-tooltip="Assegna Risorse al Gruppo"
+      (click)="assignResourcesToGroups.emit(workGroup())">
+      <span class="material-symbols-outlined bold-icon">add</span>
+    </button>
+  }
+
+  @if (permissions.canDeleteWorkGroup(workGroup())) {
+    <button class="btn-action-icon btn-remove-single" type="button" 
+      (click)="deleteWorkGroup.emit(workGroup())"
+      [matTooltip]="'Elimina'"
+      matTooltipPosition="above"
+      aria-label="Elimina">
+      <mat-icon class="action-icon">delete</mat-icon>
+    </button>
+  }
+  
 </td>

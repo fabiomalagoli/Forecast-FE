@@ -38,27 +38,24 @@ export class UsersService {
       photoUrl: user.photoUrl || user.PhotoUrl || user.pictureUrl || user.PictureUrl || '',
     };
   }
-
-  loadAvailableUsers(projectId?: string, groupId?: string): Observable<User[]> {
+  loadAvailableUsers(options?: { projectId?: string; groupId?: string }): Observable<User[]> {
     let params = new HttpParams();
 
-    if (projectId) {
-      params = params.set('projectId', projectId);
+    if (options?.projectId) {
+      params = params.set('projectId', options.projectId);
     }
-    if (groupId) {
-      params = params.set('groupId', groupId);
+    if (options?.groupId) {
+      params = params.set('groupId', options.groupId);
     }
 
     return this.httpClient.get<User[]>(`${environment.apiUrl}/users`, { params }).pipe(
-      map(
-        users => users
-          .map(u => this.mapToUser(u))
-          .filter(u => u.userName?.toLowerCase() !== 'system_user')
+      map(users => users
+        .map(u => this.mapToUser(u))
+        .filter(u => u.userName?.toLowerCase() !== 'system_user')
       ),
       catchError(error => throwError(() => buildEntityError(error, 'utente', 'caricamento')))
     );
   }
-
   /* In futuro potrebbe essere utilizzato per caricare gli utenti in maniera paginata e potrebbero essere aggiunti filtri */
   loadUsers(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
     let url = `${environment.apiUrl}/users/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;

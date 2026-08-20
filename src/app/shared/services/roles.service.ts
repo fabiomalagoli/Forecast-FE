@@ -29,22 +29,22 @@ export class RolesService {
     }
   }
 
-  loadAllRoles(projectId?: string, groupId?: string) {
-    let params = new HttpParams();
+  loadAllRoles(options?: { projectId?: string; groupId?: string }) {
+      let params = new HttpParams();
 
-    if (projectId) {
-      params = params.set('projectId', projectId);
-    }
-    if (groupId) {
-      params = params.set('groupId', groupId);
-    }
+      if (options?.projectId) {
+          params = params.set('projectId', options.projectId);
+      }
+      if (options?.groupId) {
+          params = params.set('groupId', options.groupId);
+      }
 
-    return this.httpClient.get<any[]>(`${environment.apiUrl}/roles`, { params, observe: 'response' }).pipe(
-      tap(response => {
-        const roles = (response.body || []).map(r => this.mapToRole(r));
-        this.allRoles.set(roles);
-      }),
-      map(response => (response.body || []).map(r => this.mapToRole(r))),
-    );
+      return this.httpClient.get<any[]>(`${environment.apiUrl}/roles`, { params, observe: 'response' }).pipe(
+          tap(response => {
+              const roles = (response.body || []).map(r => this.mapToRole(r));
+              this.allRoles.set(roles);
+          }),
+          map(response => (response.body || []).map(r => this.mapToRole(r)))
+      );
   }
 }

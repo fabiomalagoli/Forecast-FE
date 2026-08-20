@@ -1,6 +1,15 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
+export function toElementId(prefix: string, key: string, index: number): string {
+  return `${prefix}-${index}-${key}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .toLowerCase();
+}
+
 @Injectable()
 export class WorkGroupFormFacade {
   private fb = inject(FormBuilder);
@@ -31,4 +40,6 @@ export class WorkGroupFormFacade {
     };
     return messages[key] || 'Campo obbligatorio';
   }
+
+  
 }

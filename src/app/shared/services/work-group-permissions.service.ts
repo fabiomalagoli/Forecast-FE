@@ -1,26 +1,26 @@
 import { inject, Injectable, computed } from '@angular/core';
 import { AuthenticationService } from './authentication.service';
-import { Project } from '../models/project.model';
+import { WorkGroup } from '../models/workgroup.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ProjectPermissionsService {
+export class WorkGroupPermissionsService {
   private authService = inject(AuthenticationService);
 
   readonly currentUser = computed(() => this.authService.currentUser());
   readonly currentUserId = computed(() => this.currentUser()?.id || null);
   readonly isGlobalAdmin = computed(() => this.currentUser()?.role === 'Administrator');
 
-  isUserOwner(project: Project): boolean {
+  isUserOwner(workGroup: WorkGroup): boolean {
     const userId = this.currentUserId();
-    if (!userId || !project.ownerId) return false;
-    return String(project.ownerId).toLowerCase() === String(userId).toLowerCase();
+    if (!userId || !workGroup.ownerId) return false;
+    return String(workGroup.ownerId).toLowerCase() === String(userId).toLowerCase();
   }
 
-  isUserLocalAdminOrManager(project: Project): boolean {
+  isUserLocalAdminOrManager(workGroup: WorkGroup): boolean {
     const userId = this.currentUserId();
-    const membri = project.members || (project as any)?.Members;
+    const membri = workGroup.members || (workGroup as any)?.Members;
 
     if (!userId || !membri || membri.length === 0) return false;
 
@@ -34,10 +34,10 @@ export class ProjectPermissionsService {
     return role === 'Administrator' || role === 'Manager';
   }
 
-  isUserLocalAdmin(project: Project): boolean {
+  isUserLocalAdmin(workGroup: WorkGroup): boolean {
     const userId = this.currentUserId();
-    const membri = project.members || (project as any)?.Members;
-
+    const membri = workGroup.members || (workGroup as any)?.Members;
+    
     if (!userId || !membri || membri.length === 0) return false;
 
     const memberData = membri.find((m: any) =>
@@ -48,14 +48,15 @@ export class ProjectPermissionsService {
     const role = String(memberData.role !== undefined ? memberData.role : memberData.Role || '');
 
     return role === 'Administrator';
+
   }
 
-  canManageMembers(project: Project): boolean {
-    return this.isGlobalAdmin() || this.isUserOwner(project) || this.isUserLocalAdminOrManager(project);
+  canManageMembers(workGroup: WorkGroup): boolean {
+    return this.isGlobalAdmin() || this.isUserOwner(workGroup) || this.isUserLocalAdminOrManager(workGroup);
   }
 
-  canDeleteProject(project: Project): boolean {
-    return this.isGlobalAdmin() || this.isUserOwner(project) || this.isUserLocalAdmin(project);
+  canDeleteWorkGroup(workGroup: WorkGroup): boolean {
+    return this.isGlobalAdmin() || this.isUserOwner(workGroup) || this.isUserLocalAdmin(workGroup);
   }
 
 }

@@ -3,30 +3,30 @@ import { debounceTime, distinctUntilChanged, forkJoin, Observable, tap } from 'r
 import { FormsModule, FormControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UsersService } from '../../../../shared/services/users.service';
-import { toElementId } from '../../../../shared/utils/project-form.utils';
-import { Project } from '../../../../shared/models/project.model';
+import { toElementId } from '../../../../shared/utils/workgourp-form.facade';
+import { WorkGroup } from '../../../../shared/models/workgroup.model';
 import { User } from '../../../../shared/models/user.model';
 import { AssignableUser, getUserFullName, mapAssignedUsersToSelected } from '../../../../shared/utils/accessibility-form.utils';
 import { RolesService } from '../../../../shared/services/roles.service';
-import { ProjectMembersService } from '../../../../shared/services/project-members.service';
-import { ProjectPermissionsService } from '../../../../shared/services/project-permissions.service';
+import { WorkGroupMembersService } from '../../../../shared/services/workgroup-members.service';
+import { WorkGroupPermissionsService } from '../../../../shared/services/work-group-permissions.service';
+
 
 @Component({
-    selector: 'app-project-accessibility',
-    templateUrl: './project-accessibility.component.html',
-    styleUrl: './project-accessibility.component.scss',
+    selector: 'app-work-group-accessibility',
+    templateUrl: './work-group-accessibility.component.html',
+    styleUrl: './work-group-accessibility.component.scss',
     imports: [FormsModule, ReactiveFormsModule, CommonModule],
     standalone: true,
 })
-export class AssignUsersToProjectComponent {
-    protected permissionsService = inject(ProjectPermissionsService);
-    private projectMembersService = inject(ProjectMembersService);
+export class AssignUsersToWorkGroupComponent {
+    protected permissionsService = inject(WorkGroupPermissionsService);
+    private workGroupMembersService = inject(WorkGroupMembersService);
     private rolesService = inject(RolesService);
     private userService = inject(UsersService);
     private destroyRef = inject(DestroyRef);
-    private initializedState = false;
 
-    selectedProject = input.required<Project>();
+    selectedWorkGroup = input.required<WorkGroup>();
     listaUtentiAssegnati = input.required<User[]>();
     listaUtentiSelezionati = signal<AssignableUser[]>([]);
 
@@ -44,6 +44,8 @@ export class AssignUsersToProjectComponent {
     cancel = output<void>();
 
     statusMessage = signal<{ text: string; type: 'success' | 'error' } | null>(null);
+
+    private isInitialized = false;
     private initialUserState: AssignableUser[] = [];
 
     isCurrentUser(user: User): boolean {
@@ -60,24 +62,28 @@ export class AssignUsersToProjectComponent {
     constructor() {
         effect(() => {
             const ra = this.listaUtentiAssegnati();
-            if (!this.initializedState && ra) {
+
+            if (ra && !this.isInitialized) {
                 const assignedUsers = JSON.parse(JSON.stringify(ra)) as User[];
                 const mappedUsers = mapAssignedUsersToSelected(assignedUsers);
 
                 this.initialUserState = JSON.parse(JSON.stringify(mappedUsers));
                 this.listaUtentiSelezionati.set([...mappedUsers]);
-                this.initializedState = true;
+                
+                if (mappedUsers.length > 0) {
+                    this.isInitialized = true;
+                }
             }
         });
     }
 
     ngOnInit() {
         this.isLoadingLookups.set(true);
-        const projectId = this.selectedProject()?.id;
+        const workGroupId = this.selectedWorkGroup()?.id;
 
         forkJoin({
-            users: this.userService.loadAvailableUsers({projectId}),
-            roles: this.rolesService.loadAllRoles({projectId}),
+            users: this.userService.loadAvailableUsers({ groupId: workGroupId }), 
+            roles: this.rolesService.loadAllRoles({ groupId: workGroupId }),
         }).subscribe({
             next: (risultati) => {
                 const fullUsers = risultati.users || [];
@@ -96,12 +102,13 @@ export class AssignUsersToProjectComponent {
                     );
 
                     this.initialUserState = JSON.parse(JSON.stringify(this.listaUtentiSelezionati()));
+                    this.isInitialized = true;
                 }
             },
             error: (error) => {
                 this.isLoadingLookups.set(false);
                 this.statusMessage.set({
-                    text: 'Errore durante il caricamento dei dati: ' + error.message,
+                    text: 'Errore durante il caricamento dei dati: ' + (error.message || error),
                     type: 'error',
                 });
             },
@@ -132,13 +139,13 @@ export class AssignUsersToProjectComponent {
         const term = this.showAllUsersOptions() ? '' : this.filtroRisorsaValue();
         const roleFilter = this.selectedRoleFilter();
         const users = this.listaTotaleUtenti();
-        const ownerId = String(this.selectedProject()?.ownerId || (this.selectedProject() as any)?.OwnerId || '').toLowerCase();
+        const ownerId = String(this.selectedWorkGroup()?.ownerId || (this.selectedWorkGroup() as any)?.OwnerId || '').toLowerCase();
 
         const selectedIds = new Set(this.listaUtentiSelezionati().map(u => this.getUserId(u)));
         
         let availableUsers = users.filter(u => 
             u.userName?.toLowerCase() !== 'system_user' && 
-            this.getUserId(u) !== ownerId && // <-- ESCLUDE L'OWNER
+            this.getUserId(u) !== ownerId &&
             !selectedIds.has(this.getUserId(u))
         );
 
@@ -238,39 +245,36 @@ export class AssignUsersToProjectComponent {
     submit(form: NgForm) {
         if (form.invalid) return;
 
-        const projectId = this.selectedProject().id;
+        const workGroupId = this.selectedWorkGroup().id;
         const currentList = this.listaUtentiSelezionati();
         const initialList = this.initialUserState;
 
-        const updateUsers: User[] = currentList.map(user => ({
-            ...user,
-            role: user.role || ''
-        }));
-
-        const currentMap = new Map(currentList.map(u => [this.getUserId(u), u.role]));
-        const initialMap = new Map(initialList.map(u => [this.getUserId(u), u.role]));
+        const initialMap = new Map<string, string>(
+            initialList.map(u => [this.getUserId(u).toLowerCase().trim(), String(u.role || '').trim()])
+        );
 
         const requests: Observable<any>[] = [];
 
         for (const user of currentList) {
-            const userId = this.getUserId(user);
-            
-            if (!userId) {
-                console.error('Impossibile salvare l\'utente: ID non trovato nell\'oggetto', user);
-                continue;
-            }
+            const userId = this.getUserId(user).toLowerCase().trim();
+            if (!userId) continue;
 
-            if (!initialMap.has(userId)) {
-                requests.push(this.projectMembersService.addMemberToProject(projectId, userId, user.role!));
-            } else if (initialMap.get(userId) !== user.role) {
-                requests.push(this.projectMembersService.updateMemberRole(projectId, userId, user.role!));
+            const isAlreadyMember = initialMap.has(userId);
+            const oldRole = initialMap.get(userId);
+            const newRole = String(user.role || '').trim();
+
+            if (!isAlreadyMember) {
+                requests.push(this.workGroupMembersService.addMemberToWorkGroup(workGroupId, userId, newRole));
+            } else if (oldRole !== newRole) {
+                requests.push(this.workGroupMembersService.updateMemberRole(workGroupId, userId, newRole));
             }
         }
 
+        const currentSet = new Set(currentList.map(u => this.getUserId(u).toLowerCase().trim()));
         for (const initialUser of initialList) {
-            const initId = this.getUserId(initialUser);
-            if (initId && !currentMap.has(initId)) {
-                requests.push(this.projectMembersService.removeMemberFromProject(projectId, initId));
+            const initId = this.getUserId(initialUser).toLowerCase().trim();
+            if (initId && !currentSet.has(initId)) {
+                requests.push(this.workGroupMembersService.removeMemberFromWorkGroup(workGroupId, initId));
             }
         }
 
@@ -281,9 +285,7 @@ export class AssignUsersToProjectComponent {
 
         forkJoin(requests).subscribe({
             next: () => {
-                this.statusMessage.set({ text: 'Membri aggiornati con successo!', type: 'success' });
-                this.saved.emit(updateUsers);
-                form.resetForm();
+                this.saved.emit(currentList);
                 this.cancel.emit();
             },
             error: (error) => {
