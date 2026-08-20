@@ -4,11 +4,19 @@
   <div class="np-panel">
     <div class="modal-heading">
       <h2 class="np-title">Assegna Utenti</h2>
+      
+      <!-- Banner in alto per l'utente collegato -->
+      @if (isCurrentUserAssigned()) {
+        <div class="user-status-banner">
+          <span class="material-icons status-icon">account_circle</span>
+          <span>Fai parte di questo progetto</span>
+        </div>
+      }
     </div>
 
-    @if (statusMessage) {
-      <div class="message message--{{ statusMessage.type }}">
-        {{ statusMessage.text }}
+    @if (statusMessage()) {
+      <div class="message message--{{ statusMessage()?.type }}">
+        {{ statusMessage()?.text }}
       </div>
     }
 
@@ -39,18 +47,25 @@
 
           <div class="selected-list">
             @for (user of listaUtentiSelezionati(); track getUserId(user)) {
-              <div class="selected-row">
+              <div class="selected-row" [class.is-current-user]="isCurrentUser(user)">
                 <div class="selected-resource">
-                  <strong>{{ fullName(user) }}</strong>
+                  <strong>
+                    {{ fullName(user) }}
+                    @if (isCurrentUser(user)) {
+                      <span class="badge-me">Tu</span>
+                    }
+                  </strong>
                   <small>{{ user.userName }}</small>
                 </div>
 
-                <label class="level-field" [for]="toId('jobRoleLevel', $index)">
+                <label class="level-field" [for]="toId('projectRole', $index)" [title]="isCurrentUser(user) ? 'Non puoi modificare il tuo ruolo' : ''">
                   Ruolo
                   <select
-                    [id]="toId('jobRoleLevel', $index)"
+                    [id]="toId('projectRole', $index)"
                     [ngModel]="user.role"
                     [ngModelOptions]="{ standalone: true }"
+                    [disabled]="isCurrentUser(user)"
+                    [title]="isCurrentUser(user) ? 'Non puoi modificare il tuo ruolo' : ''"
                     (ngModelChange)="updateUserRole(getUserId(user), $event)">
                     <option value="" disabled>Seleziona ruolo</option>
                     @for (role of listaRoles(); track (role.id || role.Id || role)) {
@@ -61,13 +76,17 @@
                   </select>
                 </label>
 
-                <button
-                  class="remove-resource"
-                  type="button"
-                  aria-label="Rimuovi risorsa"
-                  (click)="removeSelectedUser(getUserId(user))">
-                  ×
-                </button>
+                @if (!isCurrentUser(user)) {
+                  <button
+                    class="remove-resource"
+                    type="button"
+                    aria-label="Rimuovi risorsa"
+                    (click)="removeSelectedUser(getUserId(user))">
+                    <span class="material-icons">close</span>
+                  </button>
+                } @else {
+                  <span class="material-icons lock-icon" title="Non puoi rimuovere te stesso">lock</span>
+                }
               </div>
             } @empty {
               <div class="empty-selection">
@@ -93,9 +112,13 @@
                 (focus)="onUserFilterFocus()"
                 (input)="onUserFilterInput()">
               @if (filtroRisorsaValue()) {
-                <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">×</button>
+                <button class="combo-clear" type="button" aria-label="Cancella filtro risorsa" (click)="clearNameFilter()">
+                  <span class="material-icons">close</span>
+                </button>
               }
-              <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleUserFilterDropdown()">▾</button>
+              <button class="combo-toggle" type="button" aria-label="Apri lista risorse" (click)="toggleUserFilterDropdown()">
+                <span class="material-icons">expand_more</span>
+              </button>
             </div>
 
             @if (userDropdownOpen()) {

@@ -66,5 +66,5 @@ export interface ProjectRole {
 export interface ProjectMember {
   projectId: string;
   userId: string;
-  projectRole: string;
+  role: string;
 }

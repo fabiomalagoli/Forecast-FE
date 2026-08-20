@@ -23,5 +23,5 @@ export interface UpdateWorkGroupRequest {
 export interface GroupMember {
   groupId: string;
   userId: string;
-  groupRole: string;
+  role: string;
 }

@@ -6,6 +6,7 @@ import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { Project } from '../models/project.model';
+
 @Injectable({ providedIn: 'root' })
 export class UsersService {
   private errorService = inject(ErrorService);
@@ -27,7 +28,6 @@ export class UsersService {
   userProjectsPaginationData = this.userProjectPagination.asReadonly();
 
   private mapToUser(user: any): User {
-    console.log('[UsersService] Oggetto grezzo ricevuto dal backend:', user);
 
     return {
       id: user.id || user.Id || user.userId || user.UserId || user.user_id || user.sub || '',
@@ -39,35 +39,17 @@ export class UsersService {
     };
   }
 
-//   private mapToProject(dto: any): Project {
-//   return {
-//     username: dto.username ?? dto.Id,
-//     name: dto.name ?? dto.Name,
-//     company: dto.company ?? dto.Company ?? 'N/A',
-//     companyId: dto.companyId ?? dto.CompanyId ?? null,
-//     projectStatus: dto.projectStatus ?? dto.ProjectStatus ?? 'Initiation',
-//     projectStatusId: dto.projectStatusId ?? dto.ProjectStatusId ?? null,
-//     totalBudget: dto.totalBudget ?? dto.TotalBudget ?? 0,
-//     description: dto.description ?? dto.Description,
-//     year: dto.year ?? dto.Year ?? null
-//   } as Project;
-// }
+  loadAvailableUsers(projectId?: string, groupId?: string): Observable<User[]> {
+    let params = new HttpParams();
 
-//   private toCustomerPayload(user: Customer) {
-//     return {
-//       vatNumber: user.vatNumber,
-//       name: user.name,     
-//       address: user.address,
-//       streetNumber: user.streetNumber,
-//       postalCode: user.postalCode,
-//       city: user.city,
-//       province: user.province,
-//       country: user.country,
-//     };
-//   }
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
+    if (groupId) {
+      params = params.set('groupId', groupId);
+    }
 
-  loadAvailableUsers() {
-    return this.httpClient.get<User[]>(`${environment.apiUrl}/users`).pipe(
+    return this.httpClient.get<User[]>(`${environment.apiUrl}/users`, { params }).pipe(
       map(
         users => users
           .map(u => this.mapToUser(u))
@@ -77,6 +59,7 @@ export class UsersService {
     );
   }
 
+  /* In futuro potrebbe essere utilizzato per caricare gli utenti in maniera paginata e potrebbero essere aggiunti filtri */
   loadUsers(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
     let url = `${environment.apiUrl}/users/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
@@ -106,17 +89,17 @@ export class UsersService {
     );
   }
 
-    updateUser(username: string, payload: any, uiFallback: User) {
-      return this.httpClient.put(`${environment.apiUrl}/users/${encodeURIComponent(username)}`, payload).pipe(
-        tap(() => {
-          this.upsertUser(uiFallback);
-        }),
-        catchError(error => {
-          this.errorService.showError('Errore durante l\'aggiornamento dell\'utente.');
-          return throwError(() => buildEntityError(error, 'utente', 'aggiornamento'));
-        })
-      );
-    }
+  updateUser(username: string, payload: any, uiFallback: User) {
+    return this.httpClient.put(`${environment.apiUrl}/users/${encodeURIComponent(username)}`, payload).pipe(
+      tap(() => {
+        this.upsertUser(uiFallback);
+      }),
+      catchError(error => {
+        this.errorService.showError('Errore durante l\'aggiornamento dell\'utente.');
+        return throwError(() => buildEntityError(error, 'utente', 'aggiornamento'));
+      })
+    );
+  }
 
 //   loadUserById(username: string): Observable<User> {
 //     const cached = this.users().find(c => c.username === username);
@@ -141,22 +124,22 @@ export class UsersService {
     ).subscribe();
   }
 
-    updateUserLocal(user: User) {
-      this.upsertUser(user);
-    }
+  updateUserLocal(user: User) {
+    this.upsertUser(user);
+  }
 
-    private upsertUser(user: User) {
-      this.users.update(prev =>
-        prev.some(item => item.userName === user.userName)
-          ? prev.map(item => (item.userName === user.userName ? user : item))
-          : [...prev, user]
-      );
-  
-      this.allUsers.update(prev =>
-        prev.some(item => item.userName === user.userName)
-          ? prev.map(item => (item.userName === user.userName ? user : item))
-          : [...prev, user]
-      );
-    }
+  private upsertUser(user: User) {
+    this.users.update(prev =>
+      prev.some(item => item.userName === user.userName)
+        ? prev.map(item => (item.userName === user.userName ? user : item))
+        : [...prev, user]
+    );
+
+    this.allUsers.update(prev =>
+      prev.some(item => item.userName === user.userName)
+        ? prev.map(item => (item.userName === user.userName ? user : item))
+        : [...prev, user]
+    );
+  }
 
 }

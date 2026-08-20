@@ -4,11 +4,12 @@ import { catchError, tap, throwError, Observable } from 'rxjs';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
-import { UserForAuthentication, UserForRegistration, TokenDto, User, AuthResponseDto } from '../models/user.model';
+import { UserForAuthentication, UserForRegistration, TokenDto, User, AuthResponseDto, UserTokenDataDto } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
 })
+
 export class AuthenticationService {
   private readonly httpClient = inject(HttpClient);
   private readonly errorService = inject(ErrorService);
@@ -22,7 +23,6 @@ export class AuthenticationService {
   readonly currentUser = this._currentUser.asReadonly();
   readonly accessToken = this._accessToken.asReadonly();
   readonly isAuthenticated = computed(() => !!this._accessToken());
-
 
   constructor() {
     this.initUserFromStorage();
@@ -91,7 +91,8 @@ export class AuthenticationService {
       userName: authResponse.user.userName,
       firstName: authResponse.user.firstName,
       lastName: authResponse.user.lastName,
-      photoUrl: authResponse.user.pictureUrl
+      photoUrl: authResponse.user.pictureUrl,
+      role: authResponse.user.role
     };
 
     this._currentUser.set(user);

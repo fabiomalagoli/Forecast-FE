@@ -30,6 +30,8 @@ import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-de
 import { AssignUsersToProjectComponent } from "./project/project-accessibility/project-accessibility.component";
 import { UsersService } from '../../shared/services/users.service';
 import { User } from '../../shared/models/user.model';
+import { AuthenticationService } from '../../shared/services/authentication.service';
+import { ProjectPermissionsService } from '../../shared/services/project-permissions.service';
 
 
 @Component({
@@ -53,6 +55,7 @@ import { User } from '../../shared/models/user.model';
 })
 
 export class ProjectsComponent {
+  protected permissions = inject(ProjectPermissionsService);
   private userService = inject(UsersService)
   private projectsService = inject(ProjectsService);
   private lookupsService = inject(LookupsService);

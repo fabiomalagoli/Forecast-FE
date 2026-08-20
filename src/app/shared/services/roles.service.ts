@@ -29,8 +29,17 @@ export class RolesService {
     }
   }
 
-  loadAllRoles() {
-    return this.httpClient.get<any[]>(`${environment.apiUrl}/roles`, { observe: 'response' }).pipe(
+  loadAllRoles(projectId?: string, groupId?: string) {
+    let params = new HttpParams();
+
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
+    if (groupId) {
+      params = params.set('groupId', groupId);
+    }
+
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/roles`, { params, observe: 'response' }).pipe(
       tap(response => {
         const roles = (response.body || []).map(r => this.mapToRole(r));
         this.allRoles.set(roles);

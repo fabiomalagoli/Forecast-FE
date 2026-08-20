@@ -217,31 +217,35 @@
                   aria-label="Scarica Excel">
                   <mat-icon class="action-icon">file_download</mat-icon>
                 </button>
-                <button class="btn-action-icon btn-accessibility-settings" type="button" (click)="openUserAccessibilitySettings(p)"
-                  matTooltip="Impostazioni" 
-                  matTooltipPosition="above"
-                  aria-label="Impostazioni">
-                  <mat-icon class="action-icon">settings</mat-icon>
-                </button>
+                @if (permissions.canManageMembers(p)) {
+                  <button class="btn-action-icon btn-accessibility-settings" type="button" (click)="openUserAccessibilitySettings(p)"
+                    matTooltip="Impostazioni" 
+                    matTooltipPosition="above"
+                    aria-label="Impostazioni">
+                    <mat-icon class="action-icon">settings</mat-icon>
+                  </button>
+                }
                 <button class="btn-action-icon btn-details" type="button" (click)="openProjectDetails(p.id)"
                   matTooltip="Dettagli" 
                   matTooltipPosition="above"
                   aria-label="Dettagli">
                   <mat-icon class="action-icon">visibility</mat-icon>
-                </button>                 
-                <button class="btn-action-icon btn-edit" type="button" 
-                  (click)="openEditProject(p)"
-                  matTooltip="Modifica" 
-                  matTooltipPosition="above"
-                  aria-label="Modifica">
-                  <mat-icon class="action-icon">edit</mat-icon>
                 </button>
-                <button class="btn-action-icon btn-remove-single" type="button" 
-                  (click)="onDeleteProject(p)"
-                  matTooltip="Elimina" 
-                  matTooltipPosition="above">
-                  <mat-icon>delete</mat-icon>
-                </button>
+                @if (permissions.isUserLocalAdminOrManager(p) || permissions.isGlobalAdmin()) {
+                  <button class="btn-action-icon btn-edit" type="button" 
+                    (click)="openEditProject(p)"
+                    matTooltip="Modifica" 
+                    matTooltipPosition="above"
+                    aria-label="Modifica">
+                    <mat-icon class="action-icon">edit</mat-icon>
+                  </button>
+                  <button class="btn-action-icon btn-remove-single" type="button" 
+                    (click)="onDeleteProject(p)"
+                    matTooltip="Elimina" 
+                    matTooltipPosition="above">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
               </td>
             </tr>
           } @empty {

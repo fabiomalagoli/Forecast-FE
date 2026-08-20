@@ -7,9 +7,9 @@ import { toElementId } from '../../../../shared/utils/project-form.utils';
 import { Project } from '../../../../shared/models/project.model';
 import { User } from '../../../../shared/models/user.model';
 import { AssignableUser, getUserFullName, mapAssignedUsersToSelected } from '../../../../shared/utils/accessibility-form.utils';
-import { buildUserPayload, buildUserUiFallback } from '../../../../shared/payloads/user.payloads';
 import { RolesService } from '../../../../shared/services/roles.service';
 import { ProjectMembersService } from '../../../../shared/services/project-members.service';
+import { ProjectPermissionsService } from '../../../../shared/services/project-permissions.service';
 
 @Component({
     selector: 'app-project-accessibility',
@@ -19,6 +19,7 @@ import { ProjectMembersService } from '../../../../shared/services/project-membe
     standalone: true,
 })
 export class AssignUsersToProjectComponent {
+    protected permissionsService = inject(ProjectPermissionsService);
     private projectMembersService = inject(ProjectMembersService);
     private rolesService = inject(RolesService);
     private userService = inject(UsersService);
@@ -42,8 +43,19 @@ export class AssignUsersToProjectComponent {
     saved = output<User[]>();
     cancel = output<void>();
 
-    statusMessage: { text: string; type: 'success' | 'error' } | null = null;
+    statusMessage = signal<{ text: string; type: 'success' | 'error' } | null>(null);
     private initialUserState: AssignableUser[] = [];
+
+    isCurrentUser(user: User): boolean {
+        const currentId = this.permissionsService.currentUser()?.id;
+        return !!currentId && String(currentId).toLowerCase() === this.getUserId(user);
+    }
+
+    isCurrentUserAssigned(): boolean {
+        const currentId = this.permissionsService.currentUser()?.id;
+        if (!currentId) return false;
+        return this.listaUtentiSelezionati().some(u => this.getUserId(u) === String(currentId).toLowerCase());
+    }
 
     constructor() {
         effect(() => {
@@ -59,45 +71,13 @@ export class AssignUsersToProjectComponent {
         });
     }
 
-    // ngOnInit() {
-    //     this.isLoadingLookups.set(true);
-
-    //     forkJoin({
-    //         users: this.userService.loadAvailableUsers(),
-    //         roles: this.rolesService.loadAllRoles(),
-    //     }).subscribe({
-    //         next: (risultati) => {
-    //             this.listaTotaleUtenti.set(risultati.users || []);
-    //             this.listaRoles.set(risultati.roles || []);
-    //             this.isLoadingLookups.set(false);
-    //         },
-    //         error: (error) => {
-    //             this.isLoadingLookups.set(false);
-    //             this.statusMessage = {
-    //                 text: 'Errore durante il caricamento dei dati: ' + error.message,
-    //                 type: 'error',
-    //             };
-    //         },
-    //     });
-
-    //     const filterSubscription = this.filtroUtente.valueChanges.pipe(
-    //         debounceTime(250),
-    //         distinctUntilChanged(),
-    //         tap(value => {
-    //             this.filtroRisorsaValue.set((value || '').toLowerCase());
-    //             this.showAllUsersOptions.set(false);
-    //         })
-    //     ).subscribe();
-
-    //     this.destroyRef.onDestroy(() => filterSubscription.unsubscribe());
-    // }
-
     ngOnInit() {
         this.isLoadingLookups.set(true);
+        const projectId = this.selectedProject()?.id;
 
         forkJoin({
-            users: this.userService.loadAvailableUsers(),
-            roles: this.rolesService.loadAllRoles(),
+            users: this.userService.loadAvailableUsers(projectId),
+            roles: this.rolesService.loadAllRoles(projectId),
         }).subscribe({
             next: (risultati) => {
                 const fullUsers = risultati.users || [];
@@ -105,7 +85,6 @@ export class AssignUsersToProjectComponent {
                 this.listaRoles.set(risultati.roles || []);
                 this.isLoadingLookups.set(false);
 
-                // ARRICCHIMENTO: Uniamo Nome e Cognome agli utenti già selezionati
                 if (fullUsers.length > 0) {
                     const enrichedMap = new Map(fullUsers.map(u => [this.getUserId(u), u]));
                     
@@ -121,10 +100,10 @@ export class AssignUsersToProjectComponent {
             },
             error: (error) => {
                 this.isLoadingLookups.set(false);
-                this.statusMessage = {
+                this.statusMessage.set({
                     text: 'Errore durante il caricamento dei dati: ' + error.message,
                     type: 'error',
-                };
+                });
             },
         });
 
@@ -148,35 +127,6 @@ export class AssignUsersToProjectComponent {
         const rawId = user.id || (user as any).Id || (user as any).userId || (user as any).UserId || (user as any).user_id;
         return String(rawId || '').toLowerCase().trim();
     }
-
-    // nameFilterOptions = computed<User[]>(() => {
-
-    //     const term = this.showAllUsersOptions() ? '' : this.filtroRisorsaValue();
-    //     const roleFilter = this.selectedRoleFilter();
-    //     const users = this.listaTotaleUtenti();
-
-    //     const selectedIds = new Set(this.listaUtentiSelezionati().map(u => this.getUserId(u)));
-        
-    //     let availableUsers = users.filter(u => 
-    //         u.username?.toLowerCase() !== 'system_user' && 
-    //         !selectedIds.has(this.getUserId(u))
-    //     );
-
-    //     if (roleFilter) {
-    //         availableUsers = availableUsers.filter(u =>
-    //             (u.role || '').toLowerCase() === roleFilter.toLowerCase()
-    //         );
-    //     }
-
-    //     if (term) {
-    //         availableUsers = availableUsers.filter(u =>
-    //             this.fullName(u).toLowerCase().includes(term) ||
-    //             (u.username || '').toLowerCase().includes(term)
-    //         );
-    //     }
-
-    //     return availableUsers;
-    // });
 
     nameFilterOptions = computed<User[]>(() => {
         const term = this.showAllUsersOptions() ? '' : this.filtroRisorsaValue();
@@ -241,6 +191,12 @@ export class AssignUsersToProjectComponent {
 
     updateUserRole(userId: string, role: string) {
         const targetId = String(userId).toLowerCase();
+        const currentUserId = String(this.permissionsService.currentUser()?.id || '').toLowerCase();
+
+        if (targetId === currentUserId) {
+            return;
+        }
+
         this.listaUtentiSelezionati.update(selected =>
             selected.map(u =>
                 this.getUserId(u) === targetId
@@ -279,18 +235,6 @@ export class AssignUsersToProjectComponent {
         return !this.isChanged(); // Abilitato solo quando ci sono reali modifiche agli utenti/ruoli
     }
 
-    // submit(form: NgForm) {
-    //     const selectedUsers = this.listaUtentiSelezionati();
-    //     const updateUsers: User[] = selectedUsers.map(user => ({
-    //         ...user,
-    //         role: user.role || ''
-    //     }));
-
-    //     this.statusMessage = { text: 'Utenti assegnati con successo!', type: 'success' };
-    //     this.saved.emit(updateUsers);
-    //     this.cancel.emit();
-    // }
-
     submit(form: NgForm) {
         if (form.invalid) return;
 
@@ -308,11 +252,9 @@ export class AssignUsersToProjectComponent {
 
         const requests: Observable<any>[] = [];
 
-        // Utenti aggiunti ex-novo (POST) o con ruolo modificato (PUT)
         for (const user of currentList) {
             const userId = this.getUserId(user);
             
-            // Blocco di sicurezza: interrompe l'invio se l'ID è vuoto
             if (!userId) {
                 console.error('Impossibile salvare l\'utente: ID non trovato nell\'oggetto', user);
                 continue;
@@ -325,7 +267,6 @@ export class AssignUsersToProjectComponent {
             }
         }
 
-        // Utenti rimossi dal progetto (DELETE)
         for (const initialUser of initialList) {
             const initId = this.getUserId(initialUser);
             if (initId && !currentMap.has(initId)) {
@@ -340,16 +281,16 @@ export class AssignUsersToProjectComponent {
 
         forkJoin(requests).subscribe({
             next: () => {
-                this.statusMessage = { text: 'Membri aggiornati con successo!', type: 'success' };
+                this.statusMessage.set({ text: 'Membri aggiornati con successo!', type: 'success' });
                 this.saved.emit(updateUsers);
                 form.resetForm();
                 this.cancel.emit();
             },
             error: (error) => {
-                this.statusMessage = { 
+                this.statusMessage.set({ 
                     text: `Errore durante il salvataggio: ${error.message || error}`, 
                     type: 'error' 
-                };
+                });
             }
         });
     }
@@ -359,7 +300,7 @@ export class AssignUsersToProjectComponent {
     }
 
     onFieldChange() {
-        this.statusMessage = null;
+        this.statusMessage.set(null);
     }
 
     optionName(option: any): string {
