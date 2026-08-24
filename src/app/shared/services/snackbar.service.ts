@@ -51,6 +51,12 @@ export class SnackbarService {
                 case NotifyAction.AddClient:
                     message = `Errore durante l'aggiunta di un cliente`;
                     break;
+                case NotifyAction.AddMember:
+                    message = `Errore durante l'aggiunta di un membro`;
+                    break;
+                case NotifyAction.AddWorkGroup:
+                    message = `Errore durante l'aggiunta di un gruppo di lavoro`;
+                    break;
                 case NotifyAction.UpdateEmployee:
                     message = `Errore durante l'aggiornamento di un dipendente`;
                     break;
@@ -58,7 +64,7 @@ export class SnackbarService {
                     message = `Errore durante l'aggiornamento di un progetto`;
                     break;
                 case NotifyAction.UpdateWorkGroup:
-                    message = `Errore durante l'aggiornamento di un ruolo`;
+                    message = `Errore durante l'aggiornamento di un gruppo di lavoro`;
                     break;
                 case NotifyAction.UpdateClient:
                     message = `Errore durante l'aggiornamento di un cliente`;
@@ -126,6 +132,12 @@ export class SnackbarService {
                 break;
             case NotifyAction.AddClient:
                 message = `Cliente aggiunto con successo`;
+                break;
+            case NotifyAction.AddMember:
+                message = `Membro aggiunto con successo`;
+                break;
+            case NotifyAction.AddWorkGroup:
+                message = `Gruppo di lavoro aggiunto con successo`;
                 break;
             case NotifyAction.UpdateEmployee:
                 message = `Dipendente aggiornato con successo`;

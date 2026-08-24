@@ -217,21 +217,20 @@
                   aria-label="Scarica Excel">
                   <mat-icon class="action-icon">file_download</mat-icon>
                 </button>
-                @if (permissions.canManageMembers(p)) {
-                  <button class="btn-action-icon btn-accessibility-settings" type="button" (click)="openUserAccessibilitySettings(p)"
-                    matTooltip="Impostazioni" 
-                    matTooltipPosition="above"
-                    aria-label="Impostazioni">
-                    <mat-icon class="action-icon">settings</mat-icon>
-                  </button>
-                }
                 <button class="btn-action-icon btn-details" type="button" (click)="openProjectDetails(p.id)"
                   matTooltip="Dettagli" 
                   matTooltipPosition="above"
                   aria-label="Dettagli">
                   <mat-icon class="action-icon">visibility</mat-icon>
                 </button>
-                @if (permissions.isUserLocalAdminOrManager(p) || permissions.isGlobalAdmin()) {
+                @if (canManage(p)) {
+                  <button class="btn-action-icon btn-accessibility-settings" type="button" 
+                    [routerLink]="['/progetti', p.id, 'manage-access']"
+                    matTooltip="Impostazioni" 
+                    matTooltipPosition="above"
+                    aria-label="Impostazioni">
+                    <mat-icon class="action-icon">settings</mat-icon>
+                  </button>
                   <button class="btn-action-icon btn-edit" type="button" 
                     (click)="openEditProject(p)"
                     matTooltip="Modifica" 
@@ -240,7 +239,7 @@
                     <mat-icon class="action-icon">edit</mat-icon>
                   </button>
                 }
-                @if (permissions.canDeleteProject(p)) {
+                @if (canDelete(p)) {
                   <button class="btn-action-icon btn-remove-single" type="button" 
                     (click)="onDeleteProject(p)"
                     matTooltip="Elimina" 
@@ -288,15 +287,6 @@
         (cancel)="closeEditProject()" 
         (saved)="onProjectSaved()">
       </app-modifica-progetto>
-    }
-
-    @if (settingUsersAccessibilityProject()) {
-      <app-project-accessibility
-        [listaUtentiAssegnati]="existingProjectMembers()"
-        [selectedProject]="settingUsersAccessibilityProject()!" 
-        (cancel)="closeUserAccessibilitySettings()" 
-        (saved)="onProjectSaved()">
-      </app-project-accessibility>
     }
     
   </div>

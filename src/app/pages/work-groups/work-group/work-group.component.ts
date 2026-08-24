@@ -1,19 +1,29 @@
-import { Component, inject, input, output, ViewEncapsulation } from '@angular/core';
+import { Component, computed, inject, input, output, ViewEncapsulation } from '@angular/core';
 import { MatIconModule } from "@angular/material/icon";
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { WorkGroup } from '../../../shared/models/workgroup.model';
-import { WorkGroupPermissionsService } from '../../../shared/services/work-group-permissions.service';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'tr[app-work-group-row]',
-  imports: [MatIconModule, MatTooltipModule, MatCheckboxModule],
+  imports: [MatIconModule, MatTooltipModule, MatCheckboxModule, RouterLink],
   templateUrl: './work-group.component.html',
   styleUrls: ['./work-group.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
 export class WorkGroupRowComponent {
-  protected permissions = inject(WorkGroupPermissionsService);
+  private permissionsService = inject(EntityPermissionsService);
+
+  canManage(workgroup: WorkGroup): boolean {
+    return this.permissionsService.canManageMembers(workgroup);
+  }
+
+  canDelete(workgroup: WorkGroup): boolean {
+    return this.permissionsService.canDelete(workgroup);
+  }
+
 
   workGroup = input.required<WorkGroup>();
   selected = input(false);

@@ -1,12 +1,8 @@
 import { Component, inject, signal, OnInit, computed, HostListener, input, DestroyRef, effect } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
-import { COMPLETE_PROJECT_HEADERS } from '../../../projects/project/complete-project.headers';
-import { AppButtonComponent } from '../../../../shared/button/button';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap, timer } from 'rxjs';
 import { CustomersService } from '../../../../shared/services/customers.service';
-import { EmployeesService } from '../../../../shared/services/employees.service';
-import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CustomerProjectSummaryPayload } from '../../../../shared/payloads/customer.payloads';
 import { FormControl } from '@angular/forms';
@@ -76,6 +72,7 @@ export class CustomerProjectsComponent implements OnInit {
   constructor() {
 
   }
+  
   private buildLoadCustomerProjectsErrorMessage(error: Error): string {
     return `Errore durante il caricamento dei progetti associati al cliente: ${getHttpErrorStatusMessage(error)}`;
   }

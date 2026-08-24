@@ -10,6 +10,8 @@ export enum NotifyAction {
     AddProject = 'ADD_PROJECT',
     AddRole = 'ADD_ROLE',
     AddClient = 'ADD_CLIENT',
+    AddMember = 'ADD_MEMBER',
+    AddWorkGroup = 'ADD_WORK_GROUP',
     UpdateEmployee = 'UPDATE_EMPLOYEE',
     UpdateProject = 'UPDATE_PROJECT',
     UpdateRole = 'UPDATE_ROLE',

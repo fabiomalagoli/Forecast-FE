@@ -21,9 +21,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { EditEmployeeForRoleComponent } from "./work-group-resources/edit-employee-for-work-group/edit-employee-for-work-group.component";
 import { AssignEmployeeComponent } from "./work-group/assign-employees/assign-employees-work-groups.component";
 import { UsersService } from '../../shared/services/users.service';
-import { WorkGroupPermissionsService } from '../../shared/services/work-group-permissions.service';
 import { User } from '../../shared/models/user.model';
-import { AssignUsersToWorkGroupComponent } from "./work-group/work-group-accessibility/work-group-accessibility.component";
 
 
 @Component({
@@ -38,8 +36,7 @@ import { AssignUsersToWorkGroupComponent } from "./work-group/work-group-accessi
     ReactiveFormsModule,
     EditEmployeeForRoleComponent,
     AssignEmployeeComponent,
-    MatPaginatorModule,
-    AssignUsersToWorkGroupComponent
+    MatPaginatorModule,  
 ],
   templateUrl: 'work-groups.component.html',
   styleUrl: 'work-groups.component.scss'
@@ -49,7 +46,6 @@ export class WorkGroupsComponent {
     isFetching = signal(false);
     error = signal<string | null>(null);
     
-    protected permissions = inject(WorkGroupPermissionsService);
     private userService = inject(UsersService)
     private workGroupsService = inject(WorkGroupsService);
     private employeesService = inject(EmployeesService);

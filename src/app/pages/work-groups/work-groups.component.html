@@ -149,12 +149,4 @@
         (modified)="safeEditingEmployee()">
     </app-edit-employee-for-work-group>
   }
-  @if (settingUsersAccessibilityWorkGroup()) {
-    <app-work-group-accessibility
-      [selectedWorkGroup]="settingUsersAccessibilityWorkGroup()!" 
-      [listaUtentiAssegnati]="existingGroupMembers()"
-      (cancel)="closeUserAccessibilitySettings()"
-      (saved)="safeUserAccessibilitySettings()">
-    </app-work-group-accessibility>
-}
 }

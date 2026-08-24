@@ -27,11 +27,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { toBackendDate } from '../../shared/utils/shared-utils';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
-import { AssignUsersToProjectComponent } from "./project/project-accessibility/project-accessibility.component";
 import { UsersService } from '../../shared/services/users.service';
 import { User } from '../../shared/models/user.model';
-import { AuthenticationService } from '../../shared/services/authentication.service';
-import { ProjectPermissionsService } from '../../shared/services/project-permissions.service';
+import { EntityPermissionsService } from '../../shared/services/permissions.service';
+import { RouterLink } from '@angular/router';
 
 
 @Component({
@@ -47,7 +46,7 @@ import { ProjectPermissionsService } from '../../shared/services/project-permiss
     MatIconModule,
     MatTooltipModule,
     MatCheckboxModule,
-    AssignUsersToProjectComponent
+    RouterLink
 ],
   templateUrl: './projects.component.html',
   styleUrls: ['./projects.component.scss'],
@@ -55,7 +54,7 @@ import { ProjectPermissionsService } from '../../shared/services/project-permiss
 })
 
 export class ProjectsComponent {
-  protected permissions = inject(ProjectPermissionsService);
+  private permissionsService = inject(EntityPermissionsService);
   private userService = inject(UsersService)
   private projectsService = inject(ProjectsService);
   private lookupsService = inject(LookupsService);
@@ -176,6 +175,14 @@ export class ProjectsComponent {
           })
           .filter((u: User) => u.userName?.toLowerCase() !== 'system_user');
   });
+
+  canManage(project: Project): boolean {
+    return this.permissionsService.canManageMembers(project);
+  }
+
+  canDelete(project: Project): boolean {
+    return this.permissionsService.canDelete(project);
+  }
 
   yearFilterOptions = computed<any[]>(() => {
     const projects = this.AllProjects();

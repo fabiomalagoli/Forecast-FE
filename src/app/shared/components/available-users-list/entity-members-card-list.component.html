@@ -1,0 +1,187 @@
+<div [class.modal-wrapper]="isModalMode()">
+  @if (isModalMode()) {
+    <div class="backdrop" (click)="cancel.emit()"></div>
+  }
+
+  <div class="members-container" [class.is-modal]="isModalMode()">
+    <div class="header-section">
+      <h2>Gestione Accessi Utenti {{ entity().name ? '- ' + entity().name : '' }}</h2>
+      @if (isCurrentUser(permissionsService.currentUser()!)) {
+        <div class="user-status-badge">
+          <mat-icon>account_circle</mat-icon>
+          <span>Fai parte di questo elemento</span>
+        </div>
+      }
+    </div>
+
+    <!-- Card dei membri assegnati all'entità dati -->
+    <section class="card-section">
+      <div class="card-header">
+        <h3>Membri Assegnati</h3>
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>Cerca Membro</label>
+            <input type="text" [formControl]="filterMemberName" placeholder="Cerca per nome o email..." />
+          </div>
+          <div class="filter-group">
+            <label>Ruolo locale</label>
+            <select [formControl]="filterMemberRole">
+              <option value="">Tutti i ruoli</option>
+              @for (role of availableRoles(); track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards-list">
+        <!-- Sezione degli utenti aggiunti in attesa di salvataggio (Senza paginazione) -->
+        @if (pendingAddedUsers().length > 0) {
+          <div class="pending-changes-alert">
+            <small class="alert-title">
+              ⚠️ Da salvare ({{ pendingAddedUsers().length }})
+            </small>
+
+            @for (user of pendingAddedUsers(); track getUserId(user)) {
+              <article class="user-card pending-card">
+                <div class="user-info">
+                  <div class="name-row">
+                    <strong>{{ fullName(user) }}</strong>
+                    <span class="badge-new">Nuovo</span>
+                  </div>
+                  <small class="user-email">{{ user.userName }}</small>
+                </div>
+
+                <div class="user-actions">
+                  <div class="role-selector">
+                    <label>Ruolo:</label>
+                    <select 
+                      [ngModel]="user.role" 
+                      (ngModelChange)="updateUserRole(getUserId(user), $event)">
+                      @for (role of selectableRoles(); track role) {
+                        <option [value]="role">{{ role }}</option>
+                      }
+                    </select>
+                  </div>
+                  <button type="button" class="btn-remove" matTooltip="Annulla aggiunta" (click)="removeMember(getUserId(user))">
+                    <mat-icon>undo</mat-icon>
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+
+        <!-- Sezione degli utenti nel database (Con paginazione) -->
+        @for (user of displayMembers(); track getUserId(user)) {
+          <article class="user-card" [class.is-me]="isCurrentUser(user)">
+            <div class="user-info">
+              <div class="name-row">
+                <strong>{{ fullName(user) }}</strong>
+                @if (isCurrentUser(user)) { <span class="badge-me">Tu</span> }
+              </div>
+              <small class="user-email">{{ user.userName }}</small>
+            </div>
+
+            <div class="user-actions">
+              <div class="role-selector">
+                <label>Ruolo:</label>
+                <select 
+                  [ngModel]="user.role" 
+                  [disabled]="!canManage() || isCurrentUser(user)"
+                  (ngModelChange)="updateUserRole(getUserId(user), $event)">
+                  @for (role of selectableRoles(); track role) {
+                    <option [value]="role">{{ role }}</option>
+                  }
+                </select>
+              </div>
+
+              @if (canManage()) {
+                @if (!isCurrentUser(user)) {
+                  <button type="button" class="btn-remove" matTooltip="Rimuovi utente" (click)="removeMember(getUserId(user))">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                } @else {
+                  <span class="lock-icon" title="Non puoi rimuovere te stesso"><mat-icon>lock</mat-icon></span>
+                }
+              }
+            </div>
+          </article>
+        } @empty {
+          @if (pendingAddedUsers().length === 0) {
+            <div class="empty-state">Nessun membro trovato.</div>
+          }
+        }
+      </div>
+
+      <mat-paginator 
+        [length]="displayMembers().length"
+        [pageSize]="membersPageSize()"
+        [pageIndex]="membersPage() - 1"
+        [pageSizeOptions]="[5, 10, 20]"
+        (page)="onMembersPageChange($event)">
+      </mat-paginator>
+    </section>
+
+    <!-- card di aggiunta dei nuvi utenti presenti nel db -->
+    @if (canManage()) {
+      <section class="card-section add-section">
+        <div class="card-header">
+          <h3>Aggiungi Nuovo Utente</h3>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="filter-group">
+              <label>Cerca Utenti di Sistema</label>
+              <input type="text" [formControl]="filterUserName" placeholder="Cerca per nome o email da aggiungere..." />
+            </div>
+          </div>
+        </div>
+
+        <div class="cards-list">
+          @for (user of filteredAvailableUsers(); track getUserId(user)) {
+            <article class="user-card">
+              <div class="user-info">
+                <div class="name-row">
+                  <strong>{{ fullName(user) }}</strong>
+                </div>
+                <small class="user-email">{{ user.userName }}</small>
+              </div>
+
+              <div class="user-actions">
+                <button type="button" class="btn-add-user" (click)="addMember(user)">
+                  <mat-icon class="btn-icon">add</mat-icon>
+                  <span>Aggiungi</span>
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state">Nessun utente disponibile da aggiungere.</div>
+          }
+        </div>
+
+        <mat-paginator 
+          [length]="availableUsersMetaData()?.totalCount || filteredAvailableUsers().length"
+          [pageSize]="userSectionPageSize()"
+          [pageIndex]="userSectionPage() - 1"
+          [pageSizeOptions]="[5, 10, 20]"
+          (page)="onAvailableUsersPageChange($event)">
+        </mat-paginator>
+      </section>
+    }
+
+    <div class="footer-actions">
+      <button type="button" class="btn-secondary" (click)="cancel.emit()">Annulla</button>
+      @if (canManage()) {
+        <button type="button" class="btn-primary" [disabled]="!hasChanges()" (click)="onConfirmSave()">
+          Conferma Modifiche
+        </button>
+      }
+    </div>
+  </div>
+</div>

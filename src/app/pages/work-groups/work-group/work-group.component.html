@@ -8,7 +8,7 @@
     <mat-icon class="action-icon">visibility</mat-icon>
   </button>   
 
-  @if (permissions.isUserLocalAdminOrManager(workGroup()) || permissions.isGlobalAdmin()) {
+  @if (canManage(workGroup())) {
     <button class="btn-action-icon btn-edit" type="button" 
       (click)="editWorkGroup.emit(workGroup())"
       [matTooltip]="'Modifica'"
@@ -16,19 +16,13 @@
       aria-label="Modifica">
       <mat-icon class="action-icon">edit</mat-icon>
     </button>
-  }
-
-  @if (permissions.canManageMembers(workGroup())) {
-    <button class="btn-action-icon btn-accessibility-settings" type="button"
-      (click)="manageUsers.emit(workGroup())"
+    <button class="btn-action-icon btn-accessibility-settings" type="button" 
+      [routerLink]="['/workgroups', workGroup().id, 'manage-access']"
       matTooltip="Impostazioni" 
       matTooltipPosition="above"
       aria-label="Impostazioni">
       <mat-icon class="action-icon">settings</mat-icon>
     </button>
-  }
-
-  @if (permissions.isUserLocalAdminOrManager(workGroup()) || permissions.isGlobalAdmin()) {
     <button
       class="icon-btn tooltip-container"
       type="button"
@@ -37,8 +31,7 @@
       <span class="material-symbols-outlined bold-icon">add</span>
     </button>
   }
-
-  @if (permissions.canDeleteWorkGroup(workGroup())) {
+  @if (canDelete(workGroup())) {
     <button class="btn-action-icon btn-remove-single" type="button" 
       (click)="deleteWorkGroup.emit(workGroup())"
       [matTooltip]="'Elimina'"
