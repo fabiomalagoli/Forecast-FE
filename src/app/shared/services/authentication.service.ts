@@ -4,22 +4,19 @@ import { catchError, tap, throwError, Observable } from 'rxjs';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
-import { UserForAuthentication, UserForRegistration, TokenDto, User, AuthResponseDto, UserTokenDataDto } from '../models/user.model';
+import { UserForAuthentication, UserForRegistration, TokenDto, User, AuthResponseDto } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class AuthenticationService {
   private readonly httpClient = inject(HttpClient);
   private readonly errorService = inject(ErrorService);
 
-  // Signal per i dati dell'utente ed i token
-  private readonly _currentUser = signal<User | null>(null);
+  private readonly _currentUser = signal<User | null>(this.getUserFromStorage());
   private readonly _accessToken = signal<string | null>(localStorage.getItem('accessToken'));
   private readonly _refreshToken = signal<string | null>(localStorage.getItem('refreshToken'));
 
-  // Signal pubblici in sola lettura
   readonly currentUser = this._currentUser.asReadonly();
   readonly accessToken = this._accessToken.asReadonly();
   readonly isAuthenticated = computed(() => !!this._accessToken());
@@ -28,19 +25,25 @@ export class AuthenticationService {
     this.initUserFromStorage();
   }
 
+  private getUserFromStorage(): User | null {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser) as User;
+    } catch {
+      return null;
+    }
+  }
+
   private initUserFromStorage(): void {
     const token = this._accessToken();
-    const storedUser = localStorage.getItem('user');
+    const user = this.getUserFromStorage();
 
-    if (token && storedUser) {
+    if (token && user) {
       if (this.isTokenExpired(token)) {
         this.logout();
       } else {
-        try {
-          this._currentUser.set(JSON.parse(storedUser));
-        } catch {
-          this.logout();
-        }
+        this._currentUser.set(user);
       }
     } else if (token) {
       this.logout();
@@ -50,14 +53,13 @@ export class AuthenticationService {
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      if(!payload.exp) return false; 
+      if (!payload.exp) return false; 
       return Date.now() >= payload.exp * 1000;
-    } catch (error) {
+    } catch {
       return true;
     }
   }
 
-  // Effettua il login inviando username e password nel Body della richiesta (UserForAuthenticationDto sul backend)
   login(credentials: UserForAuthentication): Observable<AuthResponseDto> {
     return this.httpClient.post<AuthResponseDto>(`${environment.apiUrl}/authentication/login`, credentials).pipe(
       tap((authResponse) => this.saveAuthData(authResponse)),
@@ -79,27 +81,30 @@ export class AuthenticationService {
   }
 
   private saveAuthData(authResponse: AuthResponseDto): void {
-    this._accessToken.set(authResponse.tokens.accessToken);
-    this._refreshToken.set(authResponse.tokens.refreshToken);
-    localStorage.setItem('accessToken', authResponse.tokens.accessToken);
-    localStorage.setItem('refreshToken', authResponse.tokens.refreshToken);
+    // Proprietà 'tokens' e 'user' in AuthResponseDto
+    const tokens = authResponse.tokens;
+    const userData = authResponse.user;
 
-    const userId = authResponse.user.id || this.getUserIdFromToken(authResponse.tokens.accessToken);
+    this._accessToken.set(tokens.accessToken);
+    this._refreshToken.set(tokens.refreshToken);
+    localStorage.setItem('accessToken', tokens.accessToken);
+    localStorage.setItem('refreshToken', tokens.refreshToken);
+
+    const userId = userData.id || this.getUserIdFromToken(tokens.accessToken);
 
     const user: User = {
       id: userId,
-      userName: authResponse.user.userName,
-      firstName: authResponse.user.firstName,
-      lastName: authResponse.user.lastName,
-      photoUrl: authResponse.user.pictureUrl,
-      role: authResponse.user.role
+      userName: userData.userName,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      photoUrl: userData.pictureUrl,
+      role: userData.role
     };
 
     this._currentUser.set(user);
     localStorage.setItem('user', JSON.stringify(user));
   }
 
-  // Registrazione
   register(userData: UserForRegistration) {
     return this.httpClient.post(`${environment.apiUrl}/authentication/register`, userData).pipe(
       catchError((error) => {
@@ -109,7 +114,6 @@ export class AuthenticationService {
     );
   }
 
-  // Rinnova l'access token usando il refresh token
   refreshToken(): Observable<TokenDto> {
     const refreshToken = this._refreshToken();
     const accessToken = this._accessToken();
@@ -118,9 +122,7 @@ export class AuthenticationService {
       accessToken,
       refreshToken
     }).pipe(
-      tap((tokenDto) => {
-        this.saveTokens(tokenDto);
-      }),
+      tap((tokenDto) => this.saveTokens(tokenDto)),
       catchError((error) => {
         this.logout();
         return throwError(() => error);
@@ -137,13 +139,13 @@ export class AuthenticationService {
     }
   }
 
-  // Disconnette l'utente e pulisce lo stato
   logout(): void {
     this._currentUser.set(null);
     this._accessToken.set(null);
     this._refreshToken.set(null);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user'); // Rimosso anche l'utente memorizzato
   }
 
   private saveTokens(tokenDto: TokenDto): void {

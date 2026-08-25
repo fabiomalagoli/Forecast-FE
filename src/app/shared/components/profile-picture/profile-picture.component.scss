@@ -1,0 +1,59 @@
+@use 'sass:color';
+@use 'sass:list';
+
+$profile-size: 70px;
+$border-color: #fff;
+$border-width: 3px;
+$shadow-color: rgba(0, 0, 0, 0.15);
+
+.profile-picture {  
+  width: $profile-size;
+  height: $profile-size;
+  border-radius: 50%;
+  overflow: hidden;
+  width: 3rem;
+  height: 3rem;
+  border: $border-width solid $border-color;
+  box-shadow: 0 4px 8px $shadow-color;
+  display: inline-block;
+  position: relative;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    transform: scale(1.03);
+    transition: all 0.3s ease;
+  }
+}
+
+$colors: #a2b9bc, #6b5b95, #feb236, #d64161, #ff7b25, #b2ad7f, #878f99;
+
+.avatar-profile-picture {
+  color: #fff; 
+  padding: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 100%;
+  width: 3rem;
+  height: 3rem;
+  font-weight: 600;
+
+  &:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    transform: scale(1.03);
+    transition: all 0.3s ease;
+  }
+
+  @for $i from 1 through list.length($colors) {
+    &--color-#{$i} {
+      background-color: color.adjust(list.nth($colors, $i), $lightness: 20%);
+    }
+  }
+}

@@ -50,6 +50,12 @@
               <article class="user-card pending-card">
                 <div class="user-info">
                   <div class="name-row">
+                    <app-profile-picture 
+                    [userImageUrl]="user.photoUrl"
+                    [userFirstName]="user.firstName"
+                    [userLastName]="user.lastName"
+                    [userEmail]="user.userName">
+                    </app-profile-picture>
                     <strong>{{ fullName(user) }}</strong>
                     <span class="badge-new">Nuovo</span>
                   </div>
@@ -81,6 +87,12 @@
           <article class="user-card" [class.is-me]="isCurrentUser(user)">
             <div class="user-info">
               <div class="name-row">
+                <app-profile-picture 
+                  [userImageUrl]="user.photoUrl"
+                  [userFirstName]="user.firstName"
+                  [userLastName]="user.lastName"
+                  [userEmail]="user.userName">
+                </app-profile-picture>
                 <strong>{{ fullName(user) }}</strong>
                 @if (isCurrentUser(user)) { <span class="badge-me">Tu</span> }
               </div>
@@ -148,6 +160,12 @@
             <article class="user-card">
               <div class="user-info">
                 <div class="name-row">
+                  <app-profile-picture 
+                    [userImageUrl]="user.photoUrl"
+                    [userFirstName]="user.firstName"
+                    [userLastName]="user.lastName"
+                    [userEmail]="user.userName">
+                  </app-profile-picture>
                   <strong>{{ fullName(user) }}</strong>
                 </div>
                 <small class="user-email">{{ user.userName }}</small>

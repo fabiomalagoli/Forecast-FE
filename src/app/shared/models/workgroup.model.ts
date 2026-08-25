@@ -26,4 +26,5 @@ export interface GroupMember {
   groupId: string;
   userId: string;
   role: string;
+  photoUrl?: string;
 }

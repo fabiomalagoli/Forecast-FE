@@ -35,7 +35,8 @@ export class WorkGroupMembersService {
           userName: m.userName || m.UserName || m.email || '',
           firstName: m.firstName || m.FirstName || '',
           lastName: m.lastName || m.LastName || '',
-          role: m.role || m.Role || ''
+          role: m.role || m.Role || '',
+          photoUrl: m.photoUrl || m.PhotoUrl || ''
         }));
         return { members, pagination };
       }),

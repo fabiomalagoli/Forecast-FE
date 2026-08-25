@@ -10,6 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { User } from '../../models/user.model';
 import { EntityPermissionsService, PermissibleEntity } from '../../services/permissions.service';
 import { getUserFullName } from '../../utils/accessibility-form.utils';
+import { ProfilePictureComponent } from "../profile-picture/profile-picture.component";
 
 export interface EntityWithMetadata extends PermissibleEntity {
   id: string;
@@ -31,8 +32,9 @@ export interface MembersDeltaPayload {
     FormsModule,
     MatIconModule,
     MatTooltipModule,
-    MatPaginatorModule
-  ],
+    MatPaginatorModule,
+    ProfilePictureComponent
+],
   templateUrl: './entity-members-card-list.component.html',
   styleUrls: ['./entity-members-card-list.component.scss']
 })

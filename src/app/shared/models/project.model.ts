@@ -67,4 +67,5 @@ export interface ProjectMember {
   projectId: string;
   userId: string;
   role: string;
+  photoUrl?: string;
 }

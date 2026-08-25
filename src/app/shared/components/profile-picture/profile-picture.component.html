@@ -1,0 +1,11 @@
+@if(userImageUrl()){
+    <img 
+    [src]="userImageUrl()" 
+    alt="User" 
+    class="profile-picture"
+    />
+} @else {
+    <div class="avatar-profile-picture" [ngClass]="colorClass()">
+    {{ getInitials(userFirstName(), userLastName()) }}
+    </div>
+}

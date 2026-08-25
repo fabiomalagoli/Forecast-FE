@@ -6,7 +6,7 @@ import { Observable, forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { EntityMembersCardListComponent, EntityWithMetadata, MembersDeltaPayload } from '../shared/components/available-users-list/entity-members-card-list.component';
+import { EntityMembersCardListComponent, EntityWithMetadata, MembersDeltaPayload } from '../shared/components/entity-members-card-list/entity-members-card-list.component';
 import { User } from '../shared/models/user.model';
 import { ProjectsService } from '../shared/services/projects.service';
 import { WorkGroupsService } from '../shared/services/workgroups.service';
