@@ -23,6 +23,12 @@ export class EntityPermissionsService {
   readonly currentUser = computed(() => this.authService.currentUser());
   readonly currentUserId = computed(() => this.currentUser()?.id || null);
   readonly isGlobalAdmin = computed(() => this.currentUser()?.role === 'Administrator');
+  readonly isGlobalManager = computed(() => this.currentUser()?.role === 'Manager');
+  readonly isGlobalViewer = computed(() => this.currentUser()?.role === 'Viewer');
+
+  readonly canEditGlobal = computed(() => 
+    this.isGlobalAdmin() || this.isGlobalManager()
+  );
 
   isUserOwner(entity?: PermissibleEntity | null): boolean {
     const userId = this.currentUserId();

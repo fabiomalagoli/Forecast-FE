@@ -8,6 +8,7 @@ import { JobRolesService } from '../../../shared/services/job-roles.service';
 import { buildUpdateJobRolePayload } from '../../../shared/payloads/job-role.payloads';
 import { JobRoleFormFacade } from '../../../shared/utils/job-role-form.facade';
 import { toElementId } from '../../../shared/utils/project-form.utils';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-modifica-job-role',
@@ -19,6 +20,7 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
 export class ModificaJobRoleComponent {
   public facade = inject(JobRoleFormFacade);
   private rolesService = inject(JobRolesService);
+  private permissionsService = inject(EntityPermissionsService);
 
   roleToEdit = input.required<JobRole>();
 
@@ -60,7 +62,7 @@ export class ModificaJobRoleComponent {
   }
 
   submit() {
-    if (this.isButtonDisabled) return;
+    if (!this.permissionsService.canEditGlobal() || this.isButtonDisabled) return;
 
     this.isSaving.set(true);
     const updatedRole = buildUpdateJobRolePayload({ ...this.roleEditForm.value }, this.roleToEdit().id);

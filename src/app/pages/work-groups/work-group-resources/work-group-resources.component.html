@@ -10,26 +10,32 @@
     </div>
   } @else {
     <div class="table-container-inner">
-      <table class="inner-table">
+      <table class="inner-table" [class.read-only]="!canManage(gruppoSelezionato()!)">
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Livello</th>
-            <th>Azienda</th>
-            <th class="action-header">Azioni</th>
+            <th class="col-nome">Nome</th>
+            <th class="col-livello">Livello</th>
+            <th class="col-azienda">Azienda</th>
+            @if (canManage(gruppoSelezionato()!)) {
+              <th class="action-header col-azioni">Azioni</th>
+            }
           </tr>
         </thead>
         <tbody>
           @for (resource of risorseAssociateAlGruppo(); track resource.id) {
             <tr>
-              <td class="font-semibold" (click)="apriDettagliRisorsa(resource)">{{ resource.name }} {{ resource.surname }}</td>
-              <td>
+              <td class="font-semibold col-nome" (click)="apriDettagliRisorsa(resource)">
+                {{ resource.name }} {{ resource.surname }}
+              </td>
+              <td class="col-livello">
                 <span class="badge">{{ resource.jobRoleLevel || resource.livello || '-' }}</span>
               </td>
-              <td>{{ resource.company }}</td>
-            <td class="actions-cell">
-              <button appButton class="btn-small btn-outline" (click)="OpenEmployeeEditing(resource)">Modifica</button>
-            </td>
+              <td class="col-azienda">{{ resource.company }}</td>
+              @if (canManage(gruppoSelezionato()!)) {
+                <td class="actions-cell col-azioni">
+                  <button appButton class="btn-small btn-outline" (click)="OpenEmployeeEditing(resource)">Modifica</button>
+                </td>
+              }
             </tr>
           }
         </tbody>

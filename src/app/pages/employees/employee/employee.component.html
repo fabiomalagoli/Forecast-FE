@@ -10,19 +10,23 @@
           aria-label="Dettagli">
     <mat-icon class="action-icon">visibility</mat-icon>
   </button>
-    
-  <button class="btn-action-icon btn-edit" type="button" 
-          (click)="editEmployee.emit(employee())" 
-          matTooltip="Modifica" 
-          matTooltipPosition="above"
-          aria-label="Modifica">
-    <mat-icon class="action-icon">edit</mat-icon>
-  </button>
 
-  <button class="btn-action-icon btn-remove-single" type="button" 
-    (click)="deleteEmployee.emit(employee())"
-    matTooltip="Elimina" 
-    matTooltipPosition="above">
-    <mat-icon class="action-icon">delete</mat-icon>
-  </button>
+  @if(isCurrentUserGlobalManager()) {
+    <button class="btn-action-icon btn-edit" type="button" 
+            (click)="editEmployee.emit(employee())" 
+            matTooltip="Modifica" 
+            matTooltipPosition="above"
+            aria-label="Modifica">
+      <mat-icon class="action-icon">edit</mat-icon>
+    </button>
+  }
+
+  @if(isCurrentUserGlobalAdmin()) {
+    <button class="btn-action-icon btn-remove-single" type="button" 
+      (click)="deleteEmployee.emit(employee())"
+      matTooltip="Elimina" 
+      matTooltipPosition="above">
+      <mat-icon class="action-icon">delete</mat-icon>
+    </button>
+  }
 </td>

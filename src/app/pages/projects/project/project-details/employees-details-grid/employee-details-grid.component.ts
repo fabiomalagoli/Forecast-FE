@@ -17,6 +17,7 @@ import { MONTHS_IN_YEAR, YEAR_FORMATS, FIRST_SEMESTER_LENGTH } from '../../../..
 import { SnackbarService } from '../../../../../shared/services/snackbar.service';
 import { NotifyAction } from '../../../../../shared/enums/notify.enum';
 import { ProjectsService } from '../../../../../shared/services/projects.service';
+import { EntityPermissionsService } from '../../../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-resource-details-grid',
@@ -42,6 +43,7 @@ export class ResourceDetailsGridComponent {
   private fb = inject(FormBuilder);
   private monthlyManagementsService = inject(MonthlyManagementsService);
   private projectService = inject(ProjectsService);
+  private permissionsService = inject(EntityPermissionsService);
   private monthlyManagementsCache = new Map<string, MonthlyManagement[]>();
   private latestMonthlyManagementsRequestKey: string | null = null;
   private snackbarService = inject(SnackbarService);
@@ -134,6 +136,14 @@ export class ResourceDetailsGridComponent {
   delta = computed(() => this.formatDecimal(this.deltaValue()));
 
   formattedDailyTariff = computed(() => this.formatDecimal(this.resource()?.dailyCost, true));
+
+  canEditGlobal(): boolean {
+    return this.permissionsService.canEditGlobal();
+  }
+
+  canManage(project: Project): boolean {
+    return this.permissionsService.isUserLocalAdminOrManager(project);
+  }
 
   private getMonthlyManagementsCacheKey(projectEmployeeId: string, year: number) {
     return `${projectEmployeeId}_${year}`;
@@ -274,6 +284,9 @@ export class ResourceDetailsGridComponent {
   }
 
   toggleEditMode(){
+    if (!this.canEditGlobal() && !this.canManage(this.project()!)) {
+      return;
+    }
     this.isEditMode.update(value => {
       const nextValue = !value;
       
@@ -320,6 +333,8 @@ export class ResourceDetailsGridComponent {
   }
 
   saveData(){ // Questa funzione viene chiamata quando l'utente clicca sul pulsante di salvataggio. Prepara i dati da salvare e chiama il servizio per inviarli al backend
+    if (!this.canEditGlobal() && !this.canManage(this.project()!)) return;
+
     console.log("Salvataggio dati modificati per la risorsa:", this.resource());
 
     if(this.editMonthlyManagementsForm.invalid){

@@ -1,13 +1,13 @@
 import { Component, inject, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { JobRolesService } from '../../../shared/services/job-roles.service';
 import { JobRole } from '../../../shared/models/job-role.model';
 import { buildCreateJobRolePayload } from '../../../shared/payloads/job-role.payloads';
 import { JobRoleFormFacade } from '../../../shared/utils/job-role-form.facade';
 import { toElementId } from '../../../shared/utils/project-form.utils';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-new-job-role',
@@ -19,6 +19,7 @@ import { toElementId } from '../../../shared/utils/project-form.utils';
 export class NewJobRoleComponent {
   public facade = inject(JobRoleFormFacade);
   private rolesService = inject(JobRolesService);
+  private permissionsService = inject(EntityPermissionsService);
 
   roleToAdd = input.required<JobRole | null>();
 
@@ -55,7 +56,7 @@ export class NewJobRoleComponent {
   }
 
   submit() {
-    if (this.isButtonDisabled) return;
+    if (!this.permissionsService.canEditGlobal() || this.isButtonDisabled) return;
 
     const payload = buildCreateJobRolePayload({ 
       ...this.roleToAdd(), 

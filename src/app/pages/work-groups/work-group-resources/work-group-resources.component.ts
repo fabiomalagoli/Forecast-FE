@@ -7,9 +7,9 @@ import { AppButtonComponent } from '../../../shared/button/button';
 import { finalize, timer } from 'rxjs';
 import { Location } from '@angular/common';
 import { EmployeesService } from '../../../shared/services/employees.service';
-import { JobRolesService } from '../../../shared/services/job-roles.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WorkGroupsService } from '../../../shared/services/workgroups.service';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-work-group-resources',
@@ -21,6 +21,7 @@ export class WorkGroupResourcesComponent {
 
     private employeesService = inject(EmployeesService);
     private workGroupsService = inject(WorkGroupsService);
+    private permissionsService = inject(EntityPermissionsService);
     private destroyRef = inject(DestroyRef);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
@@ -39,6 +40,10 @@ export class WorkGroupResourcesComponent {
     editEmployee = output<Employee>();
 
     risorsaPerDettaglio = signal<Employee | null>(null);
+
+    canManage(workgroup: WorkGroup): boolean {
+        return this.permissionsService.canManageMembers(workgroup);
+    }
 
     constructor() {
         effect(() => {
@@ -106,16 +111,6 @@ export class WorkGroupResourcesComponent {
     OpenEmployeeEditing(risorsa: Employee) {
         this.editEmployee.emit(risorsa);
     }
-
-    // closeEmployeeEditing() {
-    //     this.risorsaInModifica.set(null); // Nasconde l' @if nel template
-    // }
-
-    // saveEdits() {
-    //     this.reloadEmployeesforRoleSelected();
-    //     this.closeEmployeeEditing();
-    //     this.showNotification('Modifiche salvate correttamente!', 'success');
-    // }
 
     showNotification(text: string, type: 'success' | 'error') {
         this.statusMessage.set({ text, type });

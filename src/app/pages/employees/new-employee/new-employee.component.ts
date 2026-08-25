@@ -9,6 +9,7 @@ import { EmployeeFormFacade } from '../../../shared/utils/employee-form.facade';
 import { buildEmployeePayload } from '../../../shared/payloads/employee.payloads';
 import { TextInputComponent } from '../../../shared/text-input/text-input.component';
 import { toId } from '../../../shared/utils/employee-form.utils';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-new-employee',
@@ -21,6 +22,7 @@ export class NewRisorsaComponent implements OnInit {
     public facade = inject(EmployeeFormFacade);
     private employeesService = inject(EmployeesService);
     private snackbarService = inject(SnackbarService);
+    private permissionsService = inject(EntityPermissionsService);
     private cdr = inject(ChangeDetectorRef);
 
     selectedEmployeeToAdd = input.required<Employee | null>();
@@ -59,7 +61,7 @@ export class NewRisorsaComponent implements OnInit {
     }
 
     submit() {
-        if (this.isButtonDisabled) return;
+        if (!this.permissionsService.canEditGlobal() || this.isButtonDisabled) return;
 
         this.isSaving.set(true);
         const formValues = this.createEmployeeForm.getRawValue();

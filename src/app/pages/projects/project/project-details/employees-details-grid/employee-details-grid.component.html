@@ -135,7 +135,7 @@
                 </div> 
 
             </div>
-
+        @if(this.canEditGlobal() || this.canManage(this.project()!)) {
             @if(isEditMode()) {
                 <div class="recap-counter">
                     <span>Giorni rimanenti: <strong>{{ formattedRemainingDays() }}</strong></span>
@@ -154,12 +154,12 @@
                     </button>
                     <button appButton type="button" class="btn-small btn-outline" (click)="toggleEditMode()">Annulla</button>
                 </div>
-            } 
-            @else {
+            } @else {               
                 <div class="actions">
                     <button appButton type="button" class="btn-small" (click)="toggleEditMode()">Modifica</button>
                 </div>
-            }           
+            }     
+        }      
         </div>
     </form>
 </section>

@@ -22,6 +22,7 @@ import { EditEmployeeForJobRoleComponent } from "./job-role-resources/edit-emplo
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
+import { EntityPermissionsService } from '../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-job-roles',
@@ -50,6 +51,7 @@ export class JobRolesComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private destroyRef = inject(DestroyRef);
     private snackbarService = inject(SnackbarService);
+    private permissionsService = inject(EntityPermissionsService);
     private dialog = inject(MatDialog);
     
     private showMessage$ = new Subject<{ text: string, type: 'success' | 'error' }>();
@@ -57,6 +59,10 @@ export class JobRolesComponent implements OnInit {
 
     isInitialLoading = signal(this.rolesService.loadedJobRoles().length === 0);
     statusMessage = signal<{ text: string, type: 'success' | 'error' } | null>(null);
+
+    isCurrentUserGlobalAdmin(): boolean {
+        return this.permissionsService.isGlobalAdmin();
+    }
 
     deletingRoleId = signal<string | null>(null);
     selectedRolesIds = signal<string[]>([]);
@@ -224,7 +230,7 @@ export class JobRolesComponent implements OnInit {
     }
 
     onDeleteRole(role: JobRole): void {
-        if (this.isUnassignedRole(role)) {
+        if (!this.permissionsService.canEditGlobal() || this.isUnassignedRole(role)) {
             return;
         }
 
@@ -431,7 +437,7 @@ export class JobRolesComponent implements OnInit {
     }
 
     apriModifica(r: JobRole) {
-        if (this.isUnassignedRole(r)) {
+        if (!this.permissionsService.canEditGlobal() || this.isUnassignedRole(r)) {
             return;
         }
         this.editingRole.set(r); 

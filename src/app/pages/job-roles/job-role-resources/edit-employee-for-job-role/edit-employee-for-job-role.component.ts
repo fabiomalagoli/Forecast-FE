@@ -11,6 +11,7 @@ import { LookupsService } from '../../../../shared/services/lookups.service';
 import { buildEmployeePayload, buildEmployeeUiFallback } from '../../../../shared/payloads/employee.payloads';
 import { normalizeEmployeeForForm } from '../../../../shared/utils/employee-form.utils';
 import { toElementId } from '../../../../shared/utils/project-form.utils';
+import { EntityPermissionsService } from '../../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-edit-employee-for-job-role',
@@ -22,6 +23,7 @@ export class EditEmployeeForJobRoleComponent {
     private employeesService = inject(EmployeesService);
     private rolesService = inject(JobRolesService);
     private lookupsService = inject(LookupsService);
+    private permissionsService = inject(EntityPermissionsService);
     risorsaDaModificare = input.required<Employee | null>();
 
     modified = output<Employee>();
@@ -145,6 +147,7 @@ export class EditEmployeeForJobRoleComponent {
         if (form.invalid || !this.isChanged()) {
             return;
         }
+        if (!this.permissionsService.canEditGlobal()) return;
 
         const uiFallback = buildEmployeeUiFallback({ ...this.formData, ...form.value }, this.formData.id);
         const backendPayload = buildEmployeePayload(uiFallback, {

@@ -7,6 +7,7 @@ import { CustomersService } from '../../../shared/services/customers.service';
 import { parseCustomerAddress } from '../../../shared/utils/customer-form.utils';
 import { toElementId } from '../../../shared/utils/project-form.utils';
 import { CustomerFormFacade } from '../../../shared/utils/customer-form.facade';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-edit-customer',
@@ -16,8 +17,9 @@ import { CustomerFormFacade } from '../../../shared/utils/customer-form.facade';
   providers: [CustomerFormFacade]
 })
 export class EditCustomerComponent implements OnInit {
-  public facade = inject(CustomerFormFacade);
+  protected facade = inject(CustomerFormFacade);
   private customersService = inject(CustomersService);
+  private permissionsService = inject(EntityPermissionsService);
 
   selectedCustomerToEdit = input.required<Customer>();
   modified = output<Customer>();
@@ -60,7 +62,7 @@ export class EditCustomerComponent implements OnInit {
   }
 
   submit() {
-    if (this.isButtonDisabled) return;
+    if (!this.permissionsService.canEditGlobal() || this.isButtonDisabled) return;
 
     this.isSaving.set(true);
     const updateCustomerData = {

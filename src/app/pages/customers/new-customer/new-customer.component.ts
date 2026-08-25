@@ -5,6 +5,7 @@ import { TextInputComponent } from '../../../shared/text-input/text-input.compon
 import { Customer } from '../../../shared/models/customer.model';
 import { toElementId } from '../../../shared/utils/project-form.utils';
 import { CustomerFormFacade } from '../../../shared/utils/customer-form.facade';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-new-customer',
@@ -16,7 +17,8 @@ import { CustomerFormFacade } from '../../../shared/utils/customer-form.facade';
   providers: [CustomerFormFacade]
 })
 export class NewCustomerComponent {
-  public facade = inject(CustomerFormFacade);
+  protected facade = inject(CustomerFormFacade);
+  private permissionsService = inject(EntityPermissionsService);
 
   created = output<Customer>();
   cancel = output<void>();
@@ -30,6 +32,7 @@ export class NewCustomerComponent {
   }
 
   submit() {
+    if (!this.permissionsService.canEditGlobal()) return;
     this.attemptedSubmit.set(true);
 
     if (this.customerForm.invalid) {

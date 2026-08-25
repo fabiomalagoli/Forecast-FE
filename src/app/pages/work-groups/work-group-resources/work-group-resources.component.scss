@@ -37,6 +37,7 @@
 
   .inner-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 0.9rem;
 
@@ -50,7 +51,6 @@
       font-weight: 600;
       color: $text-filter-medium;
       border-bottom: 1px solid $border-filter-light;
-
       &.action-header {
         text-align: right;
       }
@@ -60,12 +60,49 @@
       padding: 0.75rem 1rem;
       border-bottom: 1px solid $border-inner-light;
       color: $text-filter-dark;
+      vertical-align: middle;
+    }
+
+    /* Troncamento sul testo del nome della risorsa e dell'azienda */
+    .col-nome,
+    .col-azienda {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+
+    .col-livello {
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* Modalità in caso di utente con permessi di modifica */
+    .col-nome    { width: 30%; text-align: left; }
+    .col-livello { width: 20%; }
+    .col-azienda { width: 25%; }
+
+    td.col-azioni {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* Modalità viewer globale e locale (read-only) */
+    &.read-only {
+      .col-nome    { width: 40%; text-align: left; }
+      .col-livello { width: 20%; }
+
+      th.col-azienda,
+      td.col-azienda {
+        width: 40%;
+        text-align: right; // Sposta la colonna Azienda a destra solo quando non è presente la colonna Azioni
+      }
     }
 
     tbody {
       tr {
         &:hover {
-          background-color: $color-primary-light; // Hover leggero arancione
+          background-color: $color-primary-light;
         }
 
         &:last-child td {

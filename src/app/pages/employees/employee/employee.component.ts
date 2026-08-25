@@ -1,8 +1,9 @@
-import { Component, input, output, ViewEncapsulation } from '@angular/core';
+import { Component, inject, input, output, ViewEncapsulation } from '@angular/core';
 import { AppButtonComponent } from '../../../shared/button/button';
 import { Employee } from '../../../shared/models/employee.model';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'tr[app-employee-row]',
@@ -12,6 +13,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   encapsulation: ViewEncapsulation.None,
 })
 export class EmployeeRowComponent {
+  private permissionsService = inject(EntityPermissionsService);
+
+  isCurrentUserGlobalAdmin(): boolean {
+      return this.permissionsService.isGlobalAdmin();
+  }
+
+  isCurrentUserGlobalManager(): boolean {
+      return this.permissionsService.isGlobalManager();
+  }
+  
   employee = input.required<Employee>();
 
   viewEmployee = output<Employee>();

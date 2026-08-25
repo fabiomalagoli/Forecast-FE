@@ -28,7 +28,7 @@ export class ProfilePictureComponent {
         
         let hash = 0;
         for (let i = 0; i < key.length; i++) {
-        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+            hash = key.charCodeAt(i) + ((hash << 5) - hash);
         }
         const index = (Math.abs(hash) % 7) + 1;
         return `avatar-profile-picture--color-${index}`;

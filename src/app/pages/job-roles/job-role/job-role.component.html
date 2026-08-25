@@ -7,27 +7,31 @@
     aria-label="Dettagli">
     <mat-icon class="action-icon">visibility</mat-icon>
   </button>   
-  <button class="btn-action-icon btn-edit" type="button" 
-    (click)="editRole.emit(role())"
-    [disabled]="isUnassignedRole()"
-    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non può essere modificato' : 'Modifica'"
-    matTooltipPosition="above"
-    aria-label="Modifica">
-    <mat-icon class="action-icon">edit</mat-icon>
-  </button>
-  <button
-    class="icon-btn tooltip-container"
-    type="button"
-    data-tooltip="Assegna Risorse al Ruolo"
-    (click)="assignResourcesToRoles.emit(role())">
-    <span class="material-symbols-outlined bold-icon">add</span>
-  </button>
+  @if(isCurrentUserGlobalManager()) {
+    <button class="btn-action-icon btn-edit" type="button" 
+      (click)="editRole.emit(role())"
+      [disabled]="isUnassignedRole()"
+      [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non può essere modificato' : 'Modifica'"
+      matTooltipPosition="above"
+      aria-label="Modifica">
+      <mat-icon class="action-icon">edit</mat-icon>
+    </button>
+    <button
+      class="icon-btn tooltip-container"
+      type="button"
+      data-tooltip="Assegna Risorse al Ruolo"
+      (click)="assignResourcesToRoles.emit(role())">
+      <span class="material-symbols-outlined bold-icon">add</span>
+    </button>
+  }
 
-  <button class="btn-action-icon btn-remove-single" type="button" 
-    (click)="deleteRole.emit(role())"
-    [disabled]="isUnassignedRole()"
-    [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non può essere eliminato' : 'Elimina'"
-    matTooltipPosition="above">
-    <mat-icon class="action-icon">delete</mat-icon>
-  </button>
+  @if(isCurrentUserGlobalAdmin()) {
+    <button class="btn-action-icon btn-remove-single" type="button" 
+      (click)="deleteRole.emit(role())"
+      [disabled]="isUnassignedRole()"
+      [matTooltip]="isUnassignedRole() ? 'Il ruolo Unassigned non può essere eliminato' : 'Elimina'"
+      matTooltipPosition="above">
+      <mat-icon class="action-icon">delete</mat-icon>
+    </button>
+  }
 </td>

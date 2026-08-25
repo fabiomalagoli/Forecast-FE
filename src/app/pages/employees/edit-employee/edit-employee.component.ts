@@ -10,6 +10,7 @@ import { NotifyAction } from '../../../shared/enums/notify.enum';
 import { EmployeeFormFacade } from '../../../shared/utils/employee-form.facade';
 import { buildEmployeePayload } from '../../../shared/payloads/employee.payloads';
 import { toId } from '../../../shared/utils/employee-form.utils';
+import { EntityPermissionsService } from '../../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-edit-employee',
@@ -24,6 +25,7 @@ export class EditEmployeeComponent implements OnInit {
     private employeesService = inject(EmployeesService);
     private projectsService = inject(ProjectsService);
     private snackbarService = inject(SnackbarService);
+    private permissionsService = inject(EntityPermissionsService);
     private cdr = inject(ChangeDetectorRef);
 
     selectedEmployeeToEdit = input.required<Employee>();
@@ -57,7 +59,7 @@ export class EditEmployeeComponent implements OnInit {
     }
 
     submit() {
-        if (this.isButtonDisabled) return;
+        if (!this.permissionsService.canEditGlobal() || this.isButtonDisabled) return;
 
         this.isSaving.set(true);
         const formValues = this.editEmployeeForm.getRawValue();

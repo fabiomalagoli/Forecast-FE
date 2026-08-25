@@ -21,6 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
+import { EntityPermissionsService } from '../../shared/services/permissions.service';
 
 @Component({
   selector: 'app-customers',
@@ -46,8 +47,17 @@ export class CustomersComponent implements OnInit {
   // private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private snackbarService = inject(SnackbarService);
+  private permissionsService = inject(EntityPermissionsService);
   private isFromDetailsPage = signal(false);
   private dialog = inject(MatDialog);
+
+  isCurrentUserGlobalAdmin(): boolean {
+      return this.permissionsService.isGlobalAdmin();
+  }
+
+  isCurrentUserGlobalManager(): boolean {
+      return this.permissionsService.isGlobalManager();
+  }
 
   customers = this.customersService.loadedCustomers;
 
