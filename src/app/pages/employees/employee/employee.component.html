@@ -21,7 +21,7 @@
     </button>
   }
 
-  @if(canEditGlobal()) {
+  @if(isGlobalAdmin()) {
     <button class="btn-action-icon btn-remove-single" type="button" 
       (click)="deleteEmployee.emit(employee())"
       matTooltip="Elimina" 

@@ -55,6 +55,10 @@ export class CustomersComponent implements OnInit {
       return this.permissionsService.canEditGlobal();
   }
 
+  isGlobalAdmin(): boolean {
+    return this.permissionsService.isGlobalAdmin();
+  }
+
   customers = this.customersService.loadedCustomers;
 
   isInitialLoading = signal(this.customersService.loadedCustomers().length === 0);

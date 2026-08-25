@@ -99,7 +99,7 @@
                   <mat-icon class="action-icon">edit</mat-icon>
                 </button>
               }
-              @if(canEditGlobal()) {
+              @if(isGlobalAdmin()) {
                 <button class="btn-action-icon btn-remove-single" type="button" 
                   (click)="onDeleteCustomer(cliente)"
                   matTooltip="Elimina" 

@@ -18,6 +18,10 @@ export class EmployeeRowComponent {
   canEditGlobal(): boolean {
       return this.permissionsService.canEditGlobal();
   }
+
+  isGlobalAdmin(): boolean {
+    return this.permissionsService.isGlobalAdmin();
+  }
   
   employee = input.required<Employee>();
 

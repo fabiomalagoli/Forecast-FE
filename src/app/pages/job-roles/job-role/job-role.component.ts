@@ -20,6 +20,10 @@ export class JobRoleRowComponent {
       return this.permissionsService.canEditGlobal();
   }
 
+  isGlobalAdmin(): boolean {
+    return this.permissionsService.isGlobalAdmin();
+  }
+
   role = input.required<JobRole>();
   selected = input(false);
 
