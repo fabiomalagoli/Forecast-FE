@@ -16,12 +16,8 @@ export class JobRoleRowComponent {
 
   private permissionsService = inject(EntityPermissionsService);
 
-  isCurrentUserGlobalAdmin(): boolean {
-      return this.permissionsService.isGlobalAdmin();
-  }
-
-  isCurrentUserGlobalManager(): boolean {
-      return this.permissionsService.isGlobalManager();
+  canEditGlobal(): boolean {
+      return this.permissionsService.canEditGlobal();
   }
 
   role = input.required<JobRole>();

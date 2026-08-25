@@ -11,7 +11,7 @@
     <mat-icon class="action-icon">visibility</mat-icon>
   </button>
 
-  @if(isCurrentUserGlobalManager()) {
+  @if(canEditGlobal()) {
     <button class="btn-action-icon btn-edit" type="button" 
             (click)="editEmployee.emit(employee())" 
             matTooltip="Modifica" 
@@ -21,7 +21,7 @@
     </button>
   }
 
-  @if(isCurrentUserGlobalAdmin()) {
+  @if(canEditGlobal()) {
     <button class="btn-action-icon btn-remove-single" type="button" 
       (click)="deleteEmployee.emit(employee())"
       matTooltip="Elimina" 

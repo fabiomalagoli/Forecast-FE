@@ -7,7 +7,7 @@
     aria-label="Dettagli">
     <mat-icon class="action-icon">visibility</mat-icon>
   </button>   
-  @if(isCurrentUserGlobalManager()) {
+  @if(canEditGlobal()) {
     <button class="btn-action-icon btn-edit" type="button" 
       (click)="editRole.emit(role())"
       [disabled]="isUnassignedRole()"
@@ -25,7 +25,7 @@
     </button>
   }
 
-  @if(isCurrentUserGlobalAdmin()) {
+  @if(canEditGlobal()) {
     <button class="btn-action-icon btn-remove-single" type="button" 
       (click)="deleteRole.emit(role())"
       [disabled]="isUnassignedRole()"

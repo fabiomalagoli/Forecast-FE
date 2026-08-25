@@ -90,7 +90,7 @@
                 aria-label="Dettagli">
                 <mat-icon class="action-icon">visibility</mat-icon>
               </button>
-              @if(isCurrentUserGlobalManager()) {            
+              @if(canEditGlobal()) {            
                 <button class="btn-action-icon btn-edit" type="button" 
                   (click)="openCustomerEditing(cliente)"
                   matTooltip="Modifica" 
@@ -99,7 +99,7 @@
                   <mat-icon class="action-icon">edit</mat-icon>
                 </button>
               }
-              @if(isCurrentUserGlobalAdmin()) {
+              @if(canEditGlobal()) {
                 <button class="btn-action-icon btn-remove-single" type="button" 
                   (click)="onDeleteCustomer(cliente)"
                   matTooltip="Elimina" 

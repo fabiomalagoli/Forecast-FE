@@ -15,12 +15,8 @@ import { EntityPermissionsService } from '../../../shared/services/permissions.s
 export class EmployeeRowComponent {
   private permissionsService = inject(EntityPermissionsService);
 
-  isCurrentUserGlobalAdmin(): boolean {
-      return this.permissionsService.isGlobalAdmin();
-  }
-
-  isCurrentUserGlobalManager(): boolean {
-      return this.permissionsService.isGlobalManager();
+  canEditGlobal(): boolean {
+      return this.permissionsService.canEditGlobal();
   }
   
   employee = input.required<Employee>();

@@ -51,12 +51,8 @@ export class CustomersComponent implements OnInit {
   private isFromDetailsPage = signal(false);
   private dialog = inject(MatDialog);
 
-  isCurrentUserGlobalAdmin(): boolean {
-      return this.permissionsService.isGlobalAdmin();
-  }
-
-  isCurrentUserGlobalManager(): boolean {
-      return this.permissionsService.isGlobalManager();
+  canEditGlobal(): boolean {
+      return this.permissionsService.canEditGlobal();
   }
 
   customers = this.customersService.loadedCustomers;
