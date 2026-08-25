@@ -25,6 +25,7 @@
     </button>
     <button
       class="icon-btn tooltip-container"
+      [class.tooltip-left]="!canDelete(workGroup())"
       type="button"
       data-tooltip="Assegna Risorse al Gruppo"
       (click)="assignResourcesToGroups.emit(workGroup())">

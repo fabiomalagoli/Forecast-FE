@@ -123,4 +123,28 @@ td {
       transform: translateX(-50%) translateY(-2px);
     }
   }
+
+  &.tooltip-left {
+    &::after {
+      left: auto;
+      right: 0;
+      transform: translateY(-4px);
+    }
+
+    &::before {
+      left: 50%;
+      right: 10px;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    &:hover {
+      &::after {
+        transform: translateY(-8px);
+      }
+
+      &::before {
+        transform: translateX(-50%) translateY(-2px);
+      }
+    }
+  }
 }
