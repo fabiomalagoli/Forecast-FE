@@ -135,7 +135,7 @@
                 </div> 
 
             </div>
-        @if(this.canEditGlobal() || this.canManage(this.project()!)) {
+        @if(this.isGlobalAdmin() || this.canManage(this.project()!)) {
             @if(isEditMode()) {
                 <div class="recap-counter">
                     <span>Giorni rimanenti: <strong>{{ formattedRemainingDays() }}</strong></span>

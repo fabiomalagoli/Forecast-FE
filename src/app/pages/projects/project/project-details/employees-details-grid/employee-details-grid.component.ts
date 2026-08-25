@@ -137,8 +137,8 @@ export class ResourceDetailsGridComponent {
 
   formattedDailyTariff = computed(() => this.formatDecimal(this.resource()?.dailyCost, true));
 
-  canEditGlobal(): boolean {
-    return this.permissionsService.canEditGlobal();
+  isGlobalAdmin(): boolean {
+    return this.permissionsService.isGlobalAdmin();
   }
 
   canManage(project: Project): boolean {
@@ -284,7 +284,7 @@ export class ResourceDetailsGridComponent {
   }
 
   toggleEditMode(){
-    if (!this.canEditGlobal() && !this.canManage(this.project()!)) {
+    if (!this.canManage(this.project()!)) {
       return;
     }
     this.isEditMode.update(value => {
@@ -333,7 +333,7 @@ export class ResourceDetailsGridComponent {
   }
 
   saveData(){ // Questa funzione viene chiamata quando l'utente clicca sul pulsante di salvataggio. Prepara i dati da salvare e chiama il servizio per inviarli al backend
-    if (!this.canEditGlobal() && !this.canManage(this.project()!)) return;
+    if (!this.canManage(this.project()!)) return;
 
     console.log("Salvataggio dati modificati per la risorsa:", this.resource());
 
