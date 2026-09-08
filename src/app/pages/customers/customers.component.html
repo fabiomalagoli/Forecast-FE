@@ -1,6 +1,8 @@
 <div class="page-header">
   <h2>Clienti</h2>
-  <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>
+  @if (canEditGlobal()) {
+    <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>
+  }
 </div>
 
 <div class="filter-bar">

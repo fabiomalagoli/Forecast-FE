@@ -65,6 +65,11 @@ export class ProjectsComponent {
   private favouritesService = inject(FavouritesService);
   private isFromDetailsPage = signal(false);
   private dialog = inject(MatDialog);
+
+  canEditGlobal(): boolean {
+    return this.permissionsService.canEditGlobal();
+  }
+
   isFetching = signal(false);
   error = signal<string | null>(null);
   statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);

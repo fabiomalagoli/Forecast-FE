@@ -1,6 +1,8 @@
 <div class="page-header">
   <h2>Ruoli</h2>
-  <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
+  @if (canEditGlobal()) {
+    <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
+  }
 </div>
 
 <div class="filter-bar">

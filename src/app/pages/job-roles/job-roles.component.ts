@@ -64,6 +64,10 @@ export class JobRolesComponent implements OnInit {
         return this.permissionsService.isGlobalAdmin();
     }
 
+    canEditGlobal(): boolean {
+        return this.permissionsService.canEditGlobal();
+    }
+
     deletingRoleId = signal<string | null>(null);
     selectedRolesIds = signal<string[]>([]);
 

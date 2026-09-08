@@ -21,6 +21,7 @@ import { EMPLOYEES_HEADERS_TABLE } from './employee.headers';
 import { Column } from '../../shared/table-row/table.types';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
+import { EntityPermissionsService } from '../../shared/services/permissions.service';
 
 type HeaderKey = keyof typeof EMPLOYEES_HEADERS_TABLE;
 
@@ -42,10 +43,15 @@ export class EmployeesComponent implements OnInit {
     private snackbarService = inject(SnackbarService);
     private isFromDetailsPage = signal(false);
     private dialog = inject(MatDialog);
+    private permissionsService = inject(EntityPermissionsService);
     private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
 
     isInitialLoading = signal(this.employeesService.loadedEmployees().length === 0);
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
+
+    canEditGlobal(): boolean {
+        return this.permissionsService.canEditGlobal();
+    }
     
     deletingEmployeeId = signal<string | null>(null);
 

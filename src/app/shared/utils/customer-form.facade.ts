@@ -29,7 +29,7 @@ export class CustomerFormFacade {
     this.headers.forEach(header => {
       const key = header.key;
       const initialValue = initialValues[key] || '';
-      const validators = [Validators.required];
+      const validators = this.isRequiredField(key) ? [Validators.required] : [];
 
       const maxLength = this.getMaxLength(key);
       if (maxLength) {

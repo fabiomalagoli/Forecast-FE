@@ -22,6 +22,7 @@ import { EditEmployeeForRoleComponent } from "./work-group-resources/edit-employ
 import { AssignEmployeeComponent } from "./work-group/assign-employees/assign-employees-work-groups.component";
 import { UsersService } from '../../shared/services/users.service';
 import { User } from '../../shared/models/user.model';
+import { EntityPermissionsService } from '../../shared/services/permissions.service';
 
 
 @Component({
@@ -43,6 +44,7 @@ import { User } from '../../shared/models/user.model';
 })
 
 export class WorkGroupsComponent {
+    private permissionsService = inject(EntityPermissionsService);
     isFetching = signal(false);
     error = signal<string | null>(null);
     
@@ -94,6 +96,10 @@ export class WorkGroupsComponent {
     selectedWorkGroupId = signal<string | null>(null);
     selectedWorkGroup = signal<WorkGroup | null>(null);
     filteredSelectedEmployees = signal<any[]>([]);
+
+    canEditGlobal(): boolean {
+        return this.permissionsService.canEditGlobal();
+    }
 
     currentPage = signal(this.workGroupsService.paginationData()?.currentPage || 1);
     pageSize = this.workGroupsService.paginationData()?.pageSize || 10;
