@@ -11,5 +11,4 @@ export const CUSTOMER_HEADERS = {
    city: 'Città',
    province: 'Provincia',
    country: 'Paese',
-   projects: 'Progetti Attivi',
-};
+   projects: 'Progetti Attivi'};

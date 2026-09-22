@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { catchError, map, tap, throwError, of } from 'rxjs';
+import { catchError, forkJoin, map, switchMap, tap, throwError, of } from 'rxjs';
 import { ErrorService } from '../error.service';
 import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
@@ -38,7 +38,7 @@ export class WorkGroupsService {
 
     // --- WORK GROUPS ---
     loadWorkGroups(pageNumber: number = 1, pageSize: number = 10, filters?: { searchTerm?: string | null }) {
-        let url = `${environment.apiUrl}/groups?PageNumber=${pageNumber}&PageSize=${pageSize}`;
+        let url = `${environment.apiUrl}/groups/active?PageNumber=${pageNumber}&PageSize=${pageSize}`;
 
         let params = new HttpParams();
         if (filters?.searchTerm) {
@@ -66,7 +66,7 @@ export class WorkGroupsService {
     }
 
     loadAllWorkGroups() {
-        return this.httpClient.get<any[]>(`${environment.apiUrl}/groups`, { observe: 'response' }).pipe(
+        return this.httpClient.get<any[]>(`${environment.apiUrl}/groups/allActive`, { observe: 'response' }).pipe(
             tap(response => {
             const groups = (response.body || []).map(r => this.mapToWorkGroup(r));
             this.allWorkGroups.set(groups);
@@ -113,9 +113,11 @@ export class WorkGroupsService {
         });
 
         return this.httpClient.patch(`${environment.apiUrl}/groups/${encodeURIComponent(workGroupId)}/isEliminated`, patchPayload, { headers }).pipe(
-            tap(() => {
-            this.workGroups.update(prev => prev.map(j => j.id === workGroupId ? {...j, isEliminated} : j));
-            })
+            switchMap(() => forkJoin({
+                workGroups: this.loadWorkGroups(),
+                allWorkGroups: this.loadAllWorkGroups()
+            })),
+            map(() => undefined)
         );
     }
 

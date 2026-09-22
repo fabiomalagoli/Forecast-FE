@@ -15,4 +15,7 @@ export interface Customer {
     projects: number,
     isEliminated: boolean;
     activeProjects: Project[],
+    totalBudget: number,
+    winBudget: number,
+    totalRevenue: number
 }

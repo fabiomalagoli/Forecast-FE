@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment.development';
 import { buildEntityError } from '../utils/http-error-message.utils';
 import { Project } from '../models/project.model';
 import { ProjectFilters } from '../utils/filters.utils';
+import { parseCurrencyNumber } from '../utils/project-form.utils';
 @Injectable({ providedIn: 'root' })
 export class CustomersService {
   private errorService = inject(ErrorService);
@@ -21,14 +22,30 @@ export class CustomersService {
   customerProjectsPaginationData = this.customerProjectPagination.asReadonly();
 
   private mapToCustomer(customer: any): Customer {
+    const projectList = Array.isArray(customer.projects) ? customer.projects : [];
+
+    const totalBudget = projectList.reduce((sum: number, project: any) => {
+      const value = project.totalBudget ?? project.TotalBudget ?? 0;
+      return sum + parseCurrencyNumber(value);
+    }, 0);
+
+    const winBudget = projectList.reduce((sum: number, project: any) => {
+      const budget = parseCurrencyNumber(project.totalBudget ?? project.TotalBudget ?? 0);
+      const winProbability = Number(project.winProbability ?? project.WinProbability ?? 0);
+      return sum + (budget * winProbability) / 100;
+    }, 0);
+
     return {
       id: customer.id,
       vatNumber: customer.vatNumber,
       name: customer.name,
       fullAddress: customer.fullAddress,
       isEliminated: customer.IsEliminated ?? customer.isEliminated ?? false,
-      projects: customer.projects ? customer.projects.length : 0,
-      activeProjects: customer.projects || [],
+      projects: projectList.length,
+      activeProjects: projectList,
+      totalBudget,
+      winBudget,
+      totalRevenue: totalBudget,
     };
   }
 
@@ -40,7 +57,7 @@ export class CustomersService {
     companyId: dto.companyId ?? dto.CompanyId ?? null,
     projectStatus: dto.projectStatus ?? dto.ProjectStatus ?? 'Initiation',
     projectStatusId: dto.projectStatusId ?? dto.ProjectStatusId ?? null,
-    totalBudget: dto.totalBudget ?? dto.TotalBudget ?? 0,
+    totalBudget: parseCurrencyNumber(dto.totalBudget ?? dto.TotalBudget ?? 0),
     description: dto.description ?? dto.Description,
     year: dto.year ?? dto.Year ?? null
   } as Project;

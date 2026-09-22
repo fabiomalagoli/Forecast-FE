@@ -8,6 +8,7 @@ import { Project } from '../../../shared/models/project.model';
 import { finalize } from 'rxjs';
 import { CustomersService } from '../../../shared/services/customers.service';
 import { CustomerProjectsComponent } from "./customer-projects/customer-projects.component";
+import { formatEuroCurrency } from '../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-customer-details',
@@ -85,10 +86,15 @@ export class CustomerDetailsComponent {
   getValue(c: Customer, key: keyof Customer): string {
     const customerValue = c[key];
 
-    // format base (evita [object Object])
     if (customerValue == null) return '';
     if (Array.isArray(customerValue)) return customerValue.join(', ');
     if (typeof customerValue === 'object') return JSON.stringify(customerValue);
+
+    if (key === 'totalBudget' || key === 'winBudget' || key === 'totalRevenue') {
+      const value = Number(customerValue);
+      return Number.isFinite(value) ? formatEuroCurrency(value) : String(customerValue);
+    }
+
     return String(customerValue);
   }
 
