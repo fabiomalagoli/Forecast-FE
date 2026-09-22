@@ -42,10 +42,7 @@ export class CustomersService {
       fullAddress: customer.fullAddress,
       isEliminated: customer.IsEliminated ?? customer.isEliminated ?? false,
       projects: projectList.length,
-      activeProjects: projectList,
-      totalBudget,
-      winBudget,
-      totalRevenue: totalBudget,
+      activeProjects: projectList
     };
   }
 
@@ -212,6 +209,19 @@ export class CustomersService {
       catchError(error => throwError(() => buildEntityError(error, 'progetto', 'caricamento')))
     );
   }
+
+  loadCustomerRecapData(customerId: string) {
+  return this.httpClient.get<any>(
+    `${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/recap`
+  ).pipe(
+    map((r: any) => ({
+      totalRevenues: r.totalRevenues ?? 0,
+      budgetTotale: r.budgetTotale ?? 0,
+      budgetWin: r.budgetWin ?? 0
+    })),
+    catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
+  );
+}
 
   setCustomerNameFilter(value: string) {
     this.loadCustomers(1, 10, { searchTerm: value }).pipe(

@@ -9,6 +9,7 @@ import { finalize } from 'rxjs';
 import { CustomersService } from '../../../shared/services/customers.service';
 import { CustomerProjectsComponent } from "./customer-projects/customer-projects.component";
 import { formatEuroCurrency } from '../../../shared/utils/project-form.utils';
+import { CustomerRecapData } from '../../../shared/models/project.model';
 
 @Component({
   selector: 'app-customer-details',
@@ -29,6 +30,7 @@ export class CustomerDetailsComponent {
   loading = signal(true);
   error = signal<string | null>(null);
   customer = signal<Customer | null>(null);
+  customerRecap = signal<CustomerRecapData | null>(null);
 
   readonly customerHeaders: Record<keyof Customer, string> = COMPLETE_CUSTOMER_HEADERS;
   readonly headersArray = Object.entries(this.customerHeaders)
@@ -75,6 +77,16 @@ export class CustomerDetailsComponent {
       next: (c) => {
         console.log('Cliente caricato:', c);
         this.customer.set(c);
+
+        this.customersService.loadCustomerRecapData(id).subscribe({
+          next: (recap) => {
+            console.log('Recap cliente caricato:', recap);
+            this.customerRecap.set(recap);
+          },
+          error: (err) => {
+            console.error('Errore API recap cliente:', err);
+          }
+        });
       },
       error: (err) => {
         console.error('Errore API:', err);
@@ -90,11 +102,6 @@ export class CustomerDetailsComponent {
     if (Array.isArray(customerValue)) return customerValue.join(', ');
     if (typeof customerValue === 'object') return JSON.stringify(customerValue);
 
-    if (key === 'totalBudget' || key === 'winBudget' || key === 'totalRevenue') {
-      const value = Number(customerValue);
-      return Number.isFinite(value) ? formatEuroCurrency(value) : String(customerValue);
-    }
-
     return String(customerValue);
   }
 
@@ -104,6 +111,12 @@ export class CustomerDetailsComponent {
     if (Array.isArray(progettoValue)) return progettoValue.join(', ');
     if (typeof progettoValue === 'object') return JSON.stringify(progettoValue);
     return String(progettoValue);
+  }
+
+  getRecapValue(key: keyof CustomerRecapData): string {
+    const value = this.customerRecap()?.[key];
+    if (value == null) return '';
+    return formatEuroCurrency(Number(value));
   }
 
   indietro() {

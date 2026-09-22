@@ -15,8 +15,5 @@ export const COMPLETE_CUSTOMER_HEADERS: Record<keyof Customer, string> = {
    country: 'Paese',
    projects: 'Numero Progetti Attivi',
    activeProjects: 'Progetti Attivi',
-   isEliminated: 'Eliminato',
-   totalBudget: 'Budget Totale',
-   winBudget: 'Budget Win',
-   totalRevenue: 'Totale Ricavi'
+   isEliminated: 'Eliminato'
 };

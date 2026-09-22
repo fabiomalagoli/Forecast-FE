@@ -51,6 +51,12 @@ export interface RecapData {
   totalEmployedDays: number;
 }
 
+export interface CustomerRecapData {
+  totalRevenues: number;
+  budgetTotale: number;  
+  budgetWin: number;
+}
+
 
 export interface ProjectRole {
   id: string;

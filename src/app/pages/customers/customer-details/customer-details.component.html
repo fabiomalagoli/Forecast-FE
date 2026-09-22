@@ -24,6 +24,30 @@
         }
       }
     </div>
+    @if (customerRecap()) {
+      <div class="card-cliente">
+        <h3>Recap cliente</h3>
+        <div class="row">
+          <span class="label">Totale ricavi</span>
+          <div class="value-container">
+            <strong class="value">{{ getRecapValue('totalRevenues') }}</strong>
+          </div>
+        </div>
+        <div class="row">
+          <span class="label">Budget totale</span>
+          <div class="value-container">
+            <strong class="value">{{ getRecapValue('budgetTotale') }}</strong>
+          </div>
+        </div>
+        <div class="row">
+          <span class="label">Budget win</span>
+          <div class="value-container">
+            <strong class="value">{{ getRecapValue('budgetWin') }}</strong>
+          </div>
+        </div>
+      </div>
+    }
+
     <div class="card-progetti">
       @if (customer()!.activeProjects.length === 0) {
         <p>Nessun progetto attivo.</p>

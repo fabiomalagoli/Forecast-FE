@@ -14,8 +14,5 @@ export interface Customer {
     country?: string,
     projects: number,
     isEliminated: boolean;
-    activeProjects: Project[],
-    totalBudget: number,
-    winBudget: number,
-    totalRevenue: number
+    activeProjects: Project[]
 }
