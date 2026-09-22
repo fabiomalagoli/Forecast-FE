@@ -1,5 +1,6 @@
 import { Customer } from '../models/customer.model';
 import { Project } from '../models/project.model';
+import { parseCurrencyNumber } from '../utils/project-form.utils';
 
 // Payload per creare o aggiornare un Cliente
 export interface CustomerPayload {
@@ -41,11 +42,11 @@ export function buildCustomerPayload(formData: any): CustomerPayload {
 // Builder per il progetto (versione ridotta per il contesto del cliente)
 export function buildCustomerProjectPayload(formData: any): CustomerProjectSummaryPayload {
   return {
-      id: formData.id || formData.Id, 
+      id: formData.id || formData.Id,
       name: formData.name || formData.Name,
-      company: formData.company || formData.Company, 
+      company: formData.company || formData.Company,
       projectStatus: formData.projectStatus || formData.ProjectStatus,
-      totalBudget: formData.totalBudget || formData.TotalBudget,
+      totalBudget: parseCurrencyNumber(formData.totalBudget ?? formData.TotalBudget ?? 0),
       description: formData.description || formData.Description,
       year: formData.year || formData.Year
   };

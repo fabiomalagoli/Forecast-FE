@@ -90,25 +90,35 @@ export function cleanProbability(value: any): number {
 }
 
 export function parseCurrencyNumber(value: unknown): number {
-  if (value === null || value === undefined || value === '') return NaN;
+  if (value === null || value === undefined || value === '') return 0;
 
-  const raw = String(value).trim().replace(/[\u20AC\s]/g, '');
-  if (!raw) return NaN;
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
 
-  const lastComma = raw.lastIndexOf(',');
-  const lastDot = raw.lastIndexOf('.');
-  let normalized = raw;
+  const raw = String(value).trim();
+  const normalizedText = raw.toLowerCase();
+
+  if (!raw || normalizedText === 'nan' || normalizedText === 'null' || normalizedText === 'not yet calculated' || normalizedText === 'not available' || normalizedText === 'n/a') return 0;
+
+  const cleaned = raw.replace(/[\u20AC\s]/g, '');
+  if (!cleaned) return 0;
+
+  const lastComma = cleaned.lastIndexOf(',');
+  const lastDot = cleaned.lastIndexOf('.');
+  let normalized = cleaned;
 
   if (lastComma !== -1 && lastDot !== -1) {
     const decimalIndex = lastComma > lastDot ? lastComma : lastDot;
-    normalized = raw.replace(/[.,]/g, (match, offset) => (offset === decimalIndex ? '.' : ''));
+    normalized = cleaned.replace(/[.,]/g, (match, offset) => (offset === decimalIndex ? '.' : ''));
   } else if (lastComma !== -1) {
-    normalized = raw.replace(/\./g, '').replace(',', '.');
+    normalized = cleaned.replace(/\./g, '').replace(',', '.');
   } else {
-    normalized = raw.replace(/,/g, '');
+    normalized = cleaned.replace(/,/g, '');
   }
 
-  return Number(normalized);
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export function getProjectFieldPattern(key: string): string {

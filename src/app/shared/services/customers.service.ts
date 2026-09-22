@@ -203,7 +203,9 @@ export class CustomersService {
         if (paginationHeader) {
           this.customerProjectPagination.set(JSON.parse(paginationHeader));
         }
-        const projects = (response.body || []).map(dto => this.mapToProject(dto));
+        const projects = (response.body || []).map(dto => {
+          return this.mapToProject(dto);
+        });
         this.customerProjects.set(projects);
         return projects;
       }),

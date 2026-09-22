@@ -15,6 +15,7 @@ import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { CUSTOMER_PROJECT_HEADERS } from './customer-project.headers';
 import { LookupsService } from '../../../../shared/services/lookups.service';
 import { Project } from '../../../../shared/models/project.model';
+import { formatEuroCurrency, parseCurrencyNumber } from '../../../../shared/utils/project-form.utils';
 
 @Component({
   selector: 'app-customer-projects',
@@ -379,17 +380,26 @@ export class CustomerProjectsComponent implements OnInit {
       this.loading.set(false);
       return;
     }
-        this.loadInitialData(id);
-        const savedFilters = (this.customersService as any).currentFilters;
-        if (savedFilters) {
-            this.currentFilters.set(savedFilters);
-        } else {
-          this.currentFilters.set({
-            companyId: null,
-            projectStatusId: null,
-            searchTerm: null
-          });
-        }
+
+    const customer = this.selectedCustomer();
+    if (customer) {
+      const projects = customer.activeProjects ?? [];
+      this.customerProjects.set(projects);
+      this.loading.set(false);
+      return;
+    }
+
+    this.loadInitialData(id);
+    const savedFilters = (this.customersService as any).currentFilters;
+    if (savedFilters) {
+        this.currentFilters.set(savedFilters);
+    } else {
+      this.currentFilters.set({
+        companyId: null,
+        projectStatusId: null,
+        searchTerm: null
+      });
+    }
     
         this.companyFilter.valueChanges.pipe(
           debounceTime(300),
@@ -428,10 +438,15 @@ export class CustomerProjectsComponent implements OnInit {
   getValue(p: Project, key: keyof Project): string {
     const projectValue = p[key];
 
-    // format base (evita [object Object])
-    if (projectValue == null) return '';
+    if (projectValue == null || projectValue === 'NaN' || projectValue === 'nan') return '0,00 €';
     if (Array.isArray(projectValue)) return projectValue.join(', ');
     if (typeof projectValue === 'object') return JSON.stringify(projectValue);
+
+    if (key === 'totalBudget') {
+      const parsed = parseCurrencyNumber(projectValue);
+      return Number.isFinite(parsed) ? formatEuroCurrency(parsed) : '0,00 €';
+    }
+
     return String(projectValue);
   }
 
