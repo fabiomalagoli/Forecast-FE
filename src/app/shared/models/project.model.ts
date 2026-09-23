@@ -51,10 +51,18 @@ export interface RecapData {
   totalEmployedDays: number;
 }
 
+export interface CustomerRecapEntry {
+  year: number;
+  totalRevenues: number;
+  budgetTotale: number;
+  budgetWin: number;
+}
+
 export interface CustomerRecapData {
   totalRevenues: number;
-  budgetTotale: number;  
+  budgetTotale: number;
   budgetWin: number;
+  entries: CustomerRecapEntry[];
 }
 
 

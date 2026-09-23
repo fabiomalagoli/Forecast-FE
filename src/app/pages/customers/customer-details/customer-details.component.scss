@@ -62,6 +62,84 @@
   }
 }
 
+.section-title {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: $text-dark;
+}
+
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recap-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid $border-card-divider;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $text-light;
+  font-weight: 700;
+}
+
+.summary-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $text-dark;
+}
+
+.recap-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.recap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+
+  thead th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $text-light;
+    border-bottom: 1px solid $border-card-divider;
+  }
+
+  tbody td {
+    padding: 12px;
+    border-bottom: 1px solid $border-card-divider;
+    color: $text-dark;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  tbody tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
 /* RIGHE */
 
 .row {

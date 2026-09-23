@@ -25,27 +25,52 @@
       }
     </div>
     @if (customerRecap()) {
-      <div class="card-cliente">
-        <h3>Recap cliente</h3>
-        <div class="row">
-          <span class="label">Totale ricavi</span>
-          <div class="value-container">
-            <strong class="value">{{ getRecapValue('totalRevenues') }}</strong>
+      <div class="card-cliente recap-card">
+        <h3 class="section-title">Recap cliente</h3>
+
+        <div class="recap-summary">
+          <div class="summary-item">
+            <span class="summary-label">Totale ricavi</span>
+            <strong class="summary-value">{{ getRecapValue('totalRevenues') }}</strong>
           </div>
-        </div>
-        <div class="row">
-          <span class="label">Budget totale</span>
-          <div class="value-container">
-            <strong class="value">{{ getRecapValue('budgetTotale') }}</strong>
+          <div class="summary-item">
+            <span class="summary-label">Budget totale</span>
+            <strong class="summary-value">{{ getRecapValue('budgetTotale') }}</strong>
           </div>
-        </div>
-        <div class="row">
-          <span class="label">Budget win</span>
-          <div class="value-container">
-            <strong class="value">{{ getRecapValue('budgetWin') }}</strong>
+          <div class="summary-item">
+            <span class="summary-label">Budget win</span>
+            <strong class="summary-value">{{ getRecapValue('budgetWin') }}</strong>
           </div>
         </div>
       </div>
+
+      @if (getYearlyRecapEntries().length > 0) {
+        <div class="card-cliente recap-card">
+          <h3 class="section-title">Dettaglio annuale</h3>
+          <div class="recap-table-wrapper">
+            <table class="recap-table">
+              <thead>
+                <tr>
+                  <th>Anno</th>
+                  <th>Totale ricavi</th>
+                  <th>Budget totale</th>
+                  <th>Budget win</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of getYearlyRecapEntries(); track entry.year) {
+                  <tr>
+                    <td>{{ entry.year }}</td>
+                    <td>{{ entry.totalRevenues | number:'1.2-2' }} €</td>
+                    <td>{{ entry.budgetTotale | number:'1.2-2' }} €</td>
+                    <td>{{ entry.budgetWin | number:'1.2-2' }} €</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
     }
 
     <div class="card-progetti">

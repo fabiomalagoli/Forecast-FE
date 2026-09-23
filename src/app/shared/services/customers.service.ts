@@ -211,17 +211,47 @@ export class CustomersService {
   }
 
   loadCustomerRecapData(customerId: string) {
-  return this.httpClient.get<any>(
-    `${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/recap`
-  ).pipe(
-    map((r: any) => ({
-      totalRevenues: r.totalRevenues ?? 0,
-      budgetTotale: r.budgetTotale ?? 0,
-      budgetWin: r.budgetWin ?? 0
-    })),
-    catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
-  );
-}
+    return this.httpClient.get<any>(
+      `${environment.apiUrl}/customers/${encodeURIComponent(customerId)}/recap`
+    ).pipe(
+      map((raw: any) => {
+        const rows = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.items)
+            ? raw.items
+            : Array.isArray(raw?.entries)
+              ? raw.entries
+              : [];
+
+        const entries = rows
+          .map((item: any) => ({
+            year: Number(item?.year ?? item?.Year ?? 0),
+            totalRevenues: Number(item?.totalRevenues ?? item?.TotalRevenues ?? 0),
+            budgetTotale: Number(item?.budgetTotale ?? item?.BudgetTotale ?? item?.budgetTotaleRisorsa ?? item?.BudgetTotaleRisorsa ?? 0),
+            budgetWin: Number(item?.budgetWin ?? item?.BudgetWin ?? 0),
+          }))
+          .filter((item: { year: number; totalRevenues: number; budgetTotale: number; budgetWin: number }) => item.year > 0)
+          .sort((a: { year: number }, b: { year: number }) => b.year - a.year);
+
+        const totals = entries.reduce(
+          (acc: { totalRevenues: number; budgetTotale: number; budgetWin: number }, item: { totalRevenues: number; budgetTotale: number; budgetWin: number }) => ({
+            totalRevenues: acc.totalRevenues + item.totalRevenues,
+            budgetTotale: acc.budgetTotale + item.budgetTotale,
+            budgetWin: acc.budgetWin + item.budgetWin,
+          }),
+          { totalRevenues: 0, budgetTotale: 0, budgetWin: 0 }
+        );
+
+        return {
+          totalRevenues: totals.totalRevenues,
+          budgetTotale: totals.budgetTotale,
+          budgetWin: totals.budgetWin,
+          entries,
+        };
+      }),
+      catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
+    );
+  }
 
   setCustomerNameFilter(value: string) {
     this.loadCustomers(1, 10, { searchTerm: value }).pipe(

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { Customer } from '../../../shared/models/customer.model';
 import { COMPLETE_CUSTOMER_HEADERS } from '../customer/complete-customer.headers';
 import { AppButtonComponent } from '../../../shared/button/button';
@@ -14,7 +14,7 @@ import { CustomerRecapData } from '../../../shared/models/project.model';
 @Component({
   selector: 'app-customer-details',
   standalone: true,
-  imports: [AppButtonComponent, RouterModule, CustomerProjectsComponent],
+  imports: [AppButtonComponent, RouterModule, CustomerProjectsComponent, DecimalPipe],
   templateUrl: './customer-details.component.html',
   styleUrls: ['./customer-details.component.scss'],
 })
@@ -116,7 +116,12 @@ export class CustomerDetailsComponent {
   getRecapValue(key: keyof CustomerRecapData): string {
     const value = this.customerRecap()?.[key];
     if (value == null) return '';
+
     return formatEuroCurrency(Number(value));
+  }
+
+  getYearlyRecapEntries() {
+    return [...(this.customerRecap()?.entries ?? [])].sort((a, b) => b.year - a.year);
   }
 
   indietro() {
