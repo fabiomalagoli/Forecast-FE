@@ -14,8 +14,12 @@ export class LookupsService {
   loadedProjectStatuses = this.projectStatuses.asReadonly();
 
   loadAvailableCompanies() {
-    return this.httpClient.get<any[]>(`${environment.apiUrl}/companies`).pipe(
-      map(companies => companies.map(c => ({ id: c.id, name: c.name, isDefault: c.isDefault }))),
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/companies?PageNumber=1&PageSize=1000`, { observe: 'response' }).pipe(
+      map(response => (response.body || []).map(c => ({
+        id: c.id ?? c.Id,
+        name: c.name ?? c.Name,
+        isDefault: c.isDefault ?? c.IsDefault
+      }))),
       tap(companies => this.companies.set(companies)),
       catchError(error => throwError(() => new Error('Something went wrong.')))
     );

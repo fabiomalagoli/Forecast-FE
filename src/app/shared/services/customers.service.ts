@@ -36,13 +36,13 @@ export class CustomersService {
     }, 0);
 
     return {
-      id: customer.id,
-      vatNumber: customer.vatNumber,
-      name: customer.name,
-      fullAddress: customer.fullAddress,
+      id: customer.id ?? customer.Id,
+      vatNumber: customer.vatNumber ?? customer.VatNumber,
+      name: customer.name ?? customer.Name,
+      fullAddress: customer.fullAddress ?? customer.FullAddress,
       isEliminated: customer.IsEliminated ?? customer.isEliminated ?? false,
-      projects: projectList.length,
-      activeProjects: projectList
+      projects: (customer.projects ?? customer.Projects)?.length || 0,
+      activeProjects: customer.projects ?? customer.Projects ?? [],
     };
   }
 
@@ -74,8 +74,8 @@ export class CustomersService {
   }
 
   loadAvailableCustomers() {
-    return this.httpClient.get<any[]>(`${environment.apiUrl}/customers`).pipe(
-      map(customers => customers.map(c => this.mapToCustomer(c))),
+    return this.httpClient.get<any[]>(`${environment.apiUrl}/customers?PageNumber=1&PageSize=1000`, { observe: 'response' }).pipe(
+      map(response => (response.body || []).map(c => this.mapToCustomer(c))),
       catchError(error => throwError(() => buildEntityError(error, 'cliente', 'caricamento')))
     );
   }

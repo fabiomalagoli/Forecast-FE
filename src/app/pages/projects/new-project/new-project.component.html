@@ -15,8 +15,8 @@
                 [formControlName]="h.key"
                 (change)="onFieldChange()"
                 >
-                @for (opt of getOptions(h.key); track (opt.id)) {
-                  <option [value]="opt.id">{{ opt.name || opt.nome || opt }}</option>
+                @for (opt of getOptions(h.key); track (opt.id || opt.Id || opt)) {
+                  <option [value]="opt.id || opt.Id">{{ opt.name || opt.Name || opt.nome || opt }}</option>
                 }
               </select>
             }
