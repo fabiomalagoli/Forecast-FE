@@ -11,14 +11,24 @@ import { ProjectsService } from '../../../../shared/services/projects.service';
 import { EmployeesService } from '../../../../shared/services/employees.service';
 import { JobRolesService } from '../../../../shared/services/job-roles.service';
 import { mergeProjectEmployeesWithEmployeeDetails } from '../../../../shared/utils/project-display.utils';
-import { TextInputComponent } from "../../../../shared/text-input/text-input.component";
-import { RECAP_DATA_HEADERS } from '../../recap-data.headers';
 import { MatIconModule } from "@angular/material/icon";
+
+interface ProjectDetailHeader {
+  key: keyof Project;
+  label: string;
+}
+
+const PROJECT_DETAIL_FIELDS = new Set<keyof Project>([
+  'company',
+  'pm',
+  'head',
+  'projectStatus',
+]);
 
 @Component({
   selector: 'app-project-details',
   standalone: true,
-  imports: [AppButtonComponent, ResourceDetailsGridComponent, TextInputComponent, MatIconModule],
+  imports: [AppButtonComponent, ResourceDetailsGridComponent, MatIconModule],
   templateUrl: './project-details.component.html',
   styleUrls: ['./project-details.component.scss'],
 })
@@ -63,15 +73,12 @@ export class ProjectDetailsComponent {
     return this.formatDecimal(this.projectRecapData()?.delta);
   });
 
-  recapDataHeaders = RECAP_DATA_HEADERS;
+  hasDeltaWarning = computed(() => (this.projectRecapData()?.delta ?? 0) !== 0);
 
-  readonly projectsHeaders: Partial<Record<keyof Project, string>> = COMPLETE_PROJECT_HEADERS;
-  readonly headersArray = Object.entries(this.projectsHeaders)
-    .filter(([key]) => key !== 'id')
-    .map(([key, label]) => ({
-      key: key as keyof Project,
-      label,
-    }));
+  readonly detailHeaders: ProjectDetailHeader[] = [...PROJECT_DETAIL_FIELDS].map(key => ({
+    key,
+    label: COMPLETE_PROJECT_HEADERS[key] ?? key,
+  }));
 
   constructor() {
     effect(() => {

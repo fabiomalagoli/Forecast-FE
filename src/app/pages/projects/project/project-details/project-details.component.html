@@ -1,129 +1,146 @@
 <header class="detail-header">
   <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">PORTFOLIO / PROGETTI</span>
+    <h1>Dettaglio progetto</h1>
+  </div>
 </header>
-<h2>Dettaglio progetto</h2>
 
 @if (loading()) {
-  <p>Caricamento...</p>
+  <p class="state-message">Caricamento progetto...</p>
 } 
 @else if (error()) {
-  <p class="error">{{ error() }}</p>
+  <p class="state-message error">{{ error() }}</p>
 } 
 @else if (!project()) {
-  <p>Progetto non trovato.</p>
+  <p class="state-message">Progetto non trovato.</p>
 } 
 @else {
   @let p = project()!;
+  @let resources = displayedProjectEmployees();
 
-  <div class="project-layout">
-    <div class="left-column">
-      <section class="card-progetto">
-        @for (h of headersArray; track h.key) {
-          @if (h.key !== 'projectJobRoles' && h.key !== 'projectEmployees') {
-            <div class="row">
-              <span class="label">{{ h.label }}</span>
-              <strong class="value">{{ getValue(p, h.key) }}</strong>
+  <main class="project-page">
+    <section class="project-overview">
+      <div class="project-topline">
+        <div class="project-title-block">
+          <span class="project-customer">{{ getValue(p, 'customer') }}</span>
+          <h2>{{ getValue(p, 'name') }}</h2>
+          @if (p.description) {
+            <p class="project-description">{{ p.description }}</p>
+          }
+        </div>
+
+        <div class="project-period">
+          <span>PERIODO</span>
+          <strong class="project-period-dates">{{ getValue(p, 'startDate') }} <span aria-hidden="true">→</span> {{ getValue(p, 'endDate') }}</strong>
+          <div class="project-period-meta">
+            <span class="duration">{{ getValue(p, 'totalDays') }} giorni</span>
+            <span class="duration">Anno {{ getValue(p, 'year') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="project-information" aria-labelledby="project-information-title">
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">INFORMAZIONI GENERALI</span>
+          </div>
+        </div>
+
+        <div class="project-fields">
+          @for (header of detailHeaders; track header.key) {
+            <div class="project-field">
+              <span>{{ header.label }}</span>
+              <strong>{{ getValue(p, header.key) }}</strong>
             </div>
           }
-        }
+        </div>
       </section>
 
-  <!-- @if (p.projectJobRoles && p.projectJobRoles.length > 0) {
-    <h3 style="margin-top: 2rem; margin-left: 1rem;">Ruoli</h3>
-    <section class="card">
-      <table class="roles-table">
-        <thead>
-          <tr>
-            <th>Ruolo</th>
-            <th>Livello</th>
-            <th>Costo Giornaliero</th>
-            <th>Giorni Spesi</th>
-            <th>Win %</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (role of p.projectJobRoles; track role.id) {
-            <tr>
-              <td><strong>{{ role.jobRole }}</strong></td>
-              <td>{{ role.jobRoleLevel }}</td>
-              <td>€{{ role.dailyCost }}</td>
-              <td>{{ role.daysSpent }}</td>
-              <td>{{ role.winProbability }}%</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <aside class="recap-panel" aria-labelledby="recap-title">
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">DATI ECONOMICI</span>
+          </div>
+        </div>
+        <div class="recap-grid">
+          <div class="recap-metric">
+            <span>Budget totale (€)</span>
+            <strong>{{ formattedBudgetTotale() }}</strong>
+          </div>
+          <div class="recap-metric">
+            <span>Ricavi totali (€)</span>
+            <strong>{{ formattedTotalRevenues() }}</strong>
+          </div>
+          <div class="recap-metric">
+            <span>Budget win</span>
+            <strong>{{ formattedBudgetWin() }}</strong>
+          </div>
+          <div class="recap-metric">
+            <span>Giorni consuntivati</span>
+            <strong>{{ formattedTotalEmployedDays() }}</strong>
+          </div>
+          <div class="recap-metric delta-metric" [class.delta-warning]="hasDeltaWarning()">
+            <span>Delta</span>
+            <strong>{{ formattedDelta() }}</strong>
+          </div>
+          <div class="recap-metric">
+            <span>Probabilità di vittoria</span>
+            <strong>{{ p.winProbability }}%</strong>
+          </div>
+        </div>
+      </aside>
     </section>
-  } -->
-  <!-- IMPORTANT: Per il momento, disattiviamo i ruoli in Visualizza. L'idea sarà di unirli con i dipendenti -->
 
-  @if (displayedProjectEmployees() && displayedProjectEmployees().length > 0) {
-    <h3 style="margin-top: 2rem; margin-left: 1rem;">Risorse</h3>
-    <section class="card-risorse">
-      <table class="roles-table">
-        <thead>
-          <tr>
-            <th>Risorsa</th>
-            <th>Ruolo</th>
-            <th>Livello</th>
-            <th>Tariffa</th>
-            <th>Giorni Spesi</th>
-            <th>Win %</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (employee of displayedProjectEmployees(); track employee.id) {
-            <tr class="resource-row" (click)="openEmployeeDetails(employee)">
-              <td><strong>{{ employee.employee }}</strong></td>
-              <td>{{ employee.jobRole }}</td>
-              <td>{{ employee.jobRoleLevel }}</td>
-              <td>€{{ employee.dailyCost }}</td>
-              <td>{{ employee.daysSpent }}</td>
-              <td>{{ employee.winProbability }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </section>
-  }
-    </div>
-    <aside class="recap-panel">
-      <h3 class="section-title">Recap Progetto</h3>
-      <div class="recap-grid">
-        <app-text-input class="input-recap-active">
-          <label>{{recapDataHeaders.BudgetTotale}} €</label>
-          <input type="text" [value]="formattedBudgetTotale()" readonly>
-        </app-text-input>
-        <app-text-input class="input-recap-active">
-          <label>{{recapDataHeaders.TotaleRicavi}} €</label>
-          <input type="text" [value]="formattedTotalRevenues()" readonly>
-        </app-text-input>
-        <app-text-input class="input-recap-active">
-          <label>{{recapDataHeaders.BudgetWin}}</label>
-          <input type="text" [value]="formattedBudgetWin()" readonly>
-        </app-text-input>
-        <app-text-input class="input-recap-active">
-          <label>{{recapDataHeaders.TotaleConsuntivate}}</label>
-          <input type="text" [value]="formattedTotalEmployedDays()" readonly>
-        </app-text-input>
-        <app-text-input class="input-recap-active" [class.delta-warning]="projectRecapData()?.delta !== 0">
-          <label>{{recapDataHeaders.Delta}}</label>
-          <input type="text" [value]="formattedDelta()" readonly>
-        </app-text-input>
-      </div>
-    </aside>
-  </div>
-  @if(selectedResource()) {
+    @if (resources.length > 0) {
+      <section class="resources-section" aria-labelledby="resources-title">
+        <div class="section-heading resources-heading">
+          <div>
+            <span class="section-eyebrow">TEAM DI PROGETTO ({{resources.length}})</span>
+          </div>
+        </div>
+        <div class="card-risorse">
+          <div class="table-scroll">
+            <table class="roles-table">
+              <thead>
+                <tr>
+                  <th>Risorsa</th>
+                  <th>Ruolo</th>
+                  <th>Livello</th>
+                  <th>Tariffa</th>
+                  <th>Giorni spesi</th>
+                  <th>Win %</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (employee of resources; track employee.id) {
+                  <tr class="resource-row" (click)="openEmployeeDetails(employee)">
+                    <td><strong>{{ employee.employee }}</strong></td>
+                    <td>{{ employee.jobRole }}</td>
+                    <td>{{ employee.jobRoleLevel }}</td>
+                    <td>€{{ employee.dailyCost }}</td>
+                    <td>{{ employee.daysSpent }}</td>
+                    <td>{{ employee.winProbability }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    }
+  </main>
+
+  @if (selectedResource()) {
     <div class="drawer-overlay" (click)="selectedResource.set(null)"></div>
 
     <div class="drawer-panel">
       <button class="drawer-close-btn" (click)="selectedResource.set(null)">×</button>
-      <app-resource-details-grid 
+      <app-resource-details-grid
         [resource]="selectedResource()"
         [project]="project()"
         (closeDrawer)="selectedResource.set(null)"
       ></app-resource-details-grid>
-   </div>
-
+    </div>
   }
 }

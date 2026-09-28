@@ -1,4 +1,4 @@
-<div class="card">
+<a class="card" [routerLink]="['/progetti', cards().id]">
   <div class="card-header">
     <h2 class="customer-name">{{ cards().customer }}</h2>
     <div class="header-meta">
@@ -13,4 +13,4 @@
     <div class="meta-line">Persone allocate: <span class="meta-value">{{ cards().employeeCount }}</span></div>
     <div class="meta-line">Totale (€): <span class="meta-value">{{ cards().totalBudget }}</span></div>
   </div>
-</div>
+</a>

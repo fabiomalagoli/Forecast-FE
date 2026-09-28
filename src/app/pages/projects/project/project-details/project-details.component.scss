@@ -1,118 +1,333 @@
 @use 'variables' as *;
 
-/* HEADER */
+:host {
+  display: block;
+  color: $text-dark;
+}
 
 .detail-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 18px;
+  margin: 0 auto 24px;
+  max-width: 1440px;
+  padding: 0 4px;
 
   button:hover {
     background-color: $color-primary-dark;
   }
 }
 
-/* CARDS */
-
-// Placeholder per condividere le regole comuni fra le card (risorse e progetto)
-%card-dettaglio {
-  border: 1px solid $border-light;
-  border-radius: $radius-xl;
-  padding: 16px;
-  background: $bg-white;
-  box-shadow: $shadow-card;
-  max-width: 800px;
+.page-heading h1,
+.project-title-block h2,
+.section-heading h2 {
+  margin: 0;
+  color: $text-heading;
 }
 
-.card-risorse {
-  @extend %card-dettaglio;
-  max-height: 170px;
-  overflow-y: auto;
+.page-heading h1 {
+  font-size: 1.35rem;
+  line-height: 1.25;
 }
 
-.card-progetto {
-  @extend %card-dettaglio;
+.page-eyebrow,
+.section-eyebrow,
+.project-period > span:first-child {
+  display: block;
+  margin-bottom: 5px;
+  color: $text-light;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
-/* RIGHE E LISTE */
-
-.row {
+.project-page {
   display: grid;
-  grid-template-columns: 180px 1fr;
-  padding: 10px 0;
-  border-bottom: 1px solid $border-card-divider;
+  gap: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
 
-  &:last-child {
-    border-bottom: none;
+.project-information,
+.recap-panel,
+.card-risorse {
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+  background: $bg-white;
+  box-shadow: $shadow-md;
+}
+
+.project-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  gap: 20px;
+}
+
+.project-topline {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  align-items: center;
+  gap: 28px;
+}
+
+.project-information {
+  min-width: 0;
+  padding: 20px;
+}
+
+.recap-panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.project-title-block,
+.project-period {
+  min-width: 0;
+}
+
+.project-customer {
+  display: block;
+  margin-bottom: 5px;
+  color: $color-primary-dark;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.project-title-block h2 {
+  font-size: clamp(1.4rem, 1.8vw, 1.9rem);
+  overflow-wrap: anywhere;
+}
+
+.project-period {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-left: 3px solid $color-primary;
+  background: $bg-app-shell;
+
+  > span:first-child {
+    margin: 0;
+  }
+
+  .project-period-dates {
+    color: $text-filter-dark;
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.project-period-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.duration {
+  color: $text-muted;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.project-description {
+  max-width: 72ch;
+  margin: 10px 0 0;
+  color: $text-muted;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.project-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(82px, auto);
+  gap: 10px;
+}
+
+.project-field,
+.recap-metric {
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  box-sizing: border-box;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+.project-field {
+  padding: 11px 12px;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-light;
+
+  span,
+  strong {
+    display: block;
+    overflow-wrap: anywhere;
   }
 
   span {
-    color: $text-light;
-    font-weight: 600;
+    margin-bottom: 0;
+  }
+
+  strong {
+    color: $text-filter-dark;
+    font-size: 0.9rem;
   }
 }
 
-.resource-row {
-  padding: 12px 8px;
-  border-bottom: 1px solid $border-lighter;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  -webkit-user-select: none;
-  user-select: none;
-}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
 
-.resource-row {
-  &:hover {
-    background-color: $bg-select-hover;
-  }
-
-  &:active {
-    background-color: $bg-select-active;
-  }
-
-  &.selected {
-    background-color: $bg-select-selected;
-    color: white;
-    font-weight: bold;
+  h2 {
+    font-size: 1.2rem;
   }
 }
 
-/* TABELLA RUOLI */
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(82px, auto);
+  gap: 10px;
+}
+
+.recap-metric {
+  padding: 12px;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-white;
+
+  span {
+    line-height: 1.3;
+  }
+
+  strong {
+    color: $text-heading;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+}
+
+.project-field span,
+.recap-metric span {
+  color: $text-light;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.delta-warning {
+  border-color: $color-warning;
+  background: rgba($color-warning, 0.16);
+
+  strong {
+    color: #8a5200;
+  }
+}
+
+.resources-section {
+  min-width: 0;
+}
+
+.resources-heading {
+  margin: 0 2px 12px;
+}
+
+.resource-count {
+  display: grid;
+  min-width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: $color-primary-light;
+  color: $color-primary-dark;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.card-risorse {
+  overflow: hidden;
+}
+
+.table-scroll {
+  max-height: 420px;
+  overflow: auto;
+}
 
 .roles-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  text-align: left;
 
   th {
-    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: $bg-table-header;
     color: $text-table-heading;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    padding: 8px;
-    border-bottom: 1px solid $border-light-alt;
+    white-space: nowrap;
+  }
+
+  th,
+  td {
+    padding: 13px 16px;
+    border-bottom: 1px solid $border-light;
   }
 
   td {
-    padding: 12px 8px;
-    border-bottom: 1px solid $border-lighter;
-    font-size: 0.95rem;
+    color: $text-filter-medium;
+    font-size: 0.9rem;
+    white-space: nowrap;
   }
 
-  tr:last-child td {
-    border-bottom: none;
+  tbody tr:last-child td {
+    border-bottom: 0;
   }
 }
 
-/* DRAWER LATERALE A COMPARSA*/
+.resource-row {
+  cursor: pointer;
+
+  &:hover {
+    background: $bg-select-hover;
+  }
+
+  td:first-child strong {
+    color: $text-heading;
+  }
+}
+
+.state-message {
+  max-width: 1440px;
+  margin: 24px auto;
+  padding: 18px 20px;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-white;
+  color: $text-muted;
+}
+
+.state-message.error {
+  border-color: $border-state-error-alt;
+  background: $bg-state-error-alt;
+  color: $text-state-error-alt;
+}
 
 .drawer-overlay {
   position: fixed;
-  inset: 0; // Sostituisce top, left, width, height
-  background-color: rgba(0, 0, 0, 0.4); 
+  inset: 0;
   z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.4);
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -120,37 +335,40 @@
   position: fixed;
   top: 0;
   right: 0;
+  z-index: 1001;
+  display: flex;
   width: 100%;
   max-width: 900px;
   height: 100vh;
-  background-color: $bg-layout;
-  z-index: 1001;
-  box-shadow: $shadow-drawer;
+  flex-direction: column;
   padding: 3rem 2rem;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  background-color: $bg-layout;
+  box-shadow: $shadow-drawer;
   animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .drawer-close-btn {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: color 0.2s;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-white;
   color: $text-filter-muted;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: $transition-base;
 
   &:hover {
     color: $text-dark;
+    background: $bg-hover;
   }
 }
-
-/* ANIMAZIONI */
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -162,153 +380,49 @@
   to { transform: translateX(0); }
 }
 
-/* RECAP SECTION */ 
+@media (max-width: 900px) {
+  .project-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-.section-title {
-  text-align: center;
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  font-weight: 700;
-}
-
-.recap-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 20px;
-
-  @media (max-width: 720px) {
-    grid-template-columns: 1fr;
+  .project-topline {
+    grid-column: auto;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
+@media (max-width: 600px) {
+  .detail-header {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
 
+  .page-heading h1 {
+    font-size: 1.15rem;
+  }
 
-app-text-input {
-  display: block;
-  width: 100%;
+  .project-overview {
+    gap: 20px;
+  }
 
-  input {
-    width: 100%;
-    padding: 10px 14px;
-    font-size: 14px;
-    color: #333;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    box-sizing: border-box;
+  .project-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-    &:focus {
-      border-color: #f39200;
-      box-shadow: 0 0 0 3px rgba(243, 146, 0, 0.25);
-    }
+  .recap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-    &[readonly] {
-      background-color: #f8f9fa;
-      border-color: #e9ecef;
-      color: #6c757d;
-      cursor: not-allowed;
-    }
+  .recap-panel {
+    padding: 14px;
+  }
+
+  .roles-table {
+    min-width: 680px;
+  }
+
+  .drawer-panel {
+    padding: 3.5rem 1rem 1.5rem;
   }
 }
-
-.input-recap-active {
-  input[readonly] {
-    background-color: $bg-app-shell;
-    border-color: $text-filter-light;
-    color: $text-filter-dark;
-    cursor: not-allowed;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
-  }
-}
-
-.delta-warning {
-  input {
-    border-color: #f39200 !important;
-    color: #b76e00 !important;
-    background-color: rgba(243, 146, 0, 0.04) !important;
-    box-shadow: 0 0 0 3px rgba(243, 146, 0, 0.2) !important;
-    font-weight: 600;
-  }
-}
-
-.project-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  align-items: start;
-}
-
-.recap-panel {
-  background: #ffffff;
-  border: 1px solid $border-light;
-  border-radius: $radius-xl;
-  padding: 16px;
-  box-shadow: $shadow-card;
-  height: fit-content;
-  width: 100%;
-}
-
-.recap-debug {
-  margin-top: 12px;
-  font-size: 13px;
-  color: $text-light;
-}
-
-.export-button-container {
-  margin-top: 40px; 
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-/* PULSANTE DI ESPORTAZIONE (COMMENTATO PER EVENTUALE UTILIZZO) */
-
-// .btn-export {
-//   display: inline-flex;
-//   align-items: center;
-//   justify-content: center;
-//   gap: $spacing-sm; // Spazio di 8px tra l'icona di download e il testo
-  
-//   padding: 0.75rem 1.5rem;
-//   background-color: $color-primary;
-//   color: white;
-//   border: 1px solid $color-primary;
-//   border-radius: $radius-sm;
-//   font-size: 0.9375rem;
-//   font-weight: 600;
-//   cursor: pointer;
-//   transition: $transition-base;
-
-//   // Forza l'allineamento verticale dell'icona Material
-//   mat-icon {
-//     font-size: 1.25rem;
-//     width: 24px;
-//     height: 24px;
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-//   }
-
-//   /* Effetti di Hover e Pressione */
-//   &:hover {
-//     background-color: $color-primary-hover;
-//     border-color: $color-primary-hover;
-//     box-shadow: $shadow-primary;
-//   }
-
-//   &:active {
-//     transform: scale(0.98);
-//   }
-
-//   /* Stato Disabilitato */
-//   &:disabled {
-//     border-color: $color-primary-disabled;
-//     background: $color-primary-disabled;
-//     color: rgba($text-dark, 0.55);
-//     cursor: not-allowed;
-//     box-shadow: none;
-//     transform: none;
-//   }
-// }

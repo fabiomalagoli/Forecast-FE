@@ -11,6 +11,9 @@
   border: 1px solid $border-main; // Sostituisce #ccc
   border-radius: $radius-md; // Sostituisce 7px con i 6px del sistema
   box-shadow: $shadow-sm; // Sostituisce 0 2px 5px rgba(0, 0, 0, 0.1)
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
   padding: 5px;
   display: flex;
   justify-content: space-between;
