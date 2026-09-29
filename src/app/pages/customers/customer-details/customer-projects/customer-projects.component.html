@@ -1,5 +1,3 @@
-<h2>Progetti attivi del cliente</h2>
-
 @if (error()) {
   <p class="error">{{ error() }}</p>
 } @else {
@@ -104,21 +102,34 @@
     </div>
   </div>
   @for (p of allFiltersApplied(); track p.id) {
-    <article class="project-container">
-      <section class="card">
-        <h3>{{ p.name }}</h3>
-        @for (h of headersArray; track h.key) {
-          @if(h.label !== 'Risorse' && h.label !== 'Ruoli'){
-          <div class="row">
-            <span class="label">{{ h.label }}</span>
-            <div class="value-container">
-              <strong class="value">{{ getValue(p, h.key) }}</strong>
-            </div>
+    <a class="project-container" [routerLink]="['/progetti', p.id]" [attr.aria-label]="'Apri progetto ' + p.name">
+      <section class="project-card">
+        <div class="project-card-heading">
+          <div class="project-card-title">
+            <h3>{{ p.name }}</h3>
+              @if (p.year && p.description) {
+                <p class="project-description">({{ p.year }}) {{ p.description }}</p>
+              }
+              @else if (p.year) {
+                <p class="project-description">{{ p.year }}</p>
+              }
+              @else if (p.description) {
+                <p class="project-description">{{ p.description }}</p>
+              }
           </div>
+        </div>
+        <div class="project-facts">
+        @for (h of headersArray; track h.key) {
+          @if (h.key !== 'description' && h.label !== 'Risorse' && h.label !== 'Ruoli' && h.label !== 'Anno') {
+            <div class="project-fact">
+              <span>{{ h.label }}</span>
+              <strong>{{ getValue(p, h.key) }}</strong>
+            </div>
           }
         }
+        </div>
       </section>
-    </article>
+    </a>
   }
   @if(pagination()){
     <mat-paginator

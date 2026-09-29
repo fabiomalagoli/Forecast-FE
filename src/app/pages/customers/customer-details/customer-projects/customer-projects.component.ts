@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit, computed, HostListener, input, DestroyRef, effect } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, tap, timer } from 'rxjs';
 import { CustomersService } from '../../../../shared/services/customers.service';
@@ -20,7 +20,7 @@ import { formatEuroCurrency, parseCurrencyNumber } from '../../../../shared/util
 @Component({
   selector: 'app-customer-projects',
   standalone: true,
-  imports: [MatPaginatorModule, ReactiveFormsModule],
+  imports: [MatPaginatorModule, ReactiveFormsModule, RouterLink],
   templateUrl: './customer-projects.component.html',
   styleUrls: ['customer-projects.component.scss'],
 })
@@ -382,57 +382,78 @@ export class CustomerProjectsComponent implements OnInit {
     }
 
     const customer = this.selectedCustomer();
+    const customerId = customer?.id ?? id;
+    const savedFilters = customer ? null : (this.customersService as any).currentFilters;
+    this.currentFilters.set(savedFilters ?? {
+      companyId: null,
+      projectStatusId: null,
+      searchTerm: null
+    });
+
     if (customer) {
       const projects = customer.activeProjects ?? [];
       this.customerProjects.set(projects);
       this.loading.set(false);
-      return;
-    }
-
-    this.loadInitialData(id);
-    const savedFilters = (this.customersService as any).currentFilters;
-    if (savedFilters) {
-        this.currentFilters.set(savedFilters);
+      this.loadFilterOptions();
     } else {
-      this.currentFilters.set({
-        companyId: null,
-        projectStatusId: null,
-        searchTerm: null
-      });
+      this.loadInitialData(id);
     }
-    
-        this.companyFilter.valueChanges.pipe(
-          debounceTime(300),
-          distinctUntilChanged(),
-          tap(value => {
-            const filterValue = value || '';
-            this.companyFilterValue.set(filterValue.toLowerCase());
-            this.showAllCompanyOptions.set(false);
-          }),
-          takeUntilDestroyed(this.destroyRef)
-        ).subscribe();
-    
-        this.statusFilter.valueChanges.pipe(
-          debounceTime(300),
-          distinctUntilChanged(),
-          tap(value => {
-            this.statusFilterValue.set((value || '').toLowerCase());
-            this.showAllStatusOptions.set(false);
-          }),
-          takeUntilDestroyed(this.destroyRef)
-        ).subscribe();
 
-        this.projectNameFilter.valueChanges.pipe(
-          debounceTime(300),
-          distinctUntilChanged(),
-          tap(value => {
-            const v = (value || '').toLowerCase();
-            this.filterNameValue.set(v);
-            this.currentFilters.update(filters => ({ ...filters, searchTerm: v || null }));
-          }),
-          takeUntilDestroyed(this.destroyRef)
-        ).subscribe();
+    this.companyFilter.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => {
+        this.companyFilterValue.set((value || '').toLowerCase());
+        this.showAllCompanyOptions.set(false);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
 
+    this.statusFilter.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => {
+        this.statusFilterValue.set((value || '').toLowerCase());
+        this.showAllStatusOptions.set(false);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+    this.projectNameFilter.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(value => {
+        const searchTerm = (value || '').trim().toLowerCase();
+        this.filterNameValue.set(searchTerm);
+        this.currentFilters.update(filters => ({ ...filters, searchTerm: searchTerm || null }));
+        this.loadCustomerProjectsPage(customerId, 1);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+  }
+
+  private loadFilterOptions() {
+    forkJoin({
+      companies: this.lookupsService.loadAvailableCompanies(),
+      statuses: this.lookupsService.loadProjectStatuses()
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: ({ companies, statuses }) => {
+        this.companiesList.set(companies);
+        this.statusesList.set(statuses);
+
+        const companiesMap = new Map(companies.map(company => [company.name, company.id]));
+        const statusesMap = new Map(statuses.map(status => [status.name, status.id]));
+        this.customerProjects.update(projects => projects.map(project => ({
+          ...project,
+          companyId: project.companyId || companiesMap.get(project.company) || null,
+          projectStatusId: project.projectStatusId || statusesMap.get(project.projectStatus) || null
+        })));
+      },
+      error: error => console.error('Errore nel caricamento dei filtri dei progetti:', error)
+    });
   }
 
   getValue(p: Project, key: keyof Project): string {

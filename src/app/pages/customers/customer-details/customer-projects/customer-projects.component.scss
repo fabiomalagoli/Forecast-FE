@@ -1,101 +1,96 @@
 @use 'variables' as *;
 
-/* LAYOUT E CONTENITORI */
-
 .project-container {
-  margin-bottom: 16px;
+  display: block;
+  margin-bottom: 12px;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 3px;
+  }
+
+  &:hover .project-card {
+    border-color: $color-primary-dark;
+    box-shadow: $shadow-card;
+  }
 }
 
-.section-title {
-  margin: 24px 0 12px 16px;
-  font-size: 1.1rem;
-  color: $text-medium;
-}
-
-.card {
+.project-card {
+  max-width: 100%;
+  padding: 18px 20px;
   border: 1px solid $border-light;
-  border-radius: $radius-xl;
-  padding: 16px;
+  border-radius: $radius-lg;
   background: $bg-white;
   box-shadow: $shadow-card;
-  max-width: 100%;
-
-  & + .section-title {
-    margin-top: 32px; 
-  }
+  transition: $transition-base;
 }
 
-.detail-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-/* RIGHE */
-
-.row {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  padding: 10px 0;
-  border-bottom: 1px solid $border-card-divider;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  span {
-    color: $text-light;
-    font-weight: 600;
-  }
-}
-
-.value-container {
+.project-card-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px; 
-  width: 100%;
+  gap: 16px;
+}
+
+.project-card-title {
   min-width: 0;
-
-  .value {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
 
-.project-btn {
-  white-space: nowrap; 
-  flex-shrink: 0; 
-  margin-left: auto;
+.project-card-title h3 {
+  margin: 0;
+  color: $color-primary-dark;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
-/* TABELLA RUOLI */
+.project-description {
+  margin: 7px 0 0;
+  color: $text-muted;
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 
-.roles-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+.project-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid $border-card-divider;
+}
 
-  th {
-    text-align: left;
-    color: $text-table-heading;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    padding: 8px;
-    border-bottom: 1px solid $border-light-alt;
+.project-fact {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.project-fact span {
+  color: $text-light;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.project-fact strong {
+  color: $text-filter-dark;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .project-card {
+    padding: 15px;
   }
 
-  td {
-    padding: 12px 8px;
-    border-bottom: 1px solid $border-lighter;
-    font-size: 0.95rem;
-  }
-
-  tr:last-child {
-    td {
-      border-bottom: none;
-    }
+  .project-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
   }
 }

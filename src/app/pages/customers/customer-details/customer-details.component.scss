@@ -178,3 +178,256 @@
   flex-shrink: 0;
   margin-left: auto;
 }
+
+:host {
+  display: block;
+}
+
+.detail-header {
+  max-width: 1440px;
+  margin: 0 auto 24px;
+  padding: 0 4px;
+  gap: 18px;
+}
+
+.page-heading h1,
+.customer-overview-heading h2,
+.section-heading h2,
+.customer-projects-heading h2 {
+  margin: 0;
+  color: $text-heading;
+}
+
+.page-heading h1 {
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.page-eyebrow,
+.section-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: $text-light;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.customer-page {
+  display: grid;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 20px 24px;
+  gap: 24px;
+}
+
+.customer-recap {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+  background: $bg-white;
+  box-shadow: $shadow-md;
+}
+
+.customer-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  align-items: center;
+  gap: 28px;
+  padding: 8px 4px;
+}
+
+.customer-title-block {
+  min-width: 0;
+
+  h2 {
+    margin: 0 0 8px;
+    color: $color-primary-dark;
+    font-size: clamp(1.4rem, 1.8vw, 1.9rem);
+    overflow-wrap: anywhere;
+  }
+}
+
+.customer-vat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+
+  span {
+    color: $text-light;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  strong {
+    color: $text-filter-dark;
+    font-size: 0.9rem;
+  }
+}
+
+.customer-address {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-left: 3px solid $color-primary;
+  background: $bg-app-shell;
+
+  span {
+    color: $text-light;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  strong {
+    color: $text-filter-dark;
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.customer-recap {
+  display: grid;
+  gap: 8px;
+}
+
+.section-heading h2,
+.customer-projects-heading h2 {
+  font-size: 1.2rem;
+}
+
+.recap-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-item {
+  min-width: 0;
+  border-radius: $radius-md;
+  background: $bg-light;
+}
+
+.summary-label {
+  color: $text-light;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.summary-value {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.annual-recap {
+  min-width: 0;
+  padding-top: 18px;
+  border-top: 1px solid $border-light;
+
+  h3 {
+    margin: 0 0 10px;
+    color: $text-heading;
+    font-size: 1rem;
+  }
+}
+
+.recap-table {
+  th,
+  td {
+    white-space: nowrap;
+  }
+
+  thead th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.customer-projects-section {
+  min-width: 0;
+}
+
+.customer-projects-heading {
+  margin: 0 2px 12px;
+
+  h2 {
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+}
+
+.customer-projects-heading .section-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: $text-light;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.customer-projects-section app-customer-projects {
+  display: block;
+}
+
+.empty-projects,
+.state-message {
+  margin: 0;
+  padding: 18px 20px;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-white;
+  color: $text-muted;
+}
+
+.state-message {
+  max-width: 1440px;
+  margin: 24px auto;
+}
+
+.state-message.error {
+  border-color: $border-state-error-alt;
+  background: $bg-state-error-alt;
+  color: $text-state-error-alt;
+}
+
+@media (max-width: 700px) {
+  .customer-page {
+    padding: 0 12px 20px;
+    gap: 18px;
+  }
+
+  .customer-recap {
+    padding: 16px;
+  }
+
+  .recap-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .customer-intro {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 500px) {
+  .detail-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-heading h1 {
+    font-size: 1.15rem;
+  }
+}

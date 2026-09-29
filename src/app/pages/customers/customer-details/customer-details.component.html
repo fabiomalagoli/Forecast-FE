@@ -1,33 +1,42 @@
 <header class="detail-header">
   <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">Clienti / Dettaglio cliente</span>
+    <h1></h1>
+  </div>
 </header>
-<h2>Dettaglio cliente</h2>
 
 @if (loading()) {
-  <p>Caricamento...</p>
+  <p class="state-message">Caricamento cliente...</p>
 } @else if (error()) {
-  <p class="error">{{ error() }}</p>
+  <p class="state-message error">{{ error() }}</p>
 } @else if (!customer()) {
-  <p>Cliente non trovato.</p>
+  <p class="state-message">Cliente non trovato.</p>
 } @else {
   @let c = customer()!;
-  <div class="main-content-wrapper">
-    <div class="card-cliente">
-      @for (h of headersArray; track h.key) {
-        @if(h.key !== 'activeProjects') {
-          <div class="row">
-              <span class="label">{{ h.label }}</span>
-              <div class="value-container">
-                <strong class="value">{{ getValue(c, h.key) }}</strong>
-              </div>
-          </div>
-        }
-      }
-    </div>
-    @if (customerRecap()) {
-      <div class="card-cliente recap-card">
-        <h3 class="section-title">Recap cliente</h3>
+  <main class="customer-page">
+    <section class="customer-intro" aria-labelledby="customer-name">
+      <div class="customer-title-block">
+        <span class="section-eyebrow">ANAGRAFICA CLIENTE</span>
+        <h2 id="customer-name"><strong>{{ c.name }}</strong></h2>
+        <div class="customer-vat">
+          <span>Partita IVA</span>
+          <strong>{{ c.vatNumber }}</strong>
+        </div>
+      </div>
+      <div class="customer-address">
+        <span>Indirizzo completo</span>
+        <strong>{{ getValue(c, 'fullAddress') }}</strong>
+      </div>
+    </section>
 
+    @if (customerRecap()) {
+      <section class="customer-recap" aria-labelledby="customer-recap-title">
+        <div class="section-heading">
+          <div>
+            <span class="section-eyebrow">DATI ECONOMICI</span>
+          </div>
+        </div>
         <div class="recap-summary">
           <div class="summary-item">
             <span class="summary-label">Totale ricavi</span>
@@ -42,11 +51,9 @@
             <strong class="summary-value">{{ getRecapValue('budgetWin') }}</strong>
           </div>
         </div>
-      </div>
 
-      @if (getYearlyRecapEntries().length > 0) {
-        <div class="card-cliente recap-card">
-          <h3 class="section-title">Dettaglio annuale</h3>
+        @if (getYearlyRecapEntries().length > 0) {
+          <div class="annual-recap">
           <div class="recap-table-wrapper">
             <table class="recap-table">
               <thead>
@@ -69,20 +76,22 @@
               </tbody>
             </table>
           </div>
-        </div>
-      }
+          </div>
+        }
+      </section>
     }
 
-    <div class="card-progetti">
-      @if (customer()!.activeProjects.length === 0) {
-        <p>Nessun progetto attivo.</p>
+    <section class="customer-projects-section" aria-labelledby="customer-projects-title">
+      <div class="section-heading customer-projects-heading">
+        <div>
+          <span id="customer-projects-title" class="section-eyebrow">PROGETTI ATTIVI DEL CLIENTE ({{ c.activeProjects.length }})</span>
+        </div>
+      </div>
+      @if (c.activeProjects.length === 0) {
+        <p class="empty-projects">Nessun progetto attivo.</p>
       } @else {
-          @if(customer()){
-            <div class="card-progetti">
-              <app-customer-projects [selectedCustomer]="customer()!"></app-customer-projects>
-            </div>
-          }
-      }      
-    </div>
-  </div>
+        <app-customer-projects [selectedCustomer]="c"></app-customer-projects>
+      }
+    </section>
+  </main>
 }
