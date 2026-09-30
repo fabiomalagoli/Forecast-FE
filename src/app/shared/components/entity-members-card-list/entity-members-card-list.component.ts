@@ -1,5 +1,7 @@
 import { Component, computed, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Location } from '@angular/common';
+
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -41,6 +43,7 @@ export interface MembersDeltaPayload {
 export class EntityMembersCardListComponent {
   protected permissionsService = inject(EntityPermissionsService);
   private destroyRef = inject(DestroyRef);
+  private location = inject(Location);
 
   entity = input.required<EntityWithMetadata>();
   entityType = input.required<'project' | 'workgroup'>();
@@ -198,6 +201,9 @@ export class EntityMembersCardListComponent {
     return !!currentId && String(currentId).toLowerCase() === this.getUserId(user);
   }
 
+   indietro() {
+    this.location.back();
+  }
   addMember(user: User) {
     if (!this.canManage()) return;
     const targetId = this.getUserId(user);

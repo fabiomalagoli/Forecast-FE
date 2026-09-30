@@ -1,23 +1,44 @@
+<header class="detail-header">
+  <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">
+      @if (entityType() === 'project') {
+        PROGETTI / MEMBRI PROGETTO
+      } @else {
+        GRUPPI DI LAVORO / MEMBRI
+      }
+    </span>
+  </div>
+</header>
+
+<div class="project-topline">
+  <div class="project-title-block">
+    <span class="project-headline">
+      {{ entityType() === 'project' ? 'Progetto' : 'Gruppo di Lavoro' }}
+    </span>
+    <h2><strong>{{ entity().name || '' }}</strong></h2>
+  </div>
+
+  @if (isCurrentUser(permissionsService.currentUser()!)) {
+    <div class="user-status-badge">
+      <mat-icon>account_circle</mat-icon>
+      <span>Fai parte di questo elemento</span>
+    </div>
+  }
+</div>
+
 <div [class.modal-wrapper]="isModalMode()">
   @if (isModalMode()) {
     <div class="backdrop" (click)="cancel.emit()"></div>
   }
 
-  <div class="members-container" [class.is-modal]="isModalMode()">
-    <div class="header-section">
-      <h2>Gestione Accessi Utenti {{ entity().name ? '- ' + entity().name : '' }}</h2>
-      @if (isCurrentUser(permissionsService.currentUser()!)) {
-        <div class="user-status-badge">
-          <mat-icon>account_circle</mat-icon>
-          <span>Fai parte di questo elemento</span>
-        </div>
-      }
-    </div>
-
+  <div class="members-container" [class.is-modal]="isModalMode()" [class.is-readonly]="!canManage()">
     <!-- Card dei membri assegnati all'entità dati -->
-    <section class="card-section">
+    <section class="card-section assigned-section">
       <div class="card-header">
-        <h3>Membri Assegnati</h3>
+        <div>
+          <span class="section-eyebrow">MEMBRI ASSEGNATI</span>
+        </div>
       </div>
 
       <div class="filter-card">
@@ -143,7 +164,9 @@
     @if (canManage()) {
       <section class="card-section add-section">
         <div class="card-header">
-          <h3>Aggiungi Nuovo Utente</h3>
+          <div>
+            <span class="section-eyebrow">AGGIUNGI NUOVO UTENTE</span>
+          </div>
         </div>
 
         <div class="filter-card">
@@ -172,9 +195,8 @@
               </div>
 
               <div class="user-actions">
-                <button type="button" class="btn-add-user" (click)="addMember(user)">
+                <button type="button" class="btn-small" (click)="addMember(user)">
                   <mat-icon class="btn-icon">add</mat-icon>
-                  <span>Aggiungi</span>
                 </button>
               </div>
             </article>
