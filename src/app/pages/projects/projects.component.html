@@ -1,9 +1,12 @@
-<div class="page-header">
-  <h2>Progetti</h2>
+<header class="page-header">
+  <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">PROGETTI</span>
+  </div>
   @if (canEditGlobal()) {
     <button appButton class="btn-add" (click)="openCreateProject()">+ Aggiungi Progetto</button>
   }
-</div>
+</header>
 
 <div class="filter-bar">
   <div class="filter-group">
@@ -178,48 +181,54 @@
     <p>{{ error() }}</p>
   </div>
 } @else {
-  <!-- Stato Normale di visualizzazione dei progetti nella tabella -->
   @if (statusMessage()) {
     <div class="notification" [class]="statusMessage()?.type">
       {{ statusMessage()?.text }}
     </div>
   }
 
-  <div class="table-container">
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            @for (col of columns; track col.header) {
-              <th>{{ col.header }}</th>
+  <div class="projects-grid">
+    @for (p of filteredProjects(); track p.id) {
+      <article
+        class="project-card"
+        role="link"
+        tabindex="0"
+        [attr.aria-label]="'Apri progetto ' + p.name"
+        (click)="openProjectDetails(p.id)"
+        (keydown)="onProjectCardKeydown($event, p.id)">
+        <div class="project-card-heading">
+          <div class="project-title-block">
+            <span class="project-customer">{{ p.customer }}</span>
+            <h2>{{ p.name }}</h2>
+            @if (p.description && p.year) {
+              <p class="project-description">({{p.year}}) {{ p.description }}</p>
             }
-            <th class="action-header">Azioni</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (p of filteredProjects(); track p.id) {
-            <tr>
-              @for (col of columns; track col.header; let first = $first) {
-                <td [class.project-primary-cell]="first">{{ col.value(p) }}</td>
-              }
-              <td class="actions-cell">
+            @else if (p.description) {
+              <p class="project-description">{{ p.description }}</p>
+            }
+            @else if (p.year) {
+              <p class="project-description">({{p.year}})</p>
+            }
+
+          </div>
+          <div class="project-actions" aria-label="Azioni progetto">
                 <button 
                   class="btn-favorite"
                   [class.favorite]="p.isFavorite"
-                  (click)="onToggleFavorite(p)"
+                  (click)="$event.stopPropagation(); onToggleFavorite(p)"
                   [matTooltip]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'" 
                   matTooltipPosition="above"
                   [aria-label]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'"
                   [title]="p.isFavorite ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'">
                   ★
                 </button>
-                <button class="btn-action-icon btn-download" type="button" (click)="downloadExcel(p)"
+                <button class="btn-action-icon btn-download" type="button" (click)="$event.stopPropagation(); downloadExcel(p)"
                   matTooltip="Scarica Excel" 
                   matTooltipPosition="above"
                   aria-label="Scarica Excel">
                   <mat-icon class="action-icon">file_download</mat-icon>
                 </button>
-                <button class="btn-action-icon btn-details" type="button" (click)="openProjectDetails(p.id)"
+                <button class="btn-action-icon btn-details" type="button" (click)="$event.stopPropagation(); openProjectDetails(p.id)"
                   matTooltip="Dettagli" 
                   matTooltipPosition="above"
                   aria-label="Dettagli">
@@ -228,13 +237,14 @@
                 @if (canManage(p)) {
                   <button class="btn-action-icon btn-accessibility-settings" type="button" 
                     [routerLink]="['/progetti', p.id, 'manage-access']"
+                    (click)="$event.stopPropagation()"
                     matTooltip="Impostazioni" 
                     matTooltipPosition="above"
                     aria-label="Impostazioni">
                     <mat-icon class="action-icon">settings</mat-icon>
                   </button>
                   <button class="btn-action-icon btn-edit" type="button" 
-                    (click)="openEditProject(p)"
+                    (click)="$event.stopPropagation(); openEditProject(p)"
                     matTooltip="Modifica" 
                     matTooltipPosition="above"
                     aria-label="Modifica">
@@ -243,37 +253,48 @@
                 }
                 @if (canDelete(p)) {
                   <button class="btn-action-icon btn-remove-single" type="button" 
-                    (click)="onDeleteProject(p)"
+                    (click)="$event.stopPropagation(); onDeleteProject(p)"
                     matTooltip="Elimina" 
-                    matTooltipPosition="above">
+                    matTooltipPosition="above"
+                    aria-label="Elimina progetto">
                     <mat-icon>delete</mat-icon>
                   </button>
                 }
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td [attr.colspan]="projectColumnsCount + 1" class="empty-message">
-                Nessun progetto trovato con i filtri selezionati.
-              </td>
-            </tr>
+          </div>
+        </div>
+
+        <div class="project-metadata">
+          @for (col of columns; track col.header) {
+            @if (col.header !== 'Cliente' && 
+            col.header !== 'Nome' && 
+            col.header !== 'Descrizione' &&
+            col.header !== 'Anno') {
+              <div class="project-fact">
+                <span>{{ col.header }}</span>
+                <strong>{{ col.value(p) }}</strong>
+              </div>
+            }
           }
-        </tbody>
-      </table>
-    </div> 
-    <div class="table-footer">
-      <p class="count-footer">Numero progetti: {{ pagination()?.totalCount || 0 }}</p>
-    </div>
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-projects">
+        Nessun progetto trovato con i filtri selezionati.
+      </div>
+    }
   </div>
 
-  <mat-paginator
-    [length]="pagination()?.totalCount || 0"
-    [pageSize]="pageSize"
-    [pageIndex]="currentPage() - 1"
-    [pageSizeOptions]="[5, 10, 20, 50]"
-    [showFirstLastButtons]="true"
-    (page)="onPageChange($event)">
-  </mat-paginator>
+  <div class="projects-footer">
+    <p class="count-footer">Numero progetti: {{ pagination()?.totalCount || 0 }}</p>
+    <mat-paginator
+      [length]="pagination()?.totalCount || 0"
+      [pageSize]="pageSize"
+      [pageIndex]="currentPage() - 1"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [showFirstLastButtons]="true"
+      (page)="onPageChange($event)">
+    </mat-paginator>
+  </div>
 
   <div class="bottom-actions">
     @if (isAddingProject()) {
@@ -290,6 +311,5 @@
         (saved)="onProjectSaved()">
       </app-modifica-progetto>
     }
-    
   </div>
 }

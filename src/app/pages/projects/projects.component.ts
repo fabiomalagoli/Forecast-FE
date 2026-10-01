@@ -2,6 +2,7 @@ import { Component, DestroyRef, HostListener, computed, inject, signal } from '@
 import { Project } from '../../shared/models/project.model';
 import { Column } from '../../shared/table-row/table.types';
 import { AppButtonComponent } from "../../shared/button/button";
+import { Location } from '@angular/common';
 import { COMPLETE_PROJECT_HEADERS } from './project/complete-project.headers';
 import { NewProgettoComponent } from "./new-project/new-project.component";
 import { Router } from '@angular/router';
@@ -65,6 +66,8 @@ export class ProjectsComponent {
   private favouritesService = inject(FavouritesService);
   private isFromDetailsPage = signal(false);
   private dialog = inject(MatDialog);
+  private location = inject(Location);
+
 
   canEditGlobal(): boolean {
     return this.permissionsService.canEditGlobal();
@@ -189,6 +192,10 @@ export class ProjectsComponent {
     return this.permissionsService.canDelete(project);
   }
 
+  indietro() {
+    this.location.back();
+  }
+  
   yearFilterOptions = computed<any[]>(() => {
     const projects = this.AllProjects();
 
@@ -772,6 +779,13 @@ clearYearFilter() {
 
   openProjectDetails(id: string){
     this.router.navigate(['/progetti', id]);
+  }
+
+  onProjectCardKeydown(event: KeyboardEvent, id: string): void {
+    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+
+    event.preventDefault();
+    this.openProjectDetails(id);
   }
 
   downloadExcel(project: Project): void {
