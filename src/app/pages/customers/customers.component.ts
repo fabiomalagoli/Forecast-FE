@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { CUSTOMER_HEADERS } from './customer/customer.headers';
 import { Customer } from '../../shared/models/customer.model';
 import { Column } from '../../shared/table-row/table.types';
+import { Location } from '@angular/common';
 import { NewCustomerComponent } from './new-customer/new-customer.component';
 import { AppButtonComponent } from '../../shared/button/button';
 import { EditCustomerComponent } from './edit-customer/edit-customer.component';
@@ -50,6 +51,7 @@ export class CustomersComponent implements OnInit {
   private permissionsService = inject(EntityPermissionsService);
   private isFromDetailsPage = signal(false);
   private dialog = inject(MatDialog);
+  private location = inject(Location);
 
   canEditGlobal(): boolean {
       return this.permissionsService.canEditGlobal();
@@ -59,6 +61,9 @@ export class CustomersComponent implements OnInit {
     return this.permissionsService.isGlobalAdmin();
   }
 
+  indietro() {
+    this.location.back();
+  }
   customers = this.customersService.loadedCustomers;
 
   isInitialLoading = signal(this.customersService.loadedCustomers().length === 0);
@@ -321,6 +326,14 @@ export class CustomersComponent implements OnInit {
   }
 
   openCustomerDetails(id: string) { this.router.navigate(['/clienti', id]); }
+
+  onCustomerCardKeydown(event: KeyboardEvent, id: string): void {
+    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+
+    event.preventDefault();
+    this.openCustomerDetails(id);
+  }
+
   openCustomerEditing(c: Customer) { this.editingCustomer.set(c); }
   closeCustomerEditing() { this.editingCustomer.set(null); }
 

@@ -1,9 +1,13 @@
-<div class="page-header">
-  <h2>Clienti</h2>
+<header class="page-header">
+    <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+
+  <div class="page-heading">
+    <span class="page-eyebrow">CLIENTI</span>
+  </div>
   @if (canEditGlobal()) {
     <button appButton class="btn-add" (click)="onAddingCustomer()">+ Aggiungi Cliente</button>
   }
-</div>
+</header>
 
 <div class="filter-bar">
   <div class="filter-group">
@@ -68,61 +72,66 @@
     </div>
   }
 
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          @for (col of columns; track col.header) {
-            <th>{{ col.header }}</th>
-          }
-          <th class="actions-header">Azioni</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (cliente of filteredCustomers(); track cliente.id) {
-          <tr>
-            @for (col of columns; track col.header; let first = $first) {
-              <td [class.customer-name-cell]="first">{{ col.value(cliente) }}</td>
-            }
-            <td class="actions-cell">
-              <button class="btn-action-icon btn-details" type="button" 
-                (click)="openCustomerDetails(cliente.id)"
-                matTooltip="Dettagli" 
+  <div class="customer-card-content">
+    @for (cliente of filteredCustomers(); track cliente.id) {
+      <article
+        class="customer-card"
+        role="link"
+        tabindex="0"
+        [attr.aria-label]="'Apri cliente ' + cliente.name"
+        (click)="openCustomerDetails(cliente.id)"
+        (keydown)="onCustomerCardKeydown($event, cliente.id)">
+        <div class="customer-card-heading">
+          <div class="customer-title-block">
+            <h2>{{ cliente.name }}</h2>
+          </div>
+          <div class="actions-cell" aria-label="Azioni cliente">
+            <button class="btn-action-icon btn-details" type="button"
+              (click)="$event.stopPropagation(); openCustomerDetails(cliente.id)"
+              matTooltip="Dettagli"
+              matTooltipPosition="above"
+              aria-label="Dettagli">
+              <mat-icon class="action-icon">visibility</mat-icon>
+            </button>
+            @if (canEditGlobal()) {
+              <button class="btn-action-icon btn-edit" type="button"
+                (click)="$event.stopPropagation(); openCustomerEditing(cliente)"
+                matTooltip="Modifica"
                 matTooltipPosition="above"
-                aria-label="Dettagli">
-                <mat-icon class="action-icon">visibility</mat-icon>
+                aria-label="Modifica">
+                <mat-icon class="action-icon">edit</mat-icon>
               </button>
-              @if(canEditGlobal()) {            
-                <button class="btn-action-icon btn-edit" type="button" 
-                  (click)="openCustomerEditing(cliente)"
-                  matTooltip="Modifica" 
-                  matTooltipPosition="above"
-                  aria-label="Modifica">
-                  <mat-icon class="action-icon">edit</mat-icon>
-                </button>
-              }
-              @if(isGlobalAdmin()) {
-                <button class="btn-action-icon btn-remove-single" type="button" 
-                  (click)="onDeleteCustomer(cliente)"
-                  matTooltip="Elimina" 
-                  matTooltipPosition="above">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td [attr.colspan]="clientiColsCount + 1" class="empty-message">
-              Nessun cliente trovato con i filtri selezionati.
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    <div class="table-footer">
-      <p class="count-footer">Numero clienti: {{ pagination()?.totalCount || 0 }}</p>
-    </div>
+            }
+            @if (isGlobalAdmin()) {
+              <button class="btn-action-icon btn-remove-single" type="button"
+                (click)="$event.stopPropagation(); onDeleteCustomer(cliente)"
+                matTooltip="Elimina"
+                matTooltipPosition="above"
+                aria-label="Elimina">
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="customer-data">
+          @for (col of columns; track col.header) {
+            @if (col.header !== 'Nome') {
+              <div class="customer-fact">
+                <span>{{ col.header }}</span>
+                <strong>{{ col.value(cliente) }}</strong>
+              </div>
+            }
+          }
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-message">Nessun cliente trovato con i filtri selezionati.</div>
+    }
+  </div>
+
+  <div class="table-footer">
+    <p class="count-footer">Numero clienti: {{ pagination()?.totalCount || 0 }}</p>
   </div>
 
 
