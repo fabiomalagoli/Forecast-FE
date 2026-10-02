@@ -3,6 +3,7 @@ import { EmployeesService } from '../../shared/services/employees.service';
 import { JobRolesService } from '../../shared/services/job-roles.service';
 import { LookupsService } from '../../shared/services/lookups.service'; 
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { Employee } from '../../shared/models/employee.model';
 import { CommonModule } from '@angular/common';
 import { AppButtonComponent } from '../../shared/button/button';
@@ -45,6 +46,7 @@ export class EmployeesComponent implements OnInit {
     private dialog = inject(MatDialog);
     private permissionsService = inject(EntityPermissionsService);
     private showMessage$ = new Subject<{text: string, type: 'success' | 'error'}>();
+    private location = inject(Location);
 
     isInitialLoading = signal(this.employeesService.loadedEmployees().length === 0);
     statusMessage = signal<{text: string, type: 'success' | 'error'} | null>(null);
@@ -197,6 +199,10 @@ export class EmployeesComponent implements OnInit {
         ).subscribe(() => {
             this.statusMessage.set(null);
         });
+    }
+
+    indietro() {
+        this.location.back();
     }
 
     onPageChange(event: PageEvent){

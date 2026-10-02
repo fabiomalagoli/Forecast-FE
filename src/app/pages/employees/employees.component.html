@@ -1,6 +1,8 @@
 <div class="page-header">
-  <h2>Risorse</h2>
-  @if (canEditGlobal()) {
+<button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">RISORSE</span>
+  </div>  @if (canEditGlobal()) {
     <button appButton class="btn-add" (click)="onAddingEmployee()">+ Aggiungi Risorsa</button>
   }
 </div>

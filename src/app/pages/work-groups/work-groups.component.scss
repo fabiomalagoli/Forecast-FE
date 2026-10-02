@@ -1,23 +1,36 @@
 @use 'variables' as *;
 
+:host {
+  display: block;
+}
+
 /* LAYOUT E PAGE HEADER */
 
+.btn-add 
+{
+  margin-left: auto;
+}
 .page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding: 1.5rem;
-  background-color: $bg-app-shell;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
+  gap: 18px;
+  margin: 0 auto 24px;
+  max-width: 1440px;
+  padding: 0 4px;
 
-  h2 {
-    margin: 0;
-    font-size: 1.75rem;
-    color: $text-filter-dark;
-    font-weight: 600;
+  button:hover {
+    background-color: $color-primary-dark;
   }
+
+}
+
+.page-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: $text-light;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .work-groups-layout {
@@ -27,22 +40,6 @@
   align-items: start;
   transition: $transition-layout;
 }
-
-.progetti-layout {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 24px;
-  align-items: start;
-}
-
-// Rende il pannello laterale sticky
-// .right-column {
-//   position: sticky;
-//   top: 1.5rem;
-//   align-self: start;
-//   max-height: calc(100dvh - 3rem);
-//   overflow-y: auto;
-// }
 
 /* SIDE PANEL */
 
@@ -89,20 +86,6 @@
   }
 }
 
-// .placeholder-panel {
-//   position: relative;
-// }
-
-// .side-panel {
-//   background-color: $bg-white;
-//   border-radius: $radius-lg;
-//   border: 1px solid $border-filter-light;
-//   box-shadow: $shadow-side-panel; 
-//   padding: 1.5rem;
-//   position: relative;
-//   animation: slideInRight 0.3s ease-out;
-// }
-
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(30px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -133,24 +116,6 @@
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem;
-  text-align: center;
-  background-color: $bg-app-shell;
-  border-radius: $radius-lg;
-
-  p {
-    font-size: 1rem;
-    color: $text-filter-muted;
-    margin: 0;
-  }
 }
 
 .error-state {
@@ -210,9 +175,6 @@
       &:hover { background-color: $bg-app-shell; }
       &:last-child { border-bottom: none; }
 
-      &.selected-row {
-        display: table-row !important;
-      }
     }
 
     td {
@@ -223,22 +185,6 @@
     }
 
   }
-}
-
-.actions-cell {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.actions-header { text-align: left; }
-
-.empty-message {
-  text-align: center;
-  padding: 2rem !important;
-  color: $text-filter-light;
-  font-style: italic;
 }
 
 /* CONTENITORE FOOTER DELLA TABELLA */
@@ -254,15 +200,8 @@
   box-sizing: border-box;
 }
 
-.footer-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
 .count-footer {
   margin: 0;
-  padding: 0; /* Padding gestito da .table-footer */
   font-size: 0.875rem;
   font-weight: 500;
   color: $text-filter-muted;
@@ -283,33 +222,3 @@
   backdrop-filter: blur(3px) !important;
 }
 
-.tbl-header {
-  padding: 0.6rem 0.8rem;
-  white-space: nowrap;
-  
-  &--actions { text-align: right; }
-}
-
-/* TOAST NOTIFICATION (v2) */
-
-.toast-container {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 24px;
-  border-radius: $radius-lg;
-  color: white;
-  font-weight: 600;
-  box-shadow: $shadow-toast;
-  z-index: 9999;
-  animation: slideUp 0.3s ease-out;
-
-  &.success { background-color: $color-toast-success-alt; }
-  &.error   { background-color: $color-toast-error-alt; }
-}
-
-@keyframes slideUp {
-  from { bottom: -50px; opacity: 0; }
-  to   { bottom: 20px; opacity: 1; }
-}

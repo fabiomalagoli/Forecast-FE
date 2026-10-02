@@ -1,9 +1,13 @@
-<div class="page-header">
-  <h2>Gruppi di Lavoro</h2>
+
+<header class="page-header">
+  <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">GRUPPI DI LAVORO</span>
+  </div>
   @if (canEditGlobal()) {
     <button appButton class="btn-add" (click)="isAddingWorkGroupState.set(true)">+ Aggiungi Gruppo</button>
   }
-</div>
+</header>
 
 <div class="filter-bar">
   <div class="filter-group">

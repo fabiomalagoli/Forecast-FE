@@ -8,6 +8,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Employee } from '../../shared/models/employee.model';
 import { WorkGroup } from '../../shared/models/workgroup.model';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PageEvent, MatPaginatorModule } from '@angular/material/paginator';
 import { ConfirmDeleteDialogComponent } from '../../shared/components/confirm-delete-dialog/confirm-delete-dialog';
@@ -54,6 +55,7 @@ export class WorkGroupsComponent {
     private destroyRef = inject(DestroyRef);
     private snackbarService = inject(SnackbarService);
     private dialog = inject(MatDialog);
+    private location = inject(Location);
     
     private showMessage$ = new Subject<{ text: string, type: 'success' | 'error' }>();
     private isFromDetails = signal(false);
@@ -263,6 +265,10 @@ export class WorkGroupsComponent {
         this.caricaPagina(event.pageIndex + 1);
     }
 
+    indietro() {
+        this.location.back();
+    }
+    
     onDeleteWorkGroup(workGroup: WorkGroup): void {
         const dialogRef = this.dialog.open(ConfirmDeleteDialogComponent, {
         data: {

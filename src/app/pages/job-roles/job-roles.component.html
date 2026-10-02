@@ -1,9 +1,12 @@
-<div class="page-header">
-  <h2>Ruoli</h2>
+<header class="page-header">
+  <button appButton class="btn-small" (click)="indietro()">← Indietro</button>
+  <div class="page-heading">
+    <span class="page-eyebrow">RUOLI</span>
+  </div>
   @if (canEditGlobal()) {
     <button appButton class="btn-add" (click)="isAddingRoleState.set(true)">+ Aggiungi Ruolo</button>
   }
-</div>
+</header>
 
 <div class="filter-bar">
   <div class="filter-group">

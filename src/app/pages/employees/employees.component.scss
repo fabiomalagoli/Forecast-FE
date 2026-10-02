@@ -2,29 +2,37 @@
 
 /* LAYOUT E PAGE HEADER */
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 1.5rem;
-  background-color: $bg-app-shell;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
-
-  h2 {
-    margin: 0;
-    font-size: 1.75rem;
-    color: $text-filter-dark;
-    font-weight: 600;
-  }
+:host {
+  display: block;
 }
 
-.progetti-layout {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 24px;
-  align-items: start;
+
+.btn-add 
+{
+  margin-left: auto;
+}
+ 
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0 auto 24px;
+  max-width: 1440px;
+  padding: 0 4px;
+
+  button:hover {
+    background-color: $color-primary-dark;
+  }
+
+}
+
+.page-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: $text-light;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .resources-layout {
@@ -60,24 +68,6 @@
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem;
-  text-align: center;
-  background-color: $bg-app-shell;
-  border-radius: $radius-lg;
-
-  p {
-    font-size: 1rem;
-    color: $text-filter-muted;
-    margin: 0;
-  }
 }
 
 .error-state {
@@ -160,15 +150,6 @@
   }
 }
 
-.actions-cell {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.actions-header { text-align: left; }
-
 .empty-message {
   text-align: center;
   padding: 2rem !important;
@@ -203,73 +184,3 @@
 
 /* SIDE PANEL */
 
-.side-panel {
-  background-color: $bg-white;
-  border-radius: $radius-lg;
-  border: 1px solid $border-filter-light;
-  box-shadow: $shadow-side-panel; 
-  padding: 1.5rem;
-  position: relative;
-  animation: slideInRight 0.3s ease-out;
-}
-
-.btn-close-panel {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: transparent;
-  border: none;
-  font-size: 0.9rem;
-  color: $text-filter-muted;
-  cursor: pointer;
-  font-weight: 600;
-  transition: color 0.2s;
-
-  &:hover {
-    color: $color-action-danger;
-  }
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-/* STILI LEGACY */
-
-.tbl-header {
-  padding: 0.6rem 0.8rem;
-  white-space: nowrap;
-  
-  &--actions { text-align: right; }
-}
-
-/* TOAST NOTIFICATION (v2) */
-
-.toast-container {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 24px;
-  border-radius: $radius-lg;
-  color: white;
-  font-weight: 600;
-  box-shadow: $shadow-toast;
-  z-index: 9999;
-  animation: slideUp 0.3s ease-out;
-
-  &.success { background-color: $color-toast-success-alt; }
-  &.error   { background-color: $color-toast-error-alt; }
-}
-
-@keyframes slideUp {
-  from { bottom: -50px; opacity: 0; }
-  to   { bottom: 20px; opacity: 1; }
-}

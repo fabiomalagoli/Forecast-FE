@@ -2,6 +2,7 @@ import { Component, DestroyRef, HostListener, computed, effect, inject, signal, 
 import { JobRole } from '../../shared/models/job-role.model';
 import { JobRolesService } from '../../shared/services/job-roles.service';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { JobRoleResourcesComponent } from './job-role-resources/job-role-resources.component';
 import { NewJobRoleComponent } from "./new-job-role/new-job-role.component";
 import { JobRoleRowComponent } from './job-role/job-role.component';
@@ -53,7 +54,8 @@ export class JobRolesComponent implements OnInit {
     private snackbarService = inject(SnackbarService);
     private permissionsService = inject(EntityPermissionsService);
     private dialog = inject(MatDialog);
-    
+    private location = inject(Location);
+
     private showMessage$ = new Subject<{ text: string, type: 'success' | 'error' }>();
     private isFromDetails = signal(false);
 
@@ -233,6 +235,10 @@ export class JobRolesComponent implements OnInit {
         this.caricaPagina(event.pageIndex + 1);
     }
 
+    indietro() {
+        this.location.back();
+    }
+    
     onDeleteRole(role: JobRole): void {
         if (!this.permissionsService.canEditGlobal() || this.isUnassignedRole(role)) {
             return;
