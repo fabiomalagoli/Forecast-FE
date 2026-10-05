@@ -86,7 +86,7 @@
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); //minmax(100%, 1fr) x singola riga
   gap: 16px;
   max-width: 1440px;
   margin: 0 auto;
