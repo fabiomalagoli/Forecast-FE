@@ -52,6 +52,7 @@ export class ProjectsService {
       customer: project.customer || 'N/A',
       companyId: project.companyId || null,
       pmId: project.pmId || null,
+      ownerId: project.ownerId || project.OwnerId || null,
       customerId: project.customerId || null,
       projectStatusId: project.projectStatusId || null,
       totalBudget: project.totalBudget || 0,
