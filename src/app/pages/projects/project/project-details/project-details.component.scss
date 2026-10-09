@@ -16,25 +16,11 @@
   button:hover {
     background-color: $color-primary-dark;
   }
-
-  h1 {
-    margin: 0;
-    color: $text-heading;
-    font-size: 1.35rem;
-    line-height: 1.25;
-  }
 }
 
-.page-heading h1,
-.project-title-block h2,
-.section-heading h2 {
+.project-title-block h2 {
   margin: 0;
   color: $text-heading;
-}
-
-.page-heading h1 {
-  font-size: 1.35rem;
-  line-height: 1.25;
 }
 
 .page-eyebrow,
@@ -157,10 +143,8 @@
 .recap-metric {
   display: flex;
   min-width: 0;
-  min-height: 36px;
   box-sizing: border-box;
   flex-direction: column;
-  justify-content: flex-start;
   gap: 14px;
 }
 
@@ -192,10 +176,6 @@
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
-
-  h2 {
-    font-size: 1.2rem;
-  }
 }
 
 .recap-grid {
@@ -245,18 +225,6 @@
 
 .resources-heading {
   margin: 0 2px 12px;
-}
-
-.resource-count {
-  display: grid;
-  min-width: 32px;
-  height: 32px;
-  place-items: center;
-  border-radius: 50%;
-  background: $color-primary-light;
-  color: $color-primary-dark;
-  font-size: 0.85rem;
-  font-weight: 700;
 }
 
 .card-risorse {
@@ -404,10 +372,6 @@
     flex-direction: column;
     gap: 12px;
     margin-bottom: 18px;
-  }
-
-  .page-heading h1 {
-    font-size: 1.15rem;
   }
 
   .project-overview {

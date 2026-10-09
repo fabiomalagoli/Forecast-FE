@@ -1,52 +1,5 @@
 @use 'variables' as *;
 
-/* LAYOUT PRINCIPALE */
-
-.main-content-wrapper {
-  display: flex;
-  flex-direction: column; 
-  gap: 24px;          
-  align-items: flex-start; 
-  padding: 20px;
-  width: 100%;        
-}
-
-// Media Query posizionata vicina all'elemento che altera, ma raggruppando le modifiche
-@media (max-width: 1100px) {
-  .dashboard-layout {
-    flex-direction: column;
-  }
-}
-
-/* CARDS */
-// Usiamo un placeholder % per condividere gli stili senza creare classi CSS inutili
-%card-base {
-  border: 1px solid $border-light;
-  border-radius: $radius-xl;
-  padding: 16px;
-  background: $bg-white;
-  box-shadow: $shadow-card;
-  flex: 1;
-  min-width: 300px; // Default minimo garantito per entrambe
-
-  @media (max-width: 1100px) {
-    width: 100%;
-    min-width: unset;
-  }
-}
-
-.card-cliente {
-  @extend %card-base;
-  max-width: 100%;
-  width: 100%; // Sovrascrive il default del placeholder
-}
-
-.card-progetti {
-  @extend %card-base;
-  flex: 1.5;
-  width: 100%; // Sovrascrive il default del placeholder
-}
-
 /* HEADER DETTAGLI E BOTTONI */
 
 .detail-header {
@@ -64,22 +17,9 @@
   }
 }
 
-.section-title {
-  margin: 0 0 12px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: $text-dark;
-}
-
-.recap-card {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
 .recap-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -87,24 +27,27 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
   padding: 14px 16px;
   border: 1px solid $border-card-divider;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.01);
+  border-radius: $radius-md;
+  background: $bg-light;
 }
 
 .summary-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: $text-light;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .summary-value {
   font-size: 1.05rem;
   font-weight: 700;
   color: $text-dark;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 
 .recap-table-wrapper {
@@ -117,12 +60,18 @@
   border-collapse: collapse;
   font-size: 0.94rem;
 
+  th,
+  td {
+    white-space: nowrap;
+  }
+
   thead th {
     text-align: left;
     padding: 10px 12px;
-    font-size: 0.72rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
     color: $text-light;
     border-bottom: 1px solid $border-card-divider;
   }
@@ -142,58 +91,13 @@
   }
 }
 
-/* RIGHE */
-
-.row {
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  padding: 10px 0;
-  border-bottom: 1px solid $border-card-divider;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  span {
-    color: $text-light;
-    font-weight: 600;
-  }
-}
-
-.value-container {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px; 
-  width: 100%;
-  min-width: 0;
-
-  .value {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-.project-btn {
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
 :host {
   display: block;
 }
 
-.page-heading h1,
-.customer-overview-heading h2,
-.section-heading h2,
-.customer-projects-heading h2 {
+.page-heading h1 {
   margin: 0;
   color: $text-heading;
-}
-
-.page-heading h1 {
   font-size: 1.35rem;
   line-height: 1.25;
 }
@@ -218,6 +122,8 @@
 }
 
 .customer-recap {
+  display: grid;
+  gap: 8px;
   min-width: 0;
   padding: 24px;
   border: 1px solid $border-light;
@@ -285,67 +191,10 @@
   }
 }
 
-.customer-recap {
-  display: grid;
-  gap: 8px;
-}
-
-.section-heading h2,
-.customer-projects-heading h2 {
-  font-size: 1.2rem;
-}
-
-.recap-summary {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.summary-item {
-  min-width: 0;
-  border-radius: $radius-md;
-  background: $bg-light;
-}
-
-.summary-label {
-  color: $text-light;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.summary-value {
-  overflow-wrap: anywhere;
-  font-variant-numeric: tabular-nums;
-}
-
 .annual-recap {
   min-width: 0;
   padding-top: 18px;
   border-top: 1px solid $border-light;
-
-  h3 {
-    margin: 0 0 10px;
-    color: $text-heading;
-    font-size: 1rem;
-  }
-}
-
-.recap-table {
-  th,
-  td {
-    white-space: nowrap;
-  }
-
-  thead th {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
 }
 
 .customer-projects-section {
@@ -354,11 +203,6 @@
 
 .customer-projects-heading {
   margin: 0 2px 12px;
-
-  h2 {
-    line-height: 1.35;
-    overflow-wrap: anywhere;
-  }
 }
 
 .customer-projects-heading .section-eyebrow {
